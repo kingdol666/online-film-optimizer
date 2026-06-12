@@ -1,1 +1,2 @@
 - [PMMA Quality Gate Rules](pmma-quality-gate-rules.md) — PMMA_FILM_GRADE_A target windows, gate rules, historical baselines
+- [PET Quality Gate Rules](pet-quality-gate-rules.md) — PET_FILM_GRADE_A target windows, gate rules, baseline metrics, historical recipes

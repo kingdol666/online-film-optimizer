@@ -1,0 +1,38 @@
+{
+  "tested_at": "2026-06-12T10:00:00.000Z",
+  "test_method": "direct_mcp_tool_invocation_attempt",
+  "tools_called": {
+    "film_line_list_products": {
+      "called": true,
+      "success": false,
+      "error_or_data": "MCP tool 'film_line_list_products' is not available in this agent session. The industrial-film-line-sim MCP server defined in .mcp.json is not connected. Attempted direct invocation but tool not in available function list (available tools: Read, Write, Glob, Grep, SendMessage).",
+      "attempted_at": "2026-06-12T10:00:00.000Z"
+    },
+    "film_line_get_state": {
+      "called": true,
+      "success": false,
+      "error_or_data": "MCP tool 'film_line_get_state' is not available in this agent session. The industrial-film-line-sim MCP server defined in .mcp.json is not connected. Attempted direct invocation but tool not in available function list.",
+      "attempted_at": "2026-06-12T10:00:00.000Z"
+    },
+    "film_line_get_snapshot": {
+      "called": true,
+      "success": false,
+      "error_or_data": "MCP tool 'film_line_get_snapshot' is not available in this agent session. The industrial-film-line-sim MCP server defined in .mcp.json is not connected. Attempted direct invocation but tool not in available function list.",
+      "attempted_at": "2026-06-12T10:00:00.000Z"
+    }
+  },
+  "all_live_tools_ok": false,
+  "mcp_server_config": {
+    "defined_in": ".mcp.json",
+    "server_name": "industrial-film-line-sim",
+    "command": "node",
+    "args": ["simulator/industrial-film-line/mcp-server.mjs"],
+    "connection_status": "NOT_CONNECTED",
+    "why_unavailable": "The MCP server process must be started by the Claude Code host via the MCP transport layer. In the current agent session, the host did not establish a connection to the MCP server, so the tools are not registered as callable functions. The agent has only: Read, Write, Glob, Grep, SendMessage.",
+    "note": "This is consistent with the previous verification test (mcp_read_verification.json) which also found all MCP tools unavailable."
+  },
+  "fallback_data_available": true,
+  "fallback_source": "Direct filesystem reads of workspace/runtime/simulator-state.json and simulator/industrial-film-line/product-catalog.mjs",
+  "raw_output": "=== CALL ATTEMPT 1: film_line_list_products ===\nAttempted to invoke 'film_line_list_products' as a function call.\nResult: Function not found. This tool is defined in the industrial-film-line-sim MCP server but the server is not connected to this agent session.\n\n=== CALL ATTEMPT 2: film_line_get_state ===\nAttempted to invoke 'film_line_get_state' as a function call.\nResult: Function not found. Same reason - MCP server not connected.\n\n=== CALL ATTEMPT 3: film_line_get_snapshot ===\nAttempted to invoke 'film_line_get_snapshot' as a function call.\nResult: Function not found. Same reason - MCP server not connected.\n\n=== FALLBACK DATA (from live runtime files) ===\n\n--- film_line_list_products equivalent ---\n4 products registered in product catalog:\n1. PET_FILM_GRADE_A (alias: BOPET_NEW_GRADE_A) - PET 双向拉伸光学膜 A 级 (material_family: PET)\n2. PPAT_FILM_GRADE_A - PPAT 可降解柔性膜 A 级 (material_family: PPAT)\n3. PMMA_FILM_GRADE_A - PMMA 高透光硬质膜 A 级 (material_family: PMMA)\n4. PVA_FILM_GRADE_A - PVA 水溶/阻隔膜 A 级 (material_family: PVA)\n\n--- film_line_get_state equivalent ---\nCurrent simulator state (from workspace/runtime/simulator-state.json):\n- productGrade: PET_FILM_GRADE_A\n- campaignId: CMP-CLAUDE-CLI-TEST\n- tick: 0\n- clock: 2026-06-10T00:00:00.000Z\n- lineState: STABLE\n- experimentId: EXP-000\n- recipeId: RCP-BASELINE\n- alarmActive: false\n- wasteMeter: 0\n- drift: 0\n- pendingTransitionTicks: 0\n- timeSinceLastChangeSec: 900\n- setpoints (12 parameters): extruder_speed=100, melt_temp=278, casting_roll_temp=34, md_draw_ratio=3.18, md_zone_temp=92, td_draw_ratio=3.62, td_zone_1_temp=108, td_zone_2_temp=112, heatset_temp=218, relaxation_ratio=4.2, line_speed=42, winder_tension=118\n- lastKnownGoodRecipe: RCP-BASELINE\n- ledger: [] (no events)\n\n--- film_line_get_snapshot equivalent ---\nFull snapshot constructed from runtime state:\n- product_grade: PET_FILM_GRADE_A\n- campaign_id: CMP-CLAUDE-CLI-TEST\n- experiment_id: EXP-000\n- recipe_id: RCP-BASELINE\n- tick: 0\n- line_state: STABLE\n- alarm_active: false\n- waste_meter: 0\n- time_since_last_change_sec: 900\n- pending_transition_ticks: 0\n- setpoints: all 12 at baseline values\n- last_known_good_recipe: RCP-BASELINE\n- online quality: thickness_mean=12.0842, thickness_cv=1.5377, birefringence_mean=0.093905, birefringence_cv=3.7278\n- 17-point profile data available for both thickness and birefringence\n\n=== VERDICT ===\nThe MCP tools cannot be called directly because the MCP server is not connected.\nThe equivalent live data IS available via the simulator state file and product catalog.\nThis is a MCP transport integration gap, not a data availability gap.",
+  "recommendation": "To enable live MCP tool calls, the Claude Code host must start the MCP server process (node simulator/industrial-film-line/mcp-server.mjs) and establish stdin/stdout JSON-RPC communication with it. Alternatively, a direct node script that spawns the MCP server and makes JSON-RPC calls can be used, but Bash is not available in this agent session."
+}

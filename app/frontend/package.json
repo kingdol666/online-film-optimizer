@@ -10,8 +10,6 @@
     "preview": "vite preview --host 127.0.0.1 --port ${FRONTEND_PORT:-5418}"
   },
   "dependencies": {
-    "@ant-design/icons-vue": "^7.0.1",
-    "ant-design-vue": "^4.2.6",
     "vue": "^3.5.17"
   },
   "devDependencies": {

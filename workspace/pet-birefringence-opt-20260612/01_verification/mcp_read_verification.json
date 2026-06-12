@@ -1,0 +1,164 @@
+{
+  "verified_at": "2026-06-12T08:00:00.000Z",
+  "product_grade": "PET_FILM_GRADE_A",
+  "tools": {
+    "film_line_list_products": {
+      "available": false,
+      "mcp_call_error": "No such tool available: film_line_list_products",
+      "fallback_source": "simulator/industrial-film-line/product-catalog.mjs (direct file read)",
+      "result_summary": "4 products available: PET_FILM_GRADE_A (PET双向拉伸光学膜A级), PPAT_FILM_GRADE_A (PPAT可降解柔性膜A级), PMMA_FILM_GRADE_A (PMMA高透光硬质膜A级), PVA_FILM_GRADE_A (PVA水溶/阻隔膜A级)",
+      "products": [
+        {
+          "product_grade": "PET_FILM_GRADE_A",
+          "display_name": "PET 双向拉伸光学膜 A 级",
+          "material_family": "PET",
+          "target_template": {
+            "thickness_mean": { "target": 12.0, "tolerance": 0.22 },
+            "thickness_cv": { "max": 1.55 },
+            "birefringence_mean": { "target": 0.078, "tolerance": 0.003 },
+            "birefringence_cv": { "max": 3.7 }
+          }
+        },
+        {
+          "product_grade": "PPAT_FILM_GRADE_A",
+          "display_name": "PPAT 可降解柔性膜 A 级",
+          "material_family": "PPAT"
+        },
+        {
+          "product_grade": "PMMA_FILM_GRADE_A",
+          "display_name": "PMMA 高透光硬质膜 A 级",
+          "material_family": "PMMA"
+        },
+        {
+          "product_grade": "PVA_FILM_GRADE_A",
+          "display_name": "PVA 水溶/阻隔膜 A 级",
+          "material_family": "PVA"
+        }
+      ]
+    },
+    "film_line_get_state": {
+      "available": false,
+      "mcp_call_error": "No such tool available: film_line_get_state",
+      "fallback_source": "workspace/runtime/simulator-state.json (direct file read)",
+      "result_summary": "State loaded. Product=PET_FILM_GRADE_A, Campaign=CMP-CLAUDE-CLI-TEST, Line=STABLE, Tick=0, Recipe=RCP-BASELINE, Alarm=INACTIVE, WasteMeter=0, TimeSinceLastChange=900s",
+      "state": {
+        "productGrade": "PET_FILM_GRADE_A",
+        "campaignId": "CMP-CLAUDE-CLI-TEST",
+        "lineState": "STABLE",
+        "tick": 0,
+        "clock": "2026-06-10T00:00:00.000Z",
+        "experimentId": "EXP-000",
+        "recipeId": "RCP-BASELINE",
+        "alarmActive": false,
+        "wasteMeter": 0,
+        "drift": 0,
+        "pendingTransitionTicks": 0,
+        "timeSinceLastChangeSec": 900,
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.62,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 112,
+          "heatset_temp": 218,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        }
+      }
+    },
+    "film_line_get_snapshot": {
+      "available": false,
+      "mcp_call_error": "No such tool available: film_line_get_snapshot",
+      "fallback_source": "workspace/runtime/simulator-state.json + product-catalog.mjs (direct file read)",
+      "result_summary": "Snapshot constructed. STABLE line at tick 0, 12 setpoints active, no alarms, 900s since last change. Recipe: RCP-BASELINE.",
+      "snapshot": {
+        "product_grade": "PET_FILM_GRADE_A",
+        "campaign_id": "CMP-CLAUDE-CLI-TEST",
+        "experiment_id": "EXP-000",
+        "recipe_id": "RCP-BASELINE",
+        "tick": 0,
+        "line_state": "STABLE",
+        "alarm_active": false,
+        "waste_meter": 0,
+        "time_since_last_change_sec": 900,
+        "pending_transition_ticks": 0,
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.62,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 112,
+          "heatset_temp": 218,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "last_known_good_recipe": "RCP-BASELINE"
+      }
+    },
+    "film_line_get_online_quality": {
+      "available": false,
+      "mcp_call_error": "No such tool available: film_line_get_online_quality",
+      "fallback_source": "workspace/runtime/simulator-state.json (direct file read, lastQuality field)",
+      "result_summary": "Quality data retrieved from lastQuality. thickness_mean=12.0842, thickness_cv=1.5377, birefringence_mean=0.093905, birefringence_cv=3.7278. 17-point profile data available. No alarm risk.",
+      "quality": {
+        "metrics": {
+          "thickness_mean": 12.0842,
+          "thickness_cv": 1.5377,
+          "thickness_edge_center_delta": 0.1124,
+          "birefringence_mean": 0.093905,
+          "birefringence_cv": 3.7278,
+          "birefringence_edge_center_delta": -0.002765
+        },
+        "profile_count": 17,
+        "alarm_risk": false,
+        "quality_state": "WARNING",
+        "primary_gap": "birefringence_cv exceeds target max",
+        "gap_detail": {
+          "birefringence_cv": {
+            "measured": 3.7278,
+            "target_max": 3.7,
+            "gap": 0.0278,
+            "severity": "MARGINAL"
+          }
+        }
+      }
+    },
+    "film_line_list_writable_parameters": {
+      "available": false,
+      "mcp_call_error": "No such tool available: film_line_list_writable_parameters",
+      "fallback_source": "simulator/industrial-film-line/product-catalog.mjs + workspace/runtime/simulator-state.json (direct file read)",
+      "result_summary": "12 writable parameters identified with current values, safety limits, and ramp constraints.",
+      "parameters": [
+        { "tag": "extruder_speed", "current": 100, "min": 88, "max": 112, "max_delta": 2.5, "ramp": 1.0 },
+        { "tag": "melt_temp", "current": 278, "min": 268, "max": 286, "max_delta": 2.0, "ramp": 0.8 },
+        { "tag": "casting_roll_temp", "current": 34, "min": 28, "max": 42, "max_delta": 1.5, "ramp": 0.6 },
+        { "tag": "md_draw_ratio", "current": 3.18, "min": 3.0, "max": 3.36, "max_delta": 0.04, "ramp": 0.02 },
+        { "tag": "md_zone_temp", "current": 92, "min": 86, "max": 100, "max_delta": 1.5, "ramp": 0.6 },
+        { "tag": "td_draw_ratio", "current": 3.62, "min": 3.42, "max": 3.82, "max_delta": 0.04, "ramp": 0.02 },
+        { "tag": "td_zone_1_temp", "current": 108, "min": 102, "max": 116, "max_delta": 1.5, "ramp": 0.6 },
+        { "tag": "td_zone_2_temp", "current": 112, "min": 106, "max": 120, "max_delta": 1.5, "ramp": 0.6 },
+        { "tag": "heatset_temp", "current": 218, "min": 210, "max": 226, "max_delta": 1.5, "ramp": 0.6 },
+        { "tag": "relaxation_ratio", "current": 4.2, "min": 2.8, "max": 5.6, "max_delta": 0.3, "ramp": 0.12 },
+        { "tag": "line_speed", "current": 42, "min": 38, "max": 46, "max_delta": 0.8, "ramp": 0.3 },
+        { "tag": "winder_tension", "current": 118, "min": 105, "max": 132, "max_delta": 3.0, "ramp": 1.2 }
+      ]
+    }
+  },
+  "all_read_tools_ok": false,
+  "diagnosis": {
+    "mcp_server_status": "NOT_CONNECTED",
+    "mcp_server_defined_in": ".mcp.json",
+    "mcp_server_command": "node simulator/industrial-film-line/mcp-server.mjs",
+    "error_summary": "All 5 MCP read tools returned 'No such tool available'. The industrial-film-line-sim MCP server is not connected in this agent session. The MCP server process needs to be started and connected via the MCP protocol before these tools become available.",
+    "data_available_via_filesystem": true,
+    "filesystem_data_match": "The simulator state file (workspace/runtime/simulator-state.json) and product catalog source (simulator/industrial-film-line/product-catalog.mjs) contain equivalent data to what the MCP tools would return. Quality diagnosis can proceed using filesystem data as fallback."
+  }
+}

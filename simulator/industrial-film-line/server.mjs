@@ -42,7 +42,9 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && url.pathname === '/sim/run-until-stable') return send(res, 200, simulator.runUntilStable(await readBody(req)));
     if (req.method === 'POST' && url.pathname === '/sim/rollback') return send(res, 200, simulator.rollback((await readBody(req)).reason));
     if (req.method === 'POST' && url.pathname === '/sim/recipe/save-candidate') return send(res, 200, simulator.saveCandidateRecipe(await readBody(req)));
+    if (req.method === 'POST' && url.pathname === '/sim/recipe/load-baseline') return send(res, 200, simulator.loadRecipeBaseline(await readBody(req)));
     if (req.method === 'GET' && url.pathname === '/sim/ledger') return send(res, 200, simulator.getLedger());
+    if (req.method === 'GET' && url.pathname === '/sim/health') return send(res, 200, { status: 'ok', service: 'simulator-http', campaign_id: simulator.getState().campaign_id });
     send(res, 404, { error: 'not_found', path: url.pathname });
   } catch (error) {
     send(res, 500, { error: error.message });

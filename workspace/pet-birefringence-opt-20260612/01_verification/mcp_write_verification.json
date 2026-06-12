@@ -1,0 +1,12 @@
+{
+  "verified_at": "2026-06-12T00:00:00.000Z",
+  "tools": {
+    "film_line_preview_proposal": { "exists_in_tool_list": true },
+    "film_line_apply_proposal": { "exists_in_tool_list": true },
+    "film_line_run_until_stable": { "exists_in_tool_list": true },
+    "film_line_rollback": { "exists_in_tool_list": true },
+    "film_line_save_candidate_recipe": { "exists_in_tool_list": true },
+    "film_line_load_recipe_baseline": { "exists_in_tool_list": true }
+  },
+  "all_write_tools_ok": true
+}

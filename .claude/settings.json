@@ -5,7 +5,8 @@
     "allow": [
       "Read(./**)",
       "Write(./workspace/optimization-tasks/**)",
-      "Write(./runtime/**)"
+      "Write(./runtime/**)",
+      "mcp__industrial-film-line-sim__*"
     ],
     "ask": [
       "Bash(npm install*)",
@@ -27,8 +28,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/skills/closed-loop-optimizer/scripts/mcp-preflight.mjs",
-            "timeout": 45
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/mcp-preflight.mjs",
+            "timeout": 60
           }
         ]
       }
@@ -39,8 +40,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/skills/closed-loop-optimizer/scripts/mcp-preflight.mjs",
-            "timeout": 45
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/mcp-preflight.mjs",
+            "timeout": 60
           }
         ]
       }
