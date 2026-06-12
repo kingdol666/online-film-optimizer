@@ -86,41 +86,167 @@ async function ensureSimulatorHttp() {
 }
 
 // ──────────────────────────────────────────────
-// MCP tool → HTTP endpoint mapping
+// Tool definitions (data-driven)
 // ──────────────────────────────────────────────
 
-async function callTool(name, args = {}) {
-  const routes = {
-    'film_line_list_products':          { method: 'GET',  path: '/sim/products' },
-    'film_line_reset':                  { method: 'POST', path: '/sim/reset' },
-    'film_line_get_state':              { method: 'GET',  path: '/sim/state' },
-    'film_line_get_ledger':             { method: 'GET',  path: '/sim/ledger' },
-    'film_line_get_snapshot':           { method: 'GET',  path: '/sim/snapshot' },
-    'film_line_list_writable_parameters': { method: 'GET',  path: '/sim/writable-parameters' },
-    'film_line_get_online_quality':     { method: 'GET',  path: '/sim/online-quality' },
-    'film_line_run_until_stable':       { method: 'POST', path: '/sim/run-until-stable' },
-    'film_line_preview_proposal':       { method: 'POST', path: '/sim/proposal/preview', bodyTransform: (args) => args.proposal },
-    'film_line_preview_setpoints':      { method: 'POST', path: '/sim/setpoints/preview' },
-    'film_line_apply_proposal':         { method: 'POST', path: '/sim/apply',           bodyTransform: (args) => args.proposal },
-    'film_line_apply_setpoints':        { method: 'POST', path: '/sim/setpoints/apply' },
-    'film_line_tick':                   { method: 'POST', path: '/sim/tick',            bodyTransform: (args) => ({ count: args.count || 1 }) },
-    'film_line_rollback':               { method: 'POST', path: '/sim/rollback',        bodyTransform: (args) => ({ reason: args.reason || 'mcp rollback' }) },
-    'film_line_save_candidate_recipe':  { method: 'POST', path: '/sim/recipe/save-candidate' },
-    'film_line_load_recipe_baseline':   { method: 'POST', path: '/sim/recipe/load-baseline' },
-  };
-
-  const route = routes[name];
-  if (!route) throw new Error(`Unknown tool: ${name}`);
-
-  let body = args;
-  if (route.bodyTransform) {
-    body = route.bodyTransform(args);
+const TOOL_DEFS = [
+  {
+    name: 'film_line_list_products',
+    description: 'List supported simulated product/material grades with target templates and process notes for product-specific recipe development.',
+    method: 'GET',
+    path: '/sim/products',
+    schema: {}
+  },
+  {
+    name: 'film_line_reset',
+    description: 'Reset the simulated biaxial film line to a baseline recipe and return the current state.',
+    method: 'POST',
+    path: '/sim/reset',
+    schema: { campaignId: z.string().optional(), productGrade: z.string().optional() }
+  },
+  {
+    name: 'film_line_get_state',
+    description: 'Read compact simulator state including recipe, line state, alarms, tick, waste, and setpoints.',
+    method: 'GET',
+    path: '/sim/state',
+    schema: {}
+  },
+  {
+    name: 'film_line_get_ledger',
+    description: 'Read the simulator ledger including apply, rollback, and candidate recipe events.',
+    method: 'GET',
+    path: '/sim/ledger',
+    schema: {}
+  },
+  {
+    name: 'film_line_get_snapshot',
+    description: 'Read current process snapshot including setpoints, process values, alarm state, and stable timing.',
+    method: 'GET',
+    path: '/sim/snapshot',
+    schema: {}
+  },
+  {
+    name: 'film_line_list_writable_parameters',
+    description: 'List all writable process setpoints with current value, hard min/max, per-action max delta, and ramp limit.',
+    method: 'GET',
+    path: '/sim/writable-parameters',
+    schema: {}
+  },
+  {
+    name: 'film_line_get_online_quality',
+    description: 'Read online thickness and birefringence metrics/profiles from the simulated inspection system.',
+    method: 'GET',
+    path: '/sim/online-quality',
+    schema: {}
+  },
+  {
+    name: 'film_line_run_until_stable',
+    description: 'Advance the simulated line until a stable no-alarm window is reached, then return snapshot and online quality.',
+    method: 'POST',
+    path: '/sim/run-until-stable',
+    schema: { minStableTicks: z.number().min(1).optional(), maxTicks: z.number().min(1).optional() }
+  },
+  {
+    name: 'film_line_preview_proposal',
+    description: 'Run deterministic safety preview for a parameter delta proposal without applying it.',
+    method: 'POST',
+    path: '/sim/proposal/preview',
+    schema: { proposal: z.object({}).passthrough() },
+    bodyTransform: (args) => args.proposal
+  },
+  {
+    name: 'film_line_preview_setpoints',
+    description: 'Build and safety-preview a setpoint request from tag/target pairs. The simulator computes current and delta internally.',
+    method: 'POST',
+    path: '/sim/setpoints/preview',
+    schema: {
+      changes: z.array(z.object({
+        tag: z.string(),
+        target: z.number(),
+        ramp_limit_per_min: z.number().optional()
+      })).min(1),
+      campaignId: z.string().optional(),
+      experimentId: z.string().optional(),
+      sourcePlan: z.string().optional(),
+      expectedLagMinutes: z.number().optional()
+    }
+  },
+  {
+    name: 'film_line_apply_proposal',
+    description: 'Apply a safety-gated parameter delta proposal to the simulated line and return an execution receipt.',
+    method: 'POST',
+    path: '/sim/apply',
+    schema: { proposal: z.object({}).passthrough() },
+    bodyTransform: (args) => args.proposal
+  },
+  {
+    name: 'film_line_apply_setpoints',
+    description: 'Build, safety-check, and apply tag/target setpoint changes. Rejected requests return a receipt with executed=false.',
+    method: 'POST',
+    path: '/sim/setpoints/apply',
+    schema: {
+      changes: z.array(z.object({
+        tag: z.string(),
+        target: z.number(),
+        ramp_limit_per_min: z.number().optional()
+      })).min(1),
+      campaignId: z.string().optional(),
+      experimentId: z.string().optional(),
+      sourcePlan: z.string().optional(),
+      expectedLagMinutes: z.number().optional()
+    }
+  },
+  {
+    name: 'film_line_tick',
+    description: 'Advance simulator time by N ticks and return compact state.',
+    method: 'POST',
+    path: '/sim/tick',
+    schema: { count: z.number().min(1).optional() },
+    bodyTransform: (args) => ({ count: args.count || 1 })
+  },
+  {
+    name: 'film_line_rollback',
+    description: 'Rollback to the last known good recipe and return rollback receipt.',
+    method: 'POST',
+    path: '/sim/rollback',
+    schema: { reason: z.string().optional() },
+    bodyTransform: (args) => ({ reason: args.reason || 'mcp rollback' })
+  },
+  {
+    name: 'film_line_save_candidate_recipe',
+    description: 'Save current setpoints as a candidate recipe record in the simulator ledger.',
+    method: 'POST',
+    path: '/sim/recipe/save-candidate',
+    schema: { recipeId: z.string(), metadata: z.object({}).passthrough().optional() }
+  },
+  {
+    name: 'film_line_load_recipe_baseline',
+    description: 'Load a remembered best recipe as the active rollback baseline and current setpoints.',
+    method: 'POST',
+    path: '/sim/recipe/load-baseline',
+    schema: {
+      recipeId: z.string(),
+      setpoints: z.object({}).passthrough(),
+      reason: z.string().optional()
+    }
   }
-  return httpRequest(route.method, route.path, route.method === 'POST' ? body : null);
+];
+
+// ──────────────────────────────────────────────
+// HTTP proxy call
+// ──────────────────────────────────────────────
+
+async function callHttpTool(def, args = {}) {
+  const body = def.bodyTransform ? def.bodyTransform(args) : args;
+  return httpRequest(def.method, def.path, def.method === 'POST' ? body : null);
+}
+
+function formatResult(value) {
+  return { content: [{ type: "text", text: JSON.stringify(value, null, 2) }] };
 }
 
 // ──────────────────────────────────────────────
-// Create MCP Server with official SDK
+// Create and register MCP Server
 // ──────────────────────────────────────────────
 
 const server = new McpServer({
@@ -128,190 +254,14 @@ const server = new McpServer({
   version: "0.2.0",
 });
 
-// Register all tools
-server.tool(
-  "film_line_list_products",
-  "List supported simulated product/material grades with target templates and process notes for product-specific recipe development.",
-  {},
-  async () => {
-    const result = await callTool("film_line_list_products");
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_reset",
-  "Reset the simulated biaxial film line to a baseline recipe and return the current state.",
-  { campaignId: z.string().optional(), productGrade: z.string().optional() },
-  async (args) => {
-    const result = await callTool("film_line_reset", args);
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_get_state",
-  "Read compact simulator state including recipe, line state, alarms, tick, waste, and setpoints.",
-  {},
-  async () => {
-    const result = await callTool("film_line_get_state");
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_get_ledger",
-  "Read the simulator ledger including apply, rollback, and candidate recipe events.",
-  {},
-  async () => {
-    const result = await callTool("film_line_get_ledger");
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_get_snapshot",
-  "Read current process snapshot including setpoints, process values, alarm state, and stable timing.",
-  {},
-  async () => {
-    const result = await callTool("film_line_get_snapshot");
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_list_writable_parameters",
-  "List all writable process setpoints with current value, hard min/max, per-action max delta, and ramp limit.",
-  {},
-  async () => {
-    const result = await callTool("film_line_list_writable_parameters");
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_get_online_quality",
-  "Read online thickness and birefringence metrics/profiles from the simulated inspection system.",
-  {},
-  async () => {
-    const result = await callTool("film_line_get_online_quality");
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_run_until_stable",
-  "Advance the simulated line until a stable no-alarm window is reached, then return snapshot and online quality.",
-  { minStableTicks: z.number().min(1).optional(), maxTicks: z.number().min(1).optional() },
-  async (args) => {
-    const result = await callTool("film_line_run_until_stable", args);
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_preview_proposal",
-  "Run deterministic safety preview for a parameter delta proposal without applying it.",
-  { proposal: z.object({}).passthrough() },
-  async (args) => {
-    const result = await callTool("film_line_preview_proposal", args);
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_preview_setpoints",
-  "Build and safety-preview a setpoint request from tag/target pairs. The simulator computes current and delta internally.",
-  {
-    changes: z.array(z.object({
-      tag: z.string(),
-      target: z.number(),
-      ramp_limit_per_min: z.number().optional()
-    })).min(1),
-    campaignId: z.string().optional(),
-    experimentId: z.string().optional(),
-    sourcePlan: z.string().optional(),
-    expectedLagMinutes: z.number().optional()
-  },
-  async (args) => {
-    const result = await callTool("film_line_preview_setpoints", args);
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_apply_proposal",
-  "Apply a safety-gated parameter delta proposal to the simulated line and return an execution receipt.",
-  { proposal: z.object({}).passthrough() },
-  async (args) => {
-    const result = await callTool("film_line_apply_proposal", args);
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_apply_setpoints",
-  "Build, safety-check, and apply tag/target setpoint changes. Rejected requests return a receipt with executed=false.",
-  {
-    changes: z.array(z.object({
-      tag: z.string(),
-      target: z.number(),
-      ramp_limit_per_min: z.number().optional()
-    })).min(1),
-    campaignId: z.string().optional(),
-    experimentId: z.string().optional(),
-    sourcePlan: z.string().optional(),
-    expectedLagMinutes: z.number().optional()
-  },
-  async (args) => {
-    const result = await callTool("film_line_apply_setpoints", args);
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_tick",
-  "Advance simulator time by N ticks and return compact state.",
-  { count: z.number().min(1).optional() },
-  async (args) => {
-    const result = await callTool("film_line_tick", args);
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_rollback",
-  "Rollback to the last known good recipe and return rollback receipt.",
-  { reason: z.string().optional() },
-  async (args) => {
-    const result = await callTool("film_line_rollback", args);
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_save_candidate_recipe",
-  "Save current setpoints as a candidate recipe record in the simulator ledger.",
-  { recipeId: z.string(), metadata: z.object({}).passthrough().optional() },
-  async (args) => {
-    const result = await callTool("film_line_save_candidate_recipe", args);
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
-
-server.tool(
-  "film_line_load_recipe_baseline",
-  "Load a remembered best recipe as the active rollback baseline and current setpoints.",
-  {
-    recipeId: z.string(),
-    setpoints: z.object({}).passthrough(),
-    reason: z.string().optional()
-  },
-  async (args) => {
-    const result = await callTool("film_line_load_recipe_baseline", args);
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-  }
-);
+for (const def of TOOL_DEFS) {
+  server.tool(
+    def.name,
+    def.description,
+    def.schema,
+    async (args) => formatResult(await callHttpTool(def, args))
+  );
+}
 
 // ──────────────────────────────────────────────
 // Start server

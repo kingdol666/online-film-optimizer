@@ -5,3 +5,8 @@ app/frontend/node_modules/
 app/frontend/dist/
 *.log
 .DS_Store
+
+# Runtime workspace outputs
+workspace/optimization-tasks/
+workspace/pet-birefringence-opt-*/
+simulator/industrial-film-line/workspace/

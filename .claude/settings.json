@@ -5,8 +5,7 @@
     "allow": [
       "Read(./**)",
       "Write(./workspace/optimization-tasks/**)",
-      "Write(./runtime/**)",
-      "mcp__industrial-film-line-sim__*"
+      "Write(./runtime/**)"
     ],
     "ask": [
       "Bash(npm install*)",
@@ -18,6 +17,7 @@
       "Bash(git checkout --*)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "ONLINE_OPTIMIZER_AGENTTEAM_MODE": "claude_sdk_subagents"

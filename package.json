@@ -12,9 +12,6 @@
     "sim:mcp:time": "node simulator/industrial-film-line/simple-time-mcp.mjs",
     "sim:mcp:smoke": "node scripts/simulator/mcp-smoke-test.mjs"
   },
-  "devDependencies": {
-    "tsx": "^4.22.4"
-  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^4.4.3"
