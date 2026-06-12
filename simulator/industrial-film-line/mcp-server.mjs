@@ -195,8 +195,9 @@ async function handle(message) {
 // ──────────────────────────────────────────────
 
 async function main() {
-  await ensureSimulatorHttp();
-
+  // SET UP STDIN LISTENER FIRST — before any async work.
+  // This prevents a race condition where Claude Code sends the initialize
+  // frame while ensureSimulatorHttp() is still awaiting, causing a 30s timeout.
   let buffer = Buffer.alloc(0);
 
   process.stdin.on('data', (chunk) => {
@@ -226,6 +227,9 @@ async function main() {
       }
     }
   });
+
+  // Only after the listener is ready, perform startup health check.
+  await ensureSimulatorHttp();
 }
 
 main().catch((err) => {
