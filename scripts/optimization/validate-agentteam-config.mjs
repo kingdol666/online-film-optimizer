@@ -10,6 +10,7 @@ const REQUIRED_FILES = [
   '.claude/agents/closed-loop-optimization-rd-agent.md',
   '.claude/agents/closed-loop-optimization-process-agent.md',
   'scripts/optimization/run-team-campaign.mjs',
+  'scripts/optimization/run-skill-entry.mjs',
   'scripts/optimization/run-claude-sdk-skill.mjs',
   'scripts/optimization/validate-team-workspace.mjs',
   'scripts/optimization/claude-agentteam-hook.mjs',
@@ -84,6 +85,7 @@ function main() {
     content: skill,
     needles: [
       'npm run optimize:team',
+      'npm run optimize:skill',
       '--product-grade',
       'team/department_briefs.json',
       'outputs/final_recipe.json',
@@ -113,6 +115,20 @@ function main() {
     filePath: 'scripts/optimization/run-team-campaign.mjs',
     content: runTeam,
     needles: ['--product-grade', 'createDepartmentTeamTask', 'finalizeDepartmentTeamTask', 'run-sim-campaign.mjs'],
+    failures
+  });
+
+  const runSkillEntry = read(path.join(root, 'scripts/optimization/run-skill-entry.mjs'));
+  requireContains({
+    filePath: 'scripts/optimization/run-skill-entry.mjs',
+    content: runSkillEntry,
+    needles: [
+      'ensurePlatformServices',
+      'McpClient',
+      'run-claude-sdk-skill.mjs',
+      'run-team-campaign.mjs',
+      'ONLINE_OPTIMIZER_SKILL_ENTRY'
+    ],
     failures
   });
 

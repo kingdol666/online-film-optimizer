@@ -1,26 +1,41 @@
 ---
 name: pet_birefringence_campaign_20260612
-description: PET_FILM_GRADE_A birefringence_cv 优化 campaign — 目标降1%，产品规格≤3.7
+description: PET_FILM_GRADE_A birefringence CV 5% reduction achieved 9.60% via historical recipe PET-HIST-001 jump strategy, 1 strategy cycle, 2 iterations, 3.7721 -> 3.4101
 metadata:
   type: project
 ---
 
-# PET 双折射优化 Campaign (2026-06-12)
+# PET 双折射优化 Campaign (2026-06-12) -- COMPLETED
 
 ## 目标
-- 用户目标：birefringence_cv 从基线 3.8994 下降 1% → 目标 3.8604
-- 产品规格：birefringence_cv ≤ 3.7
-- 实际操作目标：将 birefringence_cv 从 3.7201 压至 ≤ 3.7
+- 用户目标：birefringence_cv 从基线 3.7721 下降 5% → 目标 ≤ 3.5835
+- **结果：GOAL REACHED + HOLD CONFIRMED**
+- 最终 birefringence_cv: 3.4101 (9.60% 下降，超目标 4.84 个百分点)
 
-## 进度
-- 2026-06-12: 文件总线模式运行 2 轮，best observed recipe RCP-EXP-002 (birefringence_cv=3.7201)，未达产品规格
-- 2026-06-12 13:04: 创建原生 Agent Team `PET-birefringence-optimization-20260612`，启动 quality/rd/process 三个 Agent
+## 策略
+使用历史 PASS recipe PET-HIST-001 作为跳板，突破确定性引擎的局部最优陷阱。
+- 确定性引擎在 3 次 campaign 中卡在 birefringence_cv=3.7529 (td_zone_2=112, heatset=219.92, td_draw=3.566)
+- PET-HIST-001: td_zone_2_temp=114, heatset_temp=219.2, td_draw_ratio=3.68 → birefringence_cv=3.61
 
-## 关键数据
-- 历史 PASS recipe (PET-HIST-001): td_zone_2_temp=114, heatset_temp=219.2, td_draw_ratio=3.68 → birefringence_cv=3.61
-- 当前最佳: td_zone_2_temp=112, heatset_temp=218, td_draw_ratio=3.593 → birefringence_cv=3.7201
-- 差距: 0.0201 (需要从 3.72 到 3.70)
+## 执行路径
+1. Step 1: td_zone_2=113.5, heatset=219.2, td_draw=3.66 → biref_cv=3.4919 (已达标)
+2. Step 2: td_zone_2=114, td_draw=3.68 (完整历史配方) → biref_cv=3.4844
+3. Hold Window (10 ticks): biref_cv=3.4101 (持续稳定)
 
-**Why:** 这是首次使用原生 AgentTeam 模式的 BOPET campaign。文件总线模式已证明优化方向可行（通过调整 td 热区参数降低双折射），需要 AgentTeam 继续精细优化。
+## 最终 Recipe: PET-OPT-001
+| 参数 | 基线 | 最终 | 变化 |
+|------|------|------|------|
+| td_zone_2_temp | 112 | 114 | +2.0 |
+| heatset_temp | 218 | 219.2 | +1.2 |
+| td_draw_ratio | 3.62 | 3.68 | +0.06 |
+| 其他参数 | - | - | 不变 |
 
-**How to apply:** 后续 campaign 可参考此次的 levers 排序和 safety gate 配置。
+## 质量验证
+- birefringence_cv: 3.7721 → 3.4101 (-9.60%)
+- thickness_cv: 1.4711 → 1.2318 (-16.26%)
+- thickness_mean: 12.0948 → 12.0435 (稳定)
+- 传感器健康: OK, 无报警, 废物计量器: 0
+
+**Why:** 确定性引擎在 td_zone_2_temp=112 附近收敛到局部最优（biref_cv≈3.75）。加载 PET-HIST-001 直接跳跃到 td_zone_2=114 区域，该区域双折射性能显著更好。TD 热区 + heatset 耦合是 PET 双折射的主要控制通道。
+
+**How to apply:** PET 双折射优化应从 PET-HIST-001 设置点开始（td_zone_2=114, heatset=219.2, td_draw=3.68），而非默认基线。后续 fine-tuning 应在历史配方附近进行，避免落入 112 区域的局部最优。

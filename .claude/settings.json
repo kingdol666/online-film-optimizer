@@ -3,12 +3,6 @@
   "permissions": {
     "defaultMode": "auto",
     "allow": [
-      "Bash(npm run optimize:team*)",
-      "Bash(npm run optimize:claude-sdk*)",
-      "Bash(npm run agentteam:validate*)",
-      "Bash(node scripts/optimization/validate-team-workspace.mjs*)",
-      "Bash(node .claude/skills/closed-loop-optimizer/scripts/validate-campaign.mjs*)",
-      "Bash(npm run sim:mcp:smoke*)",
       "Read(./**)",
       "Write(./workspace/optimization-tasks/**)",
       "Write(./runtime/**)"
@@ -28,36 +22,42 @@
     "ONLINE_OPTIMIZER_AGENTTEAM_MODE": "claude_sdk_subagents"
   },
   "hooks": {
-    "SubagentStop": [
+    "UserPromptSubmit": [
       {
-        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/optimization/claude-agentteam-hook.mjs",
-            "timeout": 5
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/skills/closed-loop-optimizer/scripts/mcp-preflight.mjs",
+            "timeout": 45
           }
         ]
       }
     ],
-    "PostToolUse": [
+    "UserPromptExpansion": [
+      {
+        "matcher": "closed-loop-optimizer",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/skills/closed-loop-optimizer/scripts/mcp-preflight.mjs",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
       {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/optimization/claude-agentteam-hook.mjs",
-            "if": "Bash(npm run optimize:team*)",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "node scripts/optimization/claude-agentteam-hook.mjs",
-            "if": "Bash(npm run agentteam:validate*)",
-            "timeout": 5
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/skills/closed-loop-optimizer/scripts/native-team-enforcer.mjs",
+            "timeout": 10
           }
         ]
       }
-    ]
+    ],
+    "SubagentStop": [],
+    "PostToolUse": []
   }
 }

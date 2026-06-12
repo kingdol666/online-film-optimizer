@@ -15,6 +15,7 @@
     "opt:campaign": "node .claude/skills/closed-loop-optimizer/scripts/run-sim-campaign.mjs",
     "opt:campaign:demo": "node .claude/skills/closed-loop-optimizer/scripts/run-sim-campaign.mjs --target examples/targets/bopet_new_grade_a.json --max-iters 12",
     "optimize:line": "node scripts/optimization/optimize-line.mjs",
+    "optimize:skill": "node scripts/optimization/run-skill-entry.mjs",
     "optimize:team": "node scripts/optimization/run-team-campaign.mjs",
     "optimize:claude-sdk": "node scripts/optimization/run-claude-sdk-skill.mjs",
     "opt:validate": "node .claude/skills/closed-loop-optimizer/scripts/validate-campaign.mjs"

@@ -9,28 +9,38 @@ description: Use this skill for online process engineering in biaxial-film close
 
 Translate a ranked R&D optimization plan into a safety-gated, approval-aware executable parameter delta proposal while preserving the intent, hypothesis, control mode, and guardrails needed by operations.
 
-## Run
+## Inputs
 
-```bash
-node .claude/skills/process-engineer/scripts/process-engineer.mjs \
-  --plan <rd_optimization_plan_XXX.json> \
-  --snapshot <process_snapshot_XXX.json> \
-  --campaign-id <campaign_id> \
-  --iteration <N> \
-  --output <parameter_delta_proposal_XXX.json> \
-  --safety-output <safety_gate_result_XXX.json>
-```
+Read these artifacts first:
 
-## Validate
+- `rd_optimization_plan_XXX.json`
+- `process_snapshot_XXX.json`
+- `quality_review_XXX.json`
+- `strategy_state_XXX.json`
+- `best_recipe_memory.json`
 
-```bash
-node .claude/skills/industrial-deep-diagnostic/scripts/validate.mjs \
-  schemas/optimization/parameter_delta_proposal_schema.json \
-  <parameter_delta_proposal_XXX.json>
-node .claude/skills/industrial-deep-diagnostic/scripts/validate.mjs \
-  schemas/optimization/safety_gate_result_schema.json \
-  <safety_gate_result_XXX.json>
-```
+If the host exposes MCP tools, the process role may additionally use:
+
+- `film_line_preview_proposal`
+- `film_line_apply_proposal`
+- `film_line_run_until_stable`
+- `film_line_rollback`
+- `film_line_save_candidate_recipe`
+- `film_line_load_recipe_baseline`
+
+## Output Contract
+
+Produce the process execution handoff as structured artifacts, including at least:
+
+- `parameter_delta_proposal_XXX.json`
+- `safety_gate_result_XXX.json`
+- `process_brief_XXX.json`
+- `approval_packet_XXX.json`
+- `execution_receipt_XXX.json` after execution
+
+Optional maintenance helper:
+
+- `scripts/validate-output.mjs <parameter_delta_proposal_XXX.json> <safety_gate_result_XXX.json>`
 
 ## Rules
 
@@ -40,6 +50,7 @@ node .claude/skills/industrial-deep-diagnostic/scripts/validate.mjs \
 - Only propose known tags inside safety limits and ramp limits.
 - Preserve the R&D handoff intent in `execution_intent`, `control_mode`, and per-change `expected_response`.
 - If rejected, return violations to R&D; do not invent a hidden workaround.
+- Do not call shell commands or project optimization scripts from this skill.
 - For detailed handoff fields, read `references/contract.md`.
 
 ## SubAgent Use

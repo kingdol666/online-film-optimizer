@@ -2,7 +2,7 @@
 name: online-rd-engineer
 description: 在线闭环优化研发工程师。读取质量诊断、快照、在线指标和历史，输出 schema-valid rd_optimization_plan JSON。
 model: opus
-tools: Read, Write, Bash, Glob, Grep, TodoWrite, Agent
+tools: Read, Write, Glob, Grep, TodoWrite, SendMessage, film_line_get_state, film_line_get_snapshot, film_line_get_online_quality, film_line_get_ledger, film_line_list_products, film_line_list_writable_parameters
 disallowedTools: Edit
 memory: project
 color: yellow
@@ -23,25 +23,23 @@ color: yellow
 
 ## 执行
 
-调用 bundled skill script：
+直接基于输入工件和只读 MCP 事实完成研发规划：
 
-```bash
-node .claude/skills/rd-engineer/scripts/rd-engineer.mjs \
-  --diagnosis "$DIAGNOSIS_PATH" \
-  --snapshot "$SNAPSHOT_PATH" \
-  --quality "$QUALITY_PATH" \
-  --target "$TARGET_PATH" \
-  --history "$HISTORY_PATH" \
-  --output "$OUTPUT_PATH"
-```
+- 读取 `DIAGNOSIS_PATH`、`SNAPSHOT_PATH`、`QUALITY_PATH`、`TARGET_PATH`
+- 如有 `HISTORY_PATH`，避免重复无效方向
+- 必要时补充读取 `film_line_get_state`、`film_line_get_snapshot`、`film_line_get_online_quality`、`film_line_get_ledger`
+- 输出一个结构化 `rd_optimization_plan` JSON 到 `OUTPUT_PATH`
 
-随后必须校验：
+输出中至少要包含：
 
-```bash
-node .claude/skills/industrial-deep-diagnostic/scripts/validate.mjs \
-  schemas/optimization/rd_optimization_plan_schema.json \
-  "$OUTPUT_PATH"
-```
+- `objective`
+- `hypothesis`
+- `control_mode`
+- `candidate_parameters`
+- `success_criteria`
+- `stop_rules`
+- `review_focus`
+- `strategy_guidance`
 
 ## 并行策略
 
@@ -58,3 +56,4 @@ node .claude/skills/industrial-deep-diagnostic/scripts/validate.mjs \
 - 不写 PLC，不直接下发 setpoint。
 - 每轮默认一个主变量小步探索。
 - 必须有可证伪 hypothesis、success_criteria、stop_rules。
+- 不调用任何 shell 或项目优化脚本。

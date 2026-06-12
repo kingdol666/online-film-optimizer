@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import {
   buildSdkTeamPrompt,
@@ -12,7 +13,7 @@ function parseArgs(argv) {
     productGrade: '',
     maxIters: 8,
     seed: 20260612,
-    maxTurns: 8,
+    maxTurns: 14,
     permissionMode: 'bypassPermissions',
     model: null,
     reasoningMode: 'deterministic'
@@ -29,6 +30,78 @@ function parseArgs(argv) {
     else if (arg === '--reasoning-mode') args.reasoningMode = argv[++i];
   }
   return args;
+}
+
+function readLatestTaskDir(taskRoot) {
+  if (!fs.existsSync(taskRoot)) return null;
+  return fs.readdirSync(taskRoot)
+    .map((name) => path.join(taskRoot, name))
+    .filter((fullPath) => fs.statSync(fullPath).isDirectory())
+    .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0] || null;
+}
+
+function validateTaskWorkspace(taskDir) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [
+      'scripts/optimization/validate-team-workspace.mjs',
+      '--task-dir',
+      taskDir
+    ], {
+      cwd: process.cwd(),
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk.toString();
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on('close', (code) => {
+      resolve({
+        ok: code === 0,
+        stdout,
+        stderr
+      });
+    });
+  });
+}
+
+async function salvageSuccessfulWorkspace({ taskRoot, startedAt, error }) {
+  const latestTaskDir = readLatestTaskDir(taskRoot);
+  if (!latestTaskDir) return { salvaged: false };
+
+  const stats = fs.statSync(latestTaskDir);
+  if (stats.mtimeMs < startedAt) return { salvaged: false };
+
+  const validation = await validateTaskWorkspace(latestTaskDir);
+  if (!validation.ok) {
+    return {
+      salvaged: false,
+      taskDir: latestTaskDir,
+      validation
+    };
+  }
+
+  const summaryPath = path.join(latestTaskDir, 'task_summary.json');
+  const summary = fs.existsSync(summaryPath)
+    ? JSON.parse(fs.readFileSync(summaryPath, 'utf8'))
+    : null;
+
+  console.log(JSON.stringify({
+    sdk_turn_limit_reached_but_workspace_valid: true,
+    task_dir: latestTaskDir,
+    task_summary: summary,
+    validation: JSON.parse(validation.stdout)
+  }, null, 2));
+
+  return {
+    salvaged: true,
+    taskDir: latestTaskDir,
+    summary,
+    error
+  };
 }
 
 async function main() {
@@ -129,28 +202,39 @@ async function main() {
     options
   });
 
-  for await (const message of sdkQuery) {
-    if (message?.type === 'result') {
-      const resultText = message.result ?? '';
-      process.stdout.write(resultText);
-      if (resultText && !resultText.endsWith('\n')) process.stdout.write('\n');
-    } else if (message?.type === 'assistant' && message.message?.content) {
-      for (const part of message.message.content) {
-        if (part?.type === 'text' && part.text) {
-          process.stdout.write(part.text);
-          if (!part.text.endsWith('\n')) process.stdout.write('\n');
+  const taskRoot = path.join(process.cwd(), 'workspace', 'optimization-tasks');
+  const startedAt = Date.now();
+
+  try {
+    for await (const message of sdkQuery) {
+      if (message?.type === 'result') {
+        const resultText = message.result ?? '';
+        process.stdout.write(resultText);
+        if (resultText && !resultText.endsWith('\n')) process.stdout.write('\n');
+      } else if (message?.type === 'assistant' && message.message?.content) {
+        for (const part of message.message.content) {
+          if (part?.type === 'text' && part.text) {
+            process.stdout.write(part.text);
+            if (!part.text.endsWith('\n')) process.stdout.write('\n');
+          }
         }
       }
     }
+  } catch (error) {
+    const isTurnLimit = String(error?.message || '').includes('Reached maximum number of turns');
+    if (!isTurnLimit) throw error;
+
+    const salvage = await salvageSuccessfulWorkspace({
+      taskRoot,
+      startedAt,
+      error
+    });
+    if (!salvage.salvaged) throw error;
   }
 
   if (args.goalText) {
-    const taskRoot = path.join(process.cwd(), 'workspace', 'optimization-tasks');
     if (fs.existsSync(taskRoot)) {
-      const latestTaskDir = fs.readdirSync(taskRoot)
-        .map((name) => path.join(taskRoot, name))
-        .filter((fullPath) => fs.statSync(fullPath).isDirectory())
-        .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0];
+      const latestTaskDir = readLatestTaskDir(taskRoot);
       if (latestTaskDir) {
         const runtimeFile = path.join(latestTaskDir, 'orchestrator_runtime.json');
         const current = fs.existsSync(runtimeFile)

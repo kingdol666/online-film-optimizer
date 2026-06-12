@@ -1,6 +1,6 @@
 ---
 name: closed-loop-optimizer
-description: Use this skill as the single entrypoint for product-aware, team-based online closed-loop optimization of a biaxial film line. It selects the product/material grade, creates a task-specific workspace, routes the user goal into a three-agent team (quality / R&D / process), runs until the goal is reached or termination conditions fire, and persists the best recipe plus all evidence in the task folder. Triggers include 在线闭环优化, 自动调参平台, 黑盒产线优化, 最佳工艺参数, 多Agent协同优化, 团队协同优化, 产品recipe开发, PET/PPAT/PMMA/PVA recipe, closed-loop optimizer.
+description: Use this skill as the single Claude Code entrypoint for product-aware, team-based online closed-loop optimization of a biaxial film line. Trigger it whenever the user says things like “请完成对产线的优化”, “使得某性能提升/下降 xx%”, “给我开发这个产品的 recipe”, “让研发/质量/工艺团队协同优化”, or asks for PET/PPAT/PMMA/PVA recipe optimization. In Claude Code, this skill should first verify MCP and backend connectivity, then create a real three-agent team where quality and R&D only read line data and process is the only role allowed to execute MCP write actions.
 ---
 
 # Closed-Loop Optimizer
@@ -8,6 +8,17 @@ description: Use this skill as the single entrypoint for product-aware, team-bas
 ## Use This Skill When
 
 Use this skill whenever the user provides a natural-language optimization goal and wants the system to keep working until the goal is met. The skill is the only entrypoint; it reads the goal and optional product/material grade, normalizes it into a unified goal request, creates a task folder, writes product-aware team briefs for quality / R&D / process, and then starts the team-based closed-loop campaign through shared artifacts and team messages.
+
+In Claude Code, prefer the native teamwork path first:
+
+1. verify that backend and MCP are already reachable;
+2. create or reuse the task workspace;
+3. create the team with TeamCreate;
+4. spawn the three department agents with Agent;
+5. use SendMessage plus file artifacts for every handoff;
+6. let the process agent be the only role that can execute MCP write actions.
+
+Do not fake a start. If backend or MCP is not reachable, stop immediately and report the exact missing dependency.
 
 Team roles:
 
@@ -17,39 +28,77 @@ Team roles:
 
 ## Team Entry
 
-Recommended command:
+## Native Claude Code Entry
 
-```bash
-npm run optimize:team -- --product-grade PMMA_FILM_GRADE_A --goal-text "请完成对 PMMA 产线的优化：使得双折射波动下降10%，并输出最终recipe"
-```
+When the user talks directly to Claude Code with a request such as:
 
-Claude Agent SDK team command:
+- `请完成对产线的优化：使得双折射波动下降5%，并输出最终recipe`
+- `请为 PMMA 产品开发满足高透和低波动目标的 recipe`
+- `启动研发/质量/工艺团队，持续优化直到达标`
 
-```bash
-npm run optimize:claude-sdk -- --product-grade PMMA_FILM_GRADE_A --goal-text "请完成对 PMMA 产线的优化：使得双折射波动下降10%，并输出最终recipe" --max-iters 12
-```
+this skill should trigger as the first and only orchestration entry.
 
-Or run the underlying team campaign directly:
+Primary behavior inside Claude Code:
 
-```bash
-node .claude/skills/closed-loop-optimizer/scripts/run-team-campaign.mjs \
-  --goal-text "请完成对产线的优化：使得双折射波动下降10%，并输出最终recipe" \
-  --product-grade PET_FILM_GRADE_A \
-  --base-dir workspace/optimization-tasks \
-  --max-iters 12 \
-  --seed 20260610
-```
+1. Parse the goal and infer `product_grade` if the user already implied it.
+2. Run the MCP connectivity gate before creating any team work:
+   - verify read tools exist: `film_line_get_state`, `film_line_get_snapshot`, `film_line_get_online_quality`, `film_line_list_writable_parameters`, `film_line_list_products`
+   - verify process-write tools exist for the process role: `film_line_preview_proposal`, `film_line_apply_proposal`, `film_line_run_until_stable`, `film_line_rollback`, `film_line_save_candidate_recipe`, `film_line_load_recipe_baseline`
+   - verify backend health when local backend is expected, for example `curl -fsS http://127.0.0.1:4317/api/health`
+3. If the gate passes, create the task workspace and team artifacts.
+4. Create the real team with `TeamCreate` whenever the host supports it.
+5. Spawn the role agents with `Agent` and route structured messages with `SendMessage`.
+6. Keep optimizing until the goal is reached or governance hard stops fire.
 
-The command is the deterministic AgentTeam runtime for this repository. It creates the team workspace, writes role inbox messages, runs the outer strategy cycle and inner process micro-tune cycle, applies approved MCP/adapter actions, records every trial, and writes final recipe outputs.
+Fallback order:
 
-The SDK command is the preferred Claude-native entry when Claude Code is available. It registers the project agents from `.claude/agents/` as SDK `AgentDefinition`s, starts the main thread as `closed-loop-optimization-orchestrator`, enables the `closed-loop-optimizer` skill, and asks the orchestrator to invoke the three teammate subagents through the Agent tool before running the same auditable campaign command.
+1. Native `TeamCreate` + `Agent` + `SendMessage`
+2. `Agent` only, with file-bus artifacts as the source of truth
+
+If neither native mode is available, stop and report that the current Claude Code host does not expose the required teamwork tools. Do not switch to any npm/node optimization script during the conversational skill flow.
+
+The npm commands below remain available only for offline regression tests and repository maintenance. They are not the runtime path for a user-triggered Claude Code optimization conversation.
+
+This skill is not a shell wrapper. It is a native Claude Code orchestration entry.
+
+When invoked from conversation, it should:
+
+- read the user goal;
+- infer product context;
+- check MCP and backend readiness through native project hooks and native tools;
+- create the team workspace;
+- create the team with `TeamCreate`;
+- dispatch the three expert agents with `Agent`;
+- coordinate them with `SendMessage` plus file artifacts.
+
+Do not present npm or node commands to the user as the normal way to run this skill.
+
+This skill keeps its executable support scripts inside its own package:
+
+- `scripts/mcp-preflight.mjs` for entry readiness gating
+- `scripts/native-team-enforcer.mjs` for blocking shell-script optimization fallbacks
+
+## Skill Startup Contract
+
+When this skill is triggered from a Claude Code conversation:
+
+1. Prefer native Claude Code teamwork instead of shell-first orchestration.
+2. Check MCP connectivity before any team action.
+3. Confirm that:
+   - required MCP read tools are present;
+   - required MCP write tools are present for the process role;
+   - backend `/api/health` is healthy if local backend is part of this run;
+   - current snapshot or line state is readable.
+4. If the gate fails, stop and report the exact missing tool or unreachable backend endpoint.
+5. If the gate passes, continue into AgentTeam orchestration.
+6. If the host supports Claude native teams, prefer `TeamCreate` / `Agent` / `SendMessage`.
+7. If native team mode is unavailable, block and report the missing native teamwork capability rather than silently falling back to shell-script orchestration.
 
 Runtime selection reference:
 
-- Use `claude_sdk` when Claude Code / Claude Agent SDK is available and you want the most native AgentTeam entry.
-- Use `team_claude_cli` when each quality / R&D / process role should use Claude structured reasoning during the campaign loop.
-- Use `team_deterministic` for stable acceptance tests and reproducible CI-style verification.
-- Use `single_campaign` only for low-level campaign debugging; it is not the full Teamwork mode.
+- Use native Claude Code teamwork first when TeamCreate / Agent / SendMessage are available.
+- If only native `Agent` is available, use it with the same artifacts and protocol.
+- If native teamwork is unavailable, stop and report the environment gap.
 
 The full runtime matrix and Teamwork contract are documented in `docs/closed-loop-optimizer-runtimes-and-teamwork.md`.
 
@@ -67,23 +116,7 @@ The task workspace includes:
 - `campaigns/<campaign-id>/`
 - `outputs/final_recipe.json`
 
-After a team run, validate the workspace itself:
-
-```bash
-node scripts/optimization/validate-team-workspace.mjs --task-dir <task_dir>
-```
-
-Single-run command entry:
-
-```bash
-npm run optimize:line -- --product-grade PPAT_FILM_GRADE_A --goal-text "请完成对 PPAT 产线的优化：使得厚度波动下降8%，并输出最终recipe"
-```
-
-Equivalent project shortcut:
-
-```bash
-npm run opt:campaign:demo
-```
+After a team run, inspect the task workspace itself and verify that all required artifacts, messages, and final recipe outputs exist and are internally consistent.
 
 ## MCP Tool Mode
 
@@ -98,18 +131,16 @@ When the host exposes `.mcp.json`, use the `industrial-film-line-sim` MCP server
 - `film_line_rollback`
 - `film_line_save_candidate_recipe`
 
-For local smoke verification:
+Permission matrix for native teamwork:
 
-```bash
-npm run sim:mcp:smoke
-```
+- Orchestrator: no line-write MCP actions; coordinates only.
+- Quality Agent: read-only MCP actions plus local artifact writes.
+- R&D Agent: read-only MCP actions plus local artifact writes.
+- Process Agent: full process MCP authority, including preview, apply, stable-run, rollback, and recipe memory operations.
 
-## Validate Campaign
+The process agent is the only role allowed to change live process parameters. Quality and R&D may write files, reports, and team messages, but they must never execute line-write MCP actions.
 
-```bash
-node .claude/skills/closed-loop-optimizer/scripts/validate-campaign.mjs \
-  --run-dir <campaign_run_dir>
-```
+For this skill, MCP is a native tool surface. Claude Code should rely on `.mcp.json` and the configured MCP server rather than treating optimization as an external shell-script workflow.
 
 ## Orchestration
 
@@ -136,15 +167,33 @@ Use the project-level Claude Code agents in `.claude/agents/` when native subage
 Standard trigger hierarchy:
 
 1. Claude Code experimental Agent Teams, when the host exposes TeamCreate / TaskCreate / SendMessage style tools.
-2. Claude Agent SDK subagents via `npm run optimize:claude-sdk`, using `agent='closed-loop-optimization-orchestrator'` and project `agents` definitions.
-3. Deterministic file-bus AgentTeam via `npm run optimize:team`, preserving the same artifacts and validation contract.
+2. Native `Agent` runtime via project `agents` definitions when TeamCreate is unavailable.
 
-The deterministic runtime implements the same contract through files when native AgentTeam is not available. The team behaves as:
+The native teamwork path keeps the same artifact contract. The team behaves as:
 
 - Outer strategy cycle: Quality publishes quality evidence, then R&D publishes the product-aware strategy.
 - Inner process cycle: Process executes multiple bounded micro-tunes under the active R&D strategy.
 - Replan trigger: no progress, repeated rejection, repeated worsening, safety gate block, or explicit quality/R&D/process request.
 - Completion: freeze the best observed recipe only after target reach plus hold-window confirmation, otherwise preserve the best recipe and the evidence for the next cycle.
+
+## Native Teamwork Rules
+
+This skill is designed to match Claude Code’s custom skill and subagent model:
+
+- keep the skill as the single user-facing entrypoint;
+- keep specialist behavior in `.claude/agents/*.md`;
+- use tool scoping on each subagent to enforce role boundaries;
+- keep every cross-role decision in files and messages, not hidden context;
+- fail fast on missing MCP/backend dependencies instead of silently switching to a fake mode.
+
+Read these references before complex runs:
+
+- `references/team-orchestration.md`
+- `references/native-claude-code-teamwork.md`
+- `references/coordination-protocol.md`
+- `references/subagent-dispatch.md`
+- `references/product-recipe-development.md`
+- `references/real-line-adapter-contract.md`
 
 ## Team Message Protocol
 
@@ -178,6 +227,12 @@ A successful team optimization must leave:
 
 If the target is reached, stop and freeze the best observed recipe. If the target is not reached, still output the best observed recipe, stop reason, evidence, and recommended next action.
 
+The operational finish condition is stricter than one good sample:
+
+- the team should only declare success after the selected recipe has improved the target metrics and held that improvement across the configured stable window;
+- after success, the process role should persist the best recipe, communicate it through MCP-compatible artifacts, and keep the line on that recipe for hold confirmation;
+- if success is not yet stable, continue the collaboration loop instead of exiting early.
+
 ## Rules
 
 - Do not let an LLM write PLC tags directly.
@@ -188,6 +243,7 @@ If the target is reached, stop and freeze the best observed recipe. If the targe
 - Prefer artifact-driven collaboration over implicit prompt memory: diagnosis context, strategy state, approval packet, ranked planning rationale, and execution intent must be written into artifacts.
 - Treat the user request as the top-level product objective, not as an instruction to tune one metric in isolation.
 - Continue across strategy cycles until the goal is reached or configured governance limits fire. Safety rejection, repeated worsening, or no progress should first trigger replanning/recover unless the hard stop limit is reached.
+- Treat the simulated MCP as if it were a real production-line MCP. Every proposal, hold, rollback, recipe save, and recipe import step must be auditable and safe enough for later migration to a real line.
 - For real-line migration and hook boundaries, read:
   - `references/orchestration-contract.md`
   - `references/real-line-adapter-contract.md`
@@ -201,4 +257,4 @@ If the target is reached, stop and freeze the best observed recipe. If the targe
 
 Use `.claude/agents/closed-loop-optimization-orchestrator.md` for the campaign controller. It may dispatch `closed-loop-optimization-quality-agent`, `closed-loop-optimization-rd-agent`, and `closed-loop-optimization-process-agent` as the team roles.
 
-For Claude Agent SDK execution, use `scripts/optimization/run-claude-sdk-skill.mjs`. It loads `.claude/agents/*.md`, registers them as SDK subagents, sets `forwardSubagentText=true`, enables `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, and asks the orchestrator to trigger each teammate by `subagent_type`. If the host does not provide native AgentTeam execution, use the deterministic `npm run optimize:team` runtime; it implements the same team contract through files, role messages, and campaign artifacts.
+Use `.claude/agents/closed-loop-optimization-orchestrator.md` for the campaign controller. It dispatches `closed-loop-optimization-quality-agent`, `closed-loop-optimization-rd-agent`, and `closed-loop-optimization-process-agent` through native Claude Code team primitives and the shared artifact protocol.

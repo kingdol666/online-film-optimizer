@@ -9,27 +9,41 @@ description: Use this skill for R&D process-development planning in online biaxi
 
 Convert quality evidence, response history, process physics, and current control stage into the next optimization hypothesis and a ranked candidate-parameter plan that the process engineer can execute safely.
 
-## Run
+## Inputs
 
-```bash
-node .claude/skills/rd-engineer/scripts/rd-engineer.mjs \
-  --diagnosis <quality_diagnosis_XXX.json> \
-  --snapshot <process_snapshot_XXX.json> \
-  --quality <online_quality_XXX.json> \
-  --target <product_target.json> \
-  --history <campaign_ledger.jsonl> \
-  --output <rd_optimization_plan_XXX.json>
-```
+Read these artifacts first:
 
-`--history` is optional, but use it whenever available to avoid repeating ineffective or worsening moves.
+- `quality_diagnosis_XXX.json`
+- `process_snapshot_XXX.json`
+- `online_quality_XXX.json`
+- `product_target.json`
+- optional `campaign_ledger.jsonl`
 
-## Validate
+If the host exposes read-only MCP tools, you may also read:
 
-```bash
-node .claude/skills/industrial-deep-diagnostic/scripts/validate.mjs \
-  schemas/optimization/rd_optimization_plan_schema.json \
-  <rd_optimization_plan_XXX.json>
-```
+- `film_line_get_state`
+- `film_line_get_snapshot`
+- `film_line_get_online_quality`
+- `film_line_get_ledger`
+
+Use response history whenever available to avoid repeating ineffective or worsening moves.
+
+## Output Contract
+
+Produce one structured `rd_optimization_plan_XXX.json` that contains at least:
+
+- `objective`
+- `hypothesis`
+- `control_mode`
+- `candidate_parameters`
+- `success_criteria`
+- `stop_rules`
+- `review_focus`
+- `strategy_guidance`
+
+Optional maintenance helper:
+
+- `scripts/validate-output.mjs <rd_optimization_plan_XXX.json>`
 
 ## Rules
 
@@ -39,6 +53,7 @@ node .claude/skills/industrial-deep-diagnostic/scripts/validate.mjs \
 - Rank candidate levers using current diagnosis plus `campaign_ledger.jsonl` response memory when available.
 - Always emit `control_mode`, `plan_rationale`, `review_focus`, `strategy_guidance`, and per-candidate `priority_score` / `rationale` / `evidence`.
 - Do not mark a production recipe releasable from online proxies alone.
+- Do not call shell commands or project optimization scripts from this skill.
 - For detailed handoff fields, read `references/contract.md`.
 
 ## SubAgent Use

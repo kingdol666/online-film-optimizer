@@ -25,10 +25,18 @@ export async function runUntilStable(payload) {
   return postJson(`${SIM_BASE_URL}/sim/run-until-stable`, payload);
 }
 
+export async function tickSimulator({ count = 1 } = {}) {
+  return postJson(`${SIM_BASE_URL}/sim/tick`, { count });
+}
+
 export async function previewSetpoints(payload) {
   return postJson(`${SIM_BASE_URL}/sim/setpoints/preview`, payload);
 }
 
 export async function applySetpoints(payload) {
   return postJson(`${SIM_BASE_URL}/sim/setpoints/apply`, payload);
+}
+
+export async function rollbackSimulator({ reason = 'dashboard rollback' } = {}) {
+  return postJson(`${SIM_BASE_URL}/sim/rollback`, { reason });
 }

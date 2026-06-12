@@ -2,9 +2,25 @@
 
 The closed-loop optimizer must be used as a team-based workflow.
 
+This contract is intentionally aligned with Claude Code native skills and subagents:
+
+- one user-facing skill as the entrypoint;
+- project agents under `.claude/agents/`;
+- tool restrictions on each role;
+- explicit file and message handoffs between roles.
+
 ## Top-Level Entry
 
 The only user-facing entry skill should accept a natural-language optimization request and create a task-specific workspace.
+
+The preferred Claude Code path is:
+
+1. run the MCP connectivity gate;
+2. verify local backend health when applicable;
+3. create the task workspace;
+4. create the team with TeamCreate;
+5. dispatch the three role agents;
+6. continue the loop until target reach or governance hard stop.
 
 ## Claude Code Project Agents
 
@@ -15,15 +31,34 @@ Project-level agents live in `.claude/agents/` and define the reusable expert id
 - `closed-loop-optimization-rd-agent`
 - `closed-loop-optimization-process-agent`
 
-When native AgentTeam execution is available, the orchestrator should spawn the three role agents and give each the task directory, current iteration, dispatch plan, and required artifacts. When native AgentTeam execution is unavailable, `npm run optimize:team` must preserve the same contract through the file bus.
+When native AgentTeam execution is available, the orchestrator should spawn the three role agents and give each the task directory, current iteration, dispatch plan, and required artifacts.
+
+## MCP Permission Boundary
+
+The permission boundary is a hard rule, not a suggestion:
+
+- `closed-loop-optimization-orchestrator`
+  - may inspect task files and overall backend readiness
+  - must not execute any line-write MCP action
+- `closed-loop-optimization-quality-agent`
+  - may use read-only MCP tools such as snapshot, state, quality, product list, writable parameter catalog
+  - must not execute apply, rollback, or recipe-memory write actions
+- `closed-loop-optimization-rd-agent`
+  - may use read-only MCP tools such as snapshot, state, quality, product list, writable parameter catalog
+  - must not execute apply, rollback, or recipe-memory write actions
+- `closed-loop-optimization-process-agent`
+  - is the only role allowed to use process-write MCP tools including proposal preview, apply, stable-run, rollback, and candidate recipe persistence
+
+Quality and R&D are read-only with respect to the line. They may still write local artifacts and team messages.
 
 ## Claude Code Standard Trigger
 
-The project supports three compatible team triggers:
+The project supports two conversational team triggers:
 
-1. Experimental Claude Code Agent Teams. Enable with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and use the host-provided TeamCreate / TaskCreate / SendMessage style tools when available.
-2. Claude Agent SDK subagents. Run `npm run optimize:claude-sdk -- --product-grade <PRODUCT_GRADE> --goal-text "<研发目标>"`. The SDK runner registers `.claude/agents/*.md` as `AgentDefinition`s and starts the main session with `agent='closed-loop-optimization-orchestrator'`.
-3. Deterministic file-bus fallback. Run `npm run optimize:team -- --product-grade <PRODUCT_GRADE> --goal-text "<研发目标>"`. This is the acceptance-test runtime and must always remain available.
+1. Experimental Claude Code Agent Teams via TeamCreate / TaskCreate / SendMessage.
+2. Native Claude Code Agent runtime via project agents when TeamCreate is unavailable.
+
+For direct Claude Code conversational use of the `closed-loop-optimizer` skill, only these native teamwork modes are allowed.
 
 The SDK and fallback paths must write the same evidence types:
 
@@ -42,10 +77,13 @@ If TeamCreate / TaskCreate / SendMessage are available, the team lead should:
 - create tasks for quality review, R&D strategy, process execution, and verification;
 - spawn teammates with subagent types `closed-loop-optimization-quality-agent`, `closed-loop-optimization-rd-agent`, and `closed-loop-optimization-process-agent`;
 - send each teammate the task folder, current campaign folder, required artifacts, and expected output files;
+- state the MCP permission boundary in each teammate brief;
 - require each teammate to write standard team-message JSON before reporting completion;
 - delete or close the native team only after file-based validation passes.
 
 If only the Agent tool is available, invoke the same subagent types through Agent calls and keep the file-bus artifacts as the source of truth.
+
+If neither TeamCreate nor Agent is available, stop and report that native teamwork is unavailable. Do not swap to shell-script orchestration during the user conversation.
 
 ## Team Roles
 

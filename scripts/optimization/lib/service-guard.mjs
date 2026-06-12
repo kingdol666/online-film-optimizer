@@ -75,7 +75,8 @@ export async function ensurePlatformServices({
   projectRoot,
   backendPort = 4317,
   frontendPort = 5418,
-  simPort = 8877
+  simPort = 8877,
+  ensureFrontend = true
 }) {
   const services = [];
   services.push(await ensureProcess({
@@ -98,12 +99,14 @@ export async function ensurePlatformServices({
     args: ['run', 'backend'],
     cwd: projectRoot
   }));
-  services.push(await ensureProcess({
-    label: 'frontend',
-    healthUrl: `http://127.0.0.1:${frontendPort}`,
-    command: 'npm',
-    args: ['run', 'frontend'],
-    cwd: projectRoot
-  }));
+  if (ensureFrontend) {
+    services.push(await ensureProcess({
+      label: 'frontend',
+      healthUrl: `http://127.0.0.1:${frontendPort}`,
+      command: 'npm',
+      args: ['run', 'frontend'],
+      cwd: projectRoot
+    }));
+  }
   return services;
 }

@@ -5,7 +5,9 @@ import {
   listSimulatorProducts,
   previewSetpoints,
   resetSimulator,
-  runUntilStable
+  rollbackSimulator,
+  runUntilStable,
+  tickSimulator
 } from '../services/simulator.service.mjs';
 
 const router = Router();
@@ -42,6 +44,14 @@ router.post('/stabilize', async (req, res, next) => {
   }
 });
 
+router.post('/tick', async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await tickSimulator(req.body || {}) });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post('/preview-setpoints', async (req, res, next) => {
   try {
     res.json({ success: true, data: await previewSetpoints(req.body || {}) });
@@ -53,6 +63,14 @@ router.post('/preview-setpoints', async (req, res, next) => {
 router.post('/apply-setpoints', async (req, res, next) => {
   try {
     res.json({ success: true, data: await applySetpoints(req.body || {}) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/rollback', async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await rollbackSimulator(req.body || {}) });
   } catch (error) {
     next(error);
   }

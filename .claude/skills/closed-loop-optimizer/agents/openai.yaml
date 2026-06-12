@@ -1,7 +1,7 @@
 interface:
   display_name: "Closed-Loop Optimizer"
-  short_description: "Run simulated film-line optimization campaigns"
+  short_description: "Coordinate a native Claude Code AgentTeam for film-line optimization"
   brand_color: "#1D4ED8"
-  default_prompt: "Use $closed-loop-optimizer to run and validate a product-aware AgentTeam closed-loop optimization campaign, for example: npm run optimize:team -- --product-grade PMMA_FILM_GRADE_A --goal-text '<研发目标>'."
+  default_prompt: "Use $closed-loop-optimizer to start a native Claude Code AgentTeam that coordinates quality, R&D, and process roles toward the user's optimization goal."
 policy:
   allow_implicit_invocation: true
