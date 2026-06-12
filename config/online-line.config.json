@@ -1,0 +1,19 @@
+{
+  "orchestrator": {
+    "provider": "simulated-line",
+    "execution_mode": "semi_auto",
+    "auto_approve_simulator": true,
+    "max_consecutive_worse": 4,
+    "stage_switch": {
+      "exploit_effective_count": 1,
+      "exploit_loss_threshold": 0.50,
+      "recover_worse_count": 5,
+      "recover_sensor_health": ["DEGRADED"]
+    },
+    "stable_window": {
+      "explore": { "before": { "minStableTicks": 5, "maxTicks": 30 }, "after": { "minStableTicks": 5, "maxTicks": 30 } },
+      "exploit": { "before": { "minStableTicks": 6, "maxTicks": 30 }, "after": { "minStableTicks": 6, "maxTicks": 30 } },
+      "recover": { "before": { "minStableTicks": 5, "maxTicks": 30 }, "after": { "minStableTicks": 5, "maxTicks": 30 } }
+    }
+  }
+}

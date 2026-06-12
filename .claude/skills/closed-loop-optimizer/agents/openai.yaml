@@ -1,0 +1,7 @@
+interface:
+  display_name: "Closed-Loop Optimizer"
+  short_description: "Run simulated film-line optimization campaigns"
+  brand_color: "#1D4ED8"
+  default_prompt: "Use $closed-loop-optimizer to run and validate a product-aware AgentTeam closed-loop optimization campaign, for example: npm run optimize:team -- --product-grade PMMA_FILM_GRADE_A --goal-text '<研发目标>'."
+policy:
+  allow_implicit_invocation: true

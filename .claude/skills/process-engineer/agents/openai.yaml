@@ -1,0 +1,7 @@
+interface:
+  display_name: "Online Process Engineer"
+  short_description: "Create safety-gated setpoint proposals"
+  brand_color: "#166534"
+  default_prompt: "Use $process-engineer to convert an R&D optimization plan into a bounded setpoint proposal with safety-gate output."
+policy:
+  allow_implicit_invocation: true

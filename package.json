@@ -1,0 +1,25 @@
+{
+  "name": "online-optimizer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "backend": "npm --prefix app/backend start",
+    "frontend": "npm --prefix app/frontend start",
+    "sim:http": "node simulator/industrial-film-line/server.mjs",
+    "sim:mcp": "node simulator/industrial-film-line/mcp-server.mjs",
+    "sim:mcp:smoke": "node scripts/optimization/mcp-smoke-test.mjs",
+    "online:bridge:smoke": "node scripts/optimization/online-bridge-smoke-test.mjs",
+    "self-check": "node scripts/optimization/self-check.mjs",
+    "agentteam:validate": "node scripts/optimization/validate-agentteam-config.mjs",
+    "opt:campaign": "node .claude/skills/closed-loop-optimizer/scripts/run-sim-campaign.mjs",
+    "opt:campaign:demo": "node .claude/skills/closed-loop-optimizer/scripts/run-sim-campaign.mjs --target examples/targets/bopet_new_grade_a.json --max-iters 12",
+    "optimize:line": "node scripts/optimization/optimize-line.mjs",
+    "optimize:team": "node scripts/optimization/run-team-campaign.mjs",
+    "optimize:claude-sdk": "node scripts/optimization/run-claude-sdk-skill.mjs",
+    "opt:validate": "node .claude/skills/closed-loop-optimizer/scripts/validate-campaign.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.173"
+  }
+}

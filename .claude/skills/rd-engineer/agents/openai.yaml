@@ -1,0 +1,7 @@
+interface:
+  display_name: "Online R&D Engineer"
+  short_description: "Plan the next process optimization move"
+  brand_color: "#B45309"
+  default_prompt: "Use $rd-engineer to generate the next DOE-style optimization plan from quality diagnosis, process snapshot, target, and campaign history."
+policy:
+  allow_implicit_invocation: true

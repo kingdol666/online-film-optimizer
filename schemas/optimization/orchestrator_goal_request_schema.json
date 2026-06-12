@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["request_id", "campaign_id", "product_grade", "user_objective", "targets", "constraints", "execution", "parsed_goal", "stop_criteria"],
+  "properties": {
+    "request_id": { "type": "string" },
+    "campaign_id": { "type": "string" },
+    "product_grade": { "type": "string" },
+    "goal_text": { "type": "string" },
+    "user_objective": {
+      "type": "object",
+      "required": ["performance_goal", "priority_order", "business_context", "release_expectation"],
+      "properties": {
+        "performance_goal": { "type": "string" },
+        "priority_order": { "type": "array", "items": { "type": "string" } },
+        "business_context": { "type": "string" },
+        "release_expectation": { "type": "string" }
+      }
+    },
+    "parsed_goal": {
+      "type": "object",
+      "required": ["original_text", "directives", "unsupported_signals", "run_mode", "stop_criteria"],
+      "properties": {
+        "original_text": { "type": "string" },
+        "directives": { "type": "array", "items": { "type": "object" } },
+        "unsupported_signals": { "type": "array", "items": { "type": "string" } },
+        "run_mode": { "type": "string" },
+        "stop_criteria": { "type": "object" }
+      }
+    },
+    "targets": { "type": "object" },
+    "constraints": {
+      "type": "object",
+      "required": ["max_waste_meter", "max_iterations", "manual_approval_required"],
+      "properties": {
+        "max_waste_meter": { "type": "number" },
+        "max_iterations": { "type": "integer", "minimum": 1 },
+        "manual_approval_required": { "type": "boolean" }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "required": ["manual_approval_required", "auto_resume_on_approval"],
+      "properties": {
+        "manual_approval_required": { "type": "boolean" },
+        "auto_resume_on_approval": { "type": "boolean" },
+        "provider": {
+          "anyOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "stop_criteria": {
+      "type": "object",
+      "properties": {
+        "run_until_goal": { "type": "boolean" },
+        "require_recipe_output": { "type": "boolean" },
+        "hard_iteration_cap": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "target_template": { "type": "string" }
+  }
+}

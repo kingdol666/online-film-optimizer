@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "industrial-film-line-sim": {
+      "command": "node",
+      "args": ["simulator/industrial-film-line/mcp-server.mjs"]
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["campaign_id", "product_grade", "targets", "constraints"],
+  "properties": {
+    "campaign_id": { "type": "string" },
+    "product_grade": { "type": "string" },
+    "user_objective": {
+      "type": "object",
+      "properties": {
+        "performance_goal": { "type": "string" },
+        "priority_order": { "type": "array", "items": { "type": "string" } },
+        "business_context": { "type": "string" },
+        "release_expectation": { "type": "string" }
+      }
+    },
+    "targets": {
+      "type": "object",
+      "required": ["thickness_mean", "thickness_cv", "birefringence_mean", "birefringence_cv"],
+      "properties": {
+        "thickness_mean": {
+          "type": "object",
+          "required": ["target", "tolerance"],
+          "properties": {
+            "target": { "type": "number" },
+            "tolerance": { "type": "number", "minimum": 0 }
+          }
+        },
+        "thickness_cv": {
+          "type": "object",
+          "required": ["max"],
+          "properties": { "max": { "type": "number", "minimum": 0 } }
+        },
+        "birefringence_mean": {
+          "type": "object",
+          "required": ["target", "tolerance"],
+          "properties": {
+            "target": { "type": "number" },
+            "tolerance": { "type": "number", "minimum": 0 }
+          }
+        },
+        "birefringence_cv": {
+          "type": "object",
+          "required": ["max"],
+          "properties": { "max": { "type": "number", "minimum": 0 } }
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "required": ["max_waste_meter", "max_iterations", "manual_approval_required"],
+      "properties": {
+        "max_waste_meter": { "type": "number", "minimum": 0 },
+        "max_iterations": { "type": "integer", "minimum": 1 },
+        "manual_approval_required": { "type": "boolean" }
+      }
+    }
+  }
+}

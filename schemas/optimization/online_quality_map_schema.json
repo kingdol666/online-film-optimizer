@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["timestamp", "campaign_id", "experiment_id", "metrics", "profiles", "sensor_health"],
+  "properties": {
+    "timestamp": { "type": "string" },
+    "campaign_id": { "type": "string" },
+    "experiment_id": { "type": "string" },
+    "metrics": {
+      "type": "object",
+      "required": ["thickness_mean", "thickness_cv", "thickness_edge_center_delta", "birefringence_mean", "birefringence_cv", "birefringence_edge_center_delta"],
+      "additionalProperties": { "type": "number" }
+    },
+    "profiles": {
+      "type": "object",
+      "required": ["position_norm", "thickness", "birefringence"],
+      "properties": {
+        "position_norm": { "type": "array", "items": { "type": "number" } },
+        "thickness": { "type": "array", "items": { "type": "number" } },
+        "birefringence": { "type": "array", "items": { "type": "number" } }
+      }
+    },
+    "sensor_health": { "type": "string", "enum": ["OK", "DEGRADED", "FAULT"] }
+  }
+}

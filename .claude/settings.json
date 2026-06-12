@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "defaultMode": "auto",
+    "allow": [
+      "Bash(npm run optimize:team*)",
+      "Bash(npm run optimize:claude-sdk*)",
+      "Bash(npm run agentteam:validate*)",
+      "Bash(node scripts/optimization/validate-team-workspace.mjs*)",
+      "Bash(node .claude/skills/closed-loop-optimizer/scripts/validate-campaign.mjs*)",
+      "Bash(npm run sim:mcp:smoke*)",
+      "Read(./**)",
+      "Write(./workspace/optimization-tasks/**)",
+      "Write(./runtime/**)"
+    ],
+    "ask": [
+      "Bash(npm install*)",
+      "Bash(rm *)",
+      "Bash(git *)"
+    ],
+    "deny": [
+      "Bash(git reset --hard*)",
+      "Bash(git checkout --*)"
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "ONLINE_OPTIMIZER_AGENTTEAM_MODE": "claude_sdk_subagents"
+  },
+  "hooks": {
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/optimization/claude-agentteam-hook.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/optimization/claude-agentteam-hook.mjs",
+            "if": "Bash(npm run optimize:team*)",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "node scripts/optimization/claude-agentteam-hook.mjs",
+            "if": "Bash(npm run agentteam:validate*)",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

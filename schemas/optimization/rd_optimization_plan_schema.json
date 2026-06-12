@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["objective", "hypothesis", "control_mode", "fixed_parameters", "candidate_parameters", "hold_time_minutes", "success_criteria", "stop_rules", "plan_rationale", "review_focus", "strategy_guidance"],
+  "properties": {
+    "objective": { "type": "string" },
+    "hypothesis": { "type": "string" },
+    "control_mode": { "type": "string", "enum": ["explore", "exploit", "recover"] },
+    "fixed_parameters": { "type": "array", "items": { "type": "string" } },
+    "candidate_parameters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "direction", "step", "allowed_range", "expected_response"],
+        "properties": {
+          "name": { "type": "string" },
+          "direction": { "type": "string", "enum": ["increase", "decrease", "hold"] },
+          "step": { "type": "number" },
+          "signed_step": { "type": "number" },
+          "current": { "type": "number" },
+          "allowed_range": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
+          "expected_response": { "type": "string" },
+          "priority_score": { "type": "number" },
+          "rationale": { "type": "string" },
+          "evidence": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "hold_time_minutes": { "type": "number", "minimum": 0 },
+    "success_criteria": { "type": "array", "items": { "type": "string" } },
+    "stop_rules": { "type": "array", "items": { "type": "string" } },
+    "plan_rationale": {
+      "type": "object",
+      "required": ["diagnosis_priority", "response_memory", "selected_primary_lever", "selected_reason", "control_mode", "mode_reason"],
+      "properties": {
+        "diagnosis_priority": { "type": "string" },
+        "response_memory": { "type": "string" },
+        "selected_primary_lever": { "type": "string" },
+        "selected_reason": { "type": "string" },
+        "control_mode": { "type": "string" },
+        "mode_reason": { "type": "string" }
+      }
+    },
+    "review_focus": { "type": "array", "items": { "type": "string" } },
+    "strategy_guidance": {
+      "type": "object",
+      "required": ["stage", "primary_lever_confidence", "alternate_levers"],
+      "properties": {
+        "stage": { "type": "string", "enum": ["explore", "exploit", "recover"] },
+        "primary_lever_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "alternate_levers": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

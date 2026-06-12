@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["iteration", "experiment_id", "artifacts", "updated_at"],
+  "properties": {
+    "iteration": { "type": "integer", "minimum": 1 },
+    "experiment_id": { "type": "string" },
+    "updated_at": { "type": "string" },
+    "artifacts": {
+      "type": "object",
+      "required": ["snapshot", "quality", "diagnosis", "quality_review", "strategy_state", "rd_plan", "rd_brief", "process_brief", "proposal", "safety_gate", "approval_packet", "execution_receipt", "experiment_result", "executive_summary"],
+      "properties": {
+        "snapshot": { "type": "string" },
+        "quality": { "type": "string" },
+        "diagnosis": { "type": "string" },
+        "quality_review": { "type": "string" },
+        "strategy_state": { "type": "string" },
+        "rd_plan": { "type": "string" },
+        "rd_brief": { "type": "string" },
+        "process_brief": { "type": "string" },
+        "proposal": { "type": "string" },
+        "safety_gate": { "type": "string" },
+        "approval_packet": { "type": "string" },
+        "execution_receipt": { "type": "string" },
+        "experiment_result": { "type": "string" },
+        "executive_summary": { "type": "string" }
+      }
+    }
+  }
+}

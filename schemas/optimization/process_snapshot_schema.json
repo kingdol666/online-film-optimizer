@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["timestamp", "campaign_id", "experiment_id", "recipe_id", "line_state", "setpoints", "process_values", "alarm_active", "time_since_last_change_sec"],
+  "properties": {
+    "timestamp": { "type": "string" },
+    "campaign_id": { "type": "string" },
+    "experiment_id": { "type": "string" },
+    "recipe_id": { "type": "string" },
+    "line_state": { "type": "string", "enum": ["IDLE", "BASELINE_RUNNING", "READY_FOR_EXPERIMENT", "APPLYING_CHANGE", "TRANSITION", "STABLE", "EVALUATING", "READY_FOR_NEXT", "ALARM", "ROLLBACK_REQUIRED", "SENSOR_FAULT", "OUT_OF_CONTROL"] },
+    "setpoints": { "type": "object", "additionalProperties": { "type": "number" } },
+    "process_values": { "type": "object", "additionalProperties": { "type": "number" } },
+    "alarm_active": { "type": "boolean" },
+    "time_since_last_change_sec": { "type": "number", "minimum": 0 }
+  }
+}

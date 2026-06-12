@@ -1,0 +1,7 @@
+interface:
+  display_name: "Online Quality Engineer"
+  short_description: "Diagnose online film quality gaps"
+  brand_color: "#0E7490"
+  default_prompt: "Use $quality-engineer to diagnose the current film-line quality window from snapshot and online thickness/birefringence files."
+policy:
+  allow_implicit_invocation: true
