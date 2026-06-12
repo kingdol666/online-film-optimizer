@@ -1,9 +1,18 @@
 {
   "mcpServers": {
-    "industrial-film-line-sim": {
+    "simple-time": {
+      "type": "stdio",
       "command": "node",
-      "args": ["simulator/industrial-film-line/mcp-server.mjs"],
-      "cwd": "/Volumes/laxer/codes/skills/Online_optimizer"
+      "args": [
+        "simulator/industrial-film-line/simple-time-mcp.mjs"
+      ]
+    },
+    "industrial-film-line-sim": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "simulator/industrial-film-line/mcp-server.mjs"
+      ]
     }
   }
 }
