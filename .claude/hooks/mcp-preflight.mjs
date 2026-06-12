@@ -141,7 +141,7 @@ async function main() {
   process.stdout.write(JSON.stringify({
     hookSpecificOutput: {
       hookEventName: 'UserPromptSubmit',
-      additionalContext: `MCP preflight OK: ${summary} | MCP server industrial-film-line-sim is managed by .mcp.json (stdio auto-start). All film_line_* tools ready.`
+      additionalContext: `MCP preflight OK: ${summary} | MCP server industrial-film-line-sim managed by .mcp.json (stdio auto-start). Sim HTTP healthy; MCP tools will be available once Claude Code spawns and connects the MCP server process.`
     }
   }));
 }
