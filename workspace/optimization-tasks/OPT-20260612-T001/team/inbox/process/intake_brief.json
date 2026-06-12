@@ -1,0 +1,40 @@
+{
+  "protocol_version": "1.0",
+  "message_id": "MSG-OPT-20260612-T001-003",
+  "role": "process",
+  "from": "orchestrator",
+  "to": "process-agent",
+  "stage": "team-intake",
+  "purpose": "process_execution",
+  "summary": "等待 R&D 产出优化计划后，将 plan 转为 bounded proposal + safety gate + MCP 执行",
+  "inputs": [
+    "goal_request.json",
+    "product_target.json",
+    "team/department_briefs.json",
+    "team/team_contract.json",
+    "rd_optimization_plan.json (will be provided by rd agent)"
+  ],
+  "requested_actions": [
+    "读取 rd_optimization_plan.json 获取优化策略和杠杆排名",
+    "读取 film_line_list_writable_parameters 获取当前参数和边界",
+    "将 R&D plan 转为 parameter_delta_proposal.json (含每个参数的 delta 和理由)",
+    "运行 film_line_preview_proposal 进行安全预检",
+    "如果安全门通过: 运行 film_line_apply_proposal 执行调整",
+    "如果安全门拒绝: 报告原因，请求 R&D 重规划",
+    "执行后运行 film_line_run_until_stable 等待稳定",
+    "保存候选 recipe: film_line_save_candidate_recipe"
+  ],
+  "required_writes": [
+    "parameter_delta_proposal.json",
+    "safety_gate_result.json",
+    "execution_receipt.json",
+    "team/handoffs/process_to_all.md"
+  ],
+  "requires_response": true,
+  "payload": {
+    "product_grade": "PET_FILM_GRADE_A",
+    "campaign_id": "OPT-20260612-T001",
+    "rollback_baseline": "RCP-EXP-000 (current baseline)",
+    "permissions_note": "你是唯一允许执行 line-write MCP 操作的角色。Quality 和 R&D 只读。"
+  }
+}

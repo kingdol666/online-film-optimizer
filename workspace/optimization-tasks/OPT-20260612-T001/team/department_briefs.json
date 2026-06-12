@@ -1,0 +1,35 @@
+{
+  "task_id": "OPT-20260612-T001",
+  "product_grade": "PET_FILM_GRADE_A",
+  "material_family": "PET",
+  "goal_summary": "将 birefringence_cv 从当前基线 3.6685 降低 5% 至 ≤ 3.4851",
+  "roles": {
+    "quality": {
+      "mission": "诊断当前质量状态，分析 birefringence_cv 偏高的根因，评估传感器健康，建议策略阶段",
+      "permissions": "只读 MCP (get_state, get_snapshot, get_online_quality, list_writable_parameters, list_products)",
+      "writes": "quality_diagnosis.json, quality_review.json, strategy_state.json",
+      "forbidden": "禁止任何 line-write MCP (preview, apply, rollback, save_recipe, load_recipe)",
+      "autonomous": "每次 Process 执行后自动复评质量；连续多轮无效时自动请求 R&D 重规划"
+    },
+    "rd": {
+      "mission": "基于质量诊断生成阶段感知的优化策略，排名候选杠杆，输出可证伪假设",
+      "permissions": "只读 MCP (get_state, get_snapshot, get_online_quality, list_writable_parameters, get_ledger)",
+      "writes": "rd_optimization_plan.json, rd_brief.json",
+      "forbidden": "禁止任何 line-write MCP；禁止跨产品复用 recipe 记忆",
+      "autonomous": "质量信号模糊时请求 quality review；safety gate 被拒时生成替代策略"
+    },
+    "process": {
+      "mission": "将 R&D plan 转为 bounded proposal + safety gate + approval packet，调用 MCP 执行，保留 rollback 基线",
+      "permissions": "全部 MCP 读写权限（唯一可执行 apply/rollback/save/load 的角色）",
+      "writes": "parameter_delta_proposal.json, safety_gate_result.json, process_brief.json, approval_packet.json",
+      "forbidden": "禁止修改研发策略、质量判断、绕过安全门、跨产品复用 recipe",
+      "autonomous": "proposal 被拒时请求 R&D 换方向；多轮无改善时请求 quality 检查"
+    }
+  },
+  "coordination": {
+    "outer_cycle": "quality → rd → process (strategy refresh)",
+    "inner_cycle": "process micro-tune iterations under active rd strategy",
+    "replan_triggers": ["no_progress_3_iterations", "repeated_rejection", "repeated_worsening", "safety_gate_block"],
+    "completion": "goal_reached_and_hold_confirmed → freeze best recipe"
+  }
+}

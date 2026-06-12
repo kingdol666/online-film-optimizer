@@ -1,0 +1,36 @@
+{
+  "task_id": "OPT-20260612-T001",
+  "team_name": "opt-20260612-t001",
+  "created_at": "2026-06-12T10:03:32Z",
+  "product_grade": "PET_FILM_GRADE_A",
+  "goal": "降低双折射波动(birefringence_cv) 5%，从 3.6685 降至 ≤ 3.4851",
+  "stop_conditions": [
+    "goal_reached_and_hold_confirmed",
+    "execution_blocked_by_repeated_rejection",
+    "max_iterations_reached",
+    "manual_terminate",
+    "sensor_or_alarm_hard_failure"
+  ],
+  "max_strategy_cycles": 5,
+  "max_process_iterations_per_cycle": 8,
+  "hold_window_ticks": 30,
+  "permissions": {
+    "orchestrator": "coordination only, no MCP write",
+    "quality": "read-only MCP",
+    "rd": "read-only MCP",
+    "process": "full MCP write authority (sole executor)"
+  },
+  "artifact_requirements": {
+    "quality": ["team/inbox/quality/intake_brief.json", "quality_diagnosis.json"],
+    "rd": ["team/inbox/rd/intake_brief.json", "rd_optimization_plan.json"],
+    "process": ["team/inbox/process/intake_brief.json", "parameter_delta_proposal.json", "safety_gate_result.json", "approval_packet.json", "execution_receipt.json"]
+  },
+  "completion_deliverables": [
+    "task_summary.json",
+    "best_recipe.json",
+    "outputs/final_recipe.json",
+    "team/handoffs/final.md",
+    "campaigns/CMP-001/run_summary.json",
+    "campaigns/CMP-001/07_coordination/best_recipe_memory.json"
+  ]
+}

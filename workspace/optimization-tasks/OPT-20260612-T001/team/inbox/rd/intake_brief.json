@@ -1,0 +1,36 @@
+{
+  "protocol_version": "1.0",
+  "message_id": "MSG-OPT-20260612-T001-002",
+  "role": "rd",
+  "from": "orchestrator",
+  "to": "rd-agent",
+  "stage": "team-intake",
+  "purpose": "rd_optimization_plan",
+  "summary": "基于质量诊断，为 PET_FILM_GRADE_A 生成降低 birefringence_cv 5% 的优化策略",
+  "inputs": [
+    "goal_request.json",
+    "product_target.json",
+    "team/department_briefs.json",
+    "team/team_contract.json",
+    "quality_diagnosis.json (will be provided by quality agent)"
+  ],
+  "requested_actions": [
+    "读取 quality_diagnosis.json 了解当前质量状态和根因",
+    "读取 film_line_get_snapshot 了解当前 setpoint 配置",
+    "读取 film_line_list_writable_parameters 了解可调参数及其边界",
+    "读取 film_line_get_ledger 了解历史调整记录",
+    "基于 PET 产品特性排名候选杠杆，生成可证伪假设",
+    "输出 rd_optimization_plan.json 包含: 阶段 (explore/exploit/recover)、排名杠杆表、每个杠杆的调整方向和幅度范围、策略理由"
+  ],
+  "required_writes": [
+    "rd_optimization_plan.json",
+    "team/handoffs/rd_to_process.md"
+  ],
+  "requires_response": true,
+  "payload": {
+    "product_grade": "PET_FILM_GRADE_A",
+    "goal": "reduce birefringence_cv by 5% from 3.6685 to ≤3.4851",
+    "product_notes": "取向与热定型窗口较宽，双折射波动通常由 TD 热区与热定型耦合主导",
+    "key_lever_hint": "heatset_temp, td_zone_1_temp, td_zone_2_temp, td_draw_ratio, relaxation_ratio 是降低双折射波动的优先杠杆"
+  }
+}

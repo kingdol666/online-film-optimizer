@@ -1,0 +1,44 @@
+{
+  "protocol_version": "1.0",
+  "message_id": "MSG-OPT-20260612-T001-001",
+  "role": "quality",
+  "from": "orchestrator",
+  "to": "quality-agent",
+  "stage": "team-intake",
+  "purpose": "quality_diagnosis",
+  "summary": "对 PET_FILM_GRADE_A 当前产线质量状态进行诊断，重点分析 birefringence_cv=3.6685 偏高的根因",
+  "inputs": [
+    "goal_request.json",
+    "product_target.json",
+    "team/department_briefs.json",
+    "team/team_contract.json"
+  ],
+  "requested_actions": [
+    "读取 film_line_get_snapshot 获取当前工艺快照",
+    "读取 film_line_get_online_quality 获取当前质量指标",
+    "读取 film_line_list_writable_parameters 了解可调参数范围",
+    "生成 quality_diagnosis.json 包含: 指标差距分析、根因假设、风险评级、策略阶段建议 (explore/exploit/recover)"
+  ],
+  "required_writes": [
+    "quality_diagnosis.json",
+    "team/handoffs/quality_to_rd.md"
+  ],
+  "requires_response": true,
+  "payload": {
+    "product_grade": "PET_FILM_GRADE_A",
+    "current_quality": {
+      "birefringence_cv": 3.6685,
+      "birefringence_mean": 0.09213,
+      "thickness_cv": 2.6104,
+      "thickness_mean": 12.1141,
+      "sensor_health": "OK"
+    },
+    "target": {
+      "birefringence_cv": "≤ 3.4851 (5% reduction)",
+      "birefringence_mean": "0.078 ± 0.003",
+      "thickness_cv": "≤ 1.55",
+      "thickness_mean": "12 ± 0.22"
+    },
+    "strategy_hint": "PET 双折射波动通常由 TD 热区与热定型耦合主导，当前厚度 CV 已超标，需同时关注"
+  }
+}

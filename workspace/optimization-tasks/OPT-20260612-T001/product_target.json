@@ -1,0 +1,24 @@
+{
+  "product_grade": "PET_FILM_GRADE_A",
+  "material_family": "PET",
+  "display_name": "PET 双向拉伸光学膜 A 级",
+  "target_template": {
+    "thickness_mean": { "target": 12, "tolerance": 0.22 },
+    "thickness_cv": { "max": 1.55 },
+    "birefringence_mean": { "target": 0.078, "tolerance": 0.003 },
+    "birefringence_cv": { "max": 3.7 }
+  },
+  "process_notes": [
+    "取向与热定型窗口较宽，双折射波动通常由 TD 热区与热定型耦合主导。",
+    "厚度均值优先通过挤出量/线速度平衡控制，厚度 CV 优先关注 TD 拉伸与收卷张力。"
+  ],
+  "optimization_priority": {
+    "primary_metric": "birefringence_cv",
+    "primary_target": "≤ 3.4851 (5% reduction from baseline 3.6685)",
+    "secondary_constraints": [
+      "birefringence_mean: 0.078 ± 0.003",
+      "thickness_cv: ≤ 1.55",
+      "thickness_mean: 12 ± 0.22"
+    ]
+  }
+}

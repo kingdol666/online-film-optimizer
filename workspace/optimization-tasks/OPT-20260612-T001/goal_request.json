@@ -1,0 +1,31 @@
+{
+  "task_id": "OPT-20260612-T001",
+  "product_grade": "PET_FILM_GRADE_A",
+  "material_family": "PET",
+  "goal": {
+    "metric": "birefringence_cv",
+    "direction": "reduce",
+    "target_pct": 5,
+    "relative": true,
+    "baseline_value": 3.6685,
+    "absolute_target": 3.4851,
+    "product_spec_max": 3.7,
+    "description": "将双折射波动(birefringence CV)在当前基线 3.6685 基础上降低 5%，目标值 ≤ 3.4851"
+  },
+  "constraints": [
+    "thickness_mean 保持在 target 12 ± 0.22 范围内",
+    "thickness_cv 不超过 1.55",
+    "birefringence_mean 保持在 target 0.078 ± 0.003 范围内",
+    "所有工艺参数调整必须在 safety gate 允许范围内",
+    "不得触发产线报警"
+  ],
+  "initial_state": {
+    "line_state": "STABLE",
+    "alarm_active": false,
+    "birefringence_cv": 3.6685,
+    "birefringence_mean": 0.09213,
+    "thickness_cv": 2.6104,
+    "thickness_mean": 12.1141
+  },
+  "created_at": "2026-06-12T10:03:32Z"
+}

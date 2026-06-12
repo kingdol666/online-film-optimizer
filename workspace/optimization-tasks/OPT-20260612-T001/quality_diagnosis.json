@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-06-12T10:15:00Z",
+  "product_grade": "PET_FILM_GRADE_A",
+  "campaign_id": "CMP-1781254628516",
+  "line_state": "STABLE",
+  "alarm_active": false,
+  "sensor_health": "OK",
+  "quality_state": {
+    "birefringence_cv": {
+      "current": 3.6485,
+      "target": 3.4851,
+      "gap": 0.1634,
+      "status": "above_target",
+      "note": "超出优化目标 4.69%，距产品规格上限 3.7 仅 0.0515 余量"
+    },
+    "birefringence_mean": {
+      "current": 0.091862,
+      "target": 0.078,
+      "tolerance": 0.003,
+      "gap": 0.013862,
+      "status": "above_target",
+      "note": "严重偏离目标 +17.8%，远超 tolerance ±0.003，表明整体取向过高"
+    },
+    "thickness_cv": {
+      "current": 2.5428,
+      "target": 1.55,
+      "gap": 0.9928,
+      "status": "above_target",
+      "note": "超标 64%，是当前最严重的质量偏差"
+    },
+    "thickness_mean": {
+      "current": 12.1281,
+      "target": 12.0,
+      "tolerance": 0.22,
+      "gap": 0.1281,
+      "status": "on_target",
+      "note": "在 tolerance 范围内，但偏上边界，需关注后续调整不将其推出范围"
+    }
+  },
+  "profile_analysis": {
+    "thickness_edge_center_delta": 0.0423,
+    "birefringence_edge_center_delta": -0.002997,
+    "thickness_profile_pattern": "M-shaped: 边缘高 (12.15-12.18), 中间低 (12.09-12.14), 典型的 TD 拉伸不足或风冷不均匀造成颈缩",
+    "birefringence_profile_pattern": "center-peaked: 中间高 (0.092-0.093), 边缘低 (0.090-0.091), 表明 TD 热区中心取向更高, 与 TD 温度/定型耦合相关"
+  },
+  "root_cause_hypotheses": [
+    {
+      "metric": "birefringence_cv",
+      "hypothesis": "TD 热区温度 (td_zone_1=108, td_zone_2=112) 与热定型温度 (heatset_temp=218) 耦合不当，导致 TD 方向取向不均匀，中心区域取向度高于边缘，形成 center-peaked 双折射剖面",
+      "confidence": "high",
+      "evidence": "产品文档明确提示'双折射波动通常由 TD 热区与热定型耦合主导'；当前 td_zone_1=108 接近下限 102，td_zone_2=112 位于中位，heatset_temp=218 位于中上位 (210-226)；birefringence 剖面呈中心高、边缘低的取向梯度特征；birefringence_mean=0.092 远超目标 0.078，说明整体取向应力未充分松弛"
+    },
+    {
+      "metric": "birefringence_cv",
+      "hypothesis": "拉伸比设定偏高导致整体取向应力过大，加剧了空间取向差异的敏感性",
+      "confidence": "medium",
+      "evidence": "td_draw_ratio=3.54 位于 min=3.42 - max=3.82 的中低区间，但 md_draw_ratio=3.18 位于 min=3.0 - max=3.36 的中高区间；birefringence_mean 严重偏高 (+17.8%) 提示总体取向应力超量；ledger 显示历史已下调 TD draw ratio 从 3.62 -> 3.54 (recipe_011)，但 birefringence 改善不明显"
+    },
+    {
+      "metric": "thickness_cv",
+      "hypothesis": "TD 拉伸参数 (+ 收卷张力) 与线速度的匹配不佳，导致横向厚度均匀性差，thickness CV=2.54 严重超标",
+      "confidence": "high",
+      "evidence": "产品文档提示'厚度 CV 优先关注 TD 拉伸与收卷张力'；当前 winder_tension=118 在中位 (105-132) 但偏上，line_speed=42 在中位 (38-46)；thickness 剖面呈 M 形，典型的 TD 拉伸不足或风冷不均匀；thickness_cv=2.54 是目标 1.55 的 1.64 倍"
+    },
+    {
+      "metric": "birefringence_mean",
+      "hypothesis": "热定型温度 (heatset_temp=218) 和松弛率 (relaxation_ratio=4.2) 不足以有效松弛 MD/TD 取向应力，导致 birefringence 均值偏高",
+      "confidence": "medium",
+      "evidence": "heatset_temp=218 位于范围 210-226 的中低位，有上调空间；relaxation_ratio=4.2 位于范围 2.8-5.6 的中位；两者共同决定了热定型阶段的应力松弛效果；当前 birefringence_mean 偏离目标 +17.8%，远超过 ±0.003 tolerance"
+    }
+  ],
+  "risk_assessment": {
+    "level": "high",
+    "details": "三个关键指标同时超标: birefringence_cv 距规格上限 (3.7) 仅 1.4% 余量；thickness_cv 超标 64% 是最紧迫问题；birefringence_mean 偏离 17.8% 远超标。虽然产线状态 STABLE 且无报警，但质量已处于规格边缘，thickness_cv 实际可能已触发次品判定。单维度调整风险高：提高 TD 温度可能改善双折射但恶化厚度 CV；降低拉伸比可能改善双折射均值但可能推高厚度均值超出 tolerance。建议 explore 模式下协同调整 TD 热区 + 热定型 + 拉伸比/松弛率，小步快跑验证耦合关系。"
+  },
+  "stage_recommendation": "explore",
+  "stage_rationale": "当前配方 (recipe_011) 是基线变更后的初始状态，birefringence 和 thickness 均有较大偏差，且历史 ledger 仅记录两次 TD draw ratio 下调。尚未对该产品进行系统性工艺探索，产线处于 STABLE 无报警状态，适合以 explore 模式进行小步 DOE 实验，建立 PET_FILM_GRADE_A 的工艺-质量响应知识。不建议直接进入 exploit 或 recover，因为缺乏足够的响应面数据支撑精调。",
+  "recommended_focus": "优先调整 TD 热区温度 (td_zone_1, td_zone_2) 和热定型温度 (heatset_temp)，同时将松弛率 (relaxation_ratio) 作为协同杠杆。thickness_cv 的改善可能需要调整 TD 拉伸比或收卷张力，但这会耦合影响双折射。建议 R&D 采用三因子 DOE: (1) TD 热区温度梯度 (td_zone_2 - td_zone_1)，(2) heatset_temp，(3) relaxation_ratio。保持 extruder_speed 和 line_speed 不变以稳定厚度均值。"
+}

@@ -1,0 +1,18 @@
+{
+  "task_id": "pet-birefringence-20260612-174709",
+  "created_at": "2026-06-12T09:47:09Z",
+  "user_goal": {
+    "raw": "完成对 PET 产线的优化：使得双折射波动下降 5%，并输出最终 recipe",
+    "product_grade": "PET_FILM_GRADE_A",
+    "target_metric": "birefringence_fluctuation",
+    "target_direction": "reduce",
+    "target_percent": 5.0,
+    "output": "final_recipe.json"
+  },
+  "product_context": {
+    "product_grade": "PET_FILM_GRADE_A",
+    "material": "PET",
+    "film_type": "biaxial",
+    "product_database_ref": "PET_FILM_GRADE_A"
+  }
+}

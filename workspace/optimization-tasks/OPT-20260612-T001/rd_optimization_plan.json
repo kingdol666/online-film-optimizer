@@ -1,0 +1,170 @@
+{
+  "timestamp": "2026-06-12T10:20:00Z",
+  "product_grade": "PET_FILM_GRADE_A",
+  "strategy_cycle": "SC-001",
+  "stage": "explore",
+  "control_mode": "explore",
+  "stage_rationale": "当前 recipe_011 是初次基线状态，缺乏系统性工艺-质量响应数据。birefringence_mean 超标 17.8%、birefringence_cv 距离规格上限仅 1.4% 余量、thickness_cv 超标 64%。产线 STABLE 无报警，适合小步 DOE 探索。Ledger 记录显示上一轮 SC-001 Round 1 (heatset_temp 218->219, td_zone_1_temp 108->109) 执行后发生了 rollback，当前已恢复至基线配置。Rollback 原因待 quality 复核确认，但在制定新策略时应避免重复已被证伪或导致 rollback 的组合。",
+  "plan_rationale": "基于 quality diagnosis 的三个高置信度假说：(1) TD 热区温差 4°C (td_zone_2 - td_zone_1) 导致 center-peaked 双折射剖面；(2) heatset_temp=218 偏低不足以充分松弛取向应力；(3) birefringence_mean=0.092 远超 target 0.078 表明总取向应力过剩。策略采用分步渐进探索，优先缩小 TD 温差和提升热定型温度，每轮单因子变动以建立清晰的因果归因。Ledger 历史显示纯降 td_draw_ratio (3.62->3.54) 仅带来边际改善，因此本轮策略转向 TD 热区均匀性和热定型强化。",
+  "objective": "将 birefringence_cv 从当前基线 3.6485 降低至 ≤3.4851 (≥5% 降幅)，同时将 birefringence_mean 从 0.09186 降低至 ≤0.081 (进入 tolerance 范围 [0.075, 0.081])，且不恶化 thickness_cv (允许轻微波动 15% 以内) 和 thickness_mean (保持在 12±0.22)。",
+  "hypothesis": "如果 TD 热区温差从 4°C 缩小至 ≤2°C (td_zone_1 从 108 升到 110-112) 且 heatset_temp 从 218 升至 222-224，则 birefringence_cv 将降低 0.1-0.3 至 ≤3.4851 且 birefringence_mean 降至 ≤0.081，因为：(a) 缩小 TD 温差消除横向取向梯度（center-peaked 剖面应平坦化），(b) 提高热定型温度增强 PET 分子链在结晶窗口内的弛豫，降低残余取向应力绝对值。",
+  "falsifiable_hypothesis": "如果 heatset_temp +4°C (218->222) 且 td_zone_1 +4°C (108->112) 缩小 TD 温差至 0°C 后，birefringence_cv 改善不足 0.1 (仍 >3.55) 或 birefringence_mean 改善不足 0.005 (仍 >0.086)，则 TD 热区-热定型耦合假说被证伪。此时应转而探索 draw ratio 协同调整（md_draw_ratio + td_draw_ratio 同时下调）或检查模拟器双折射模型是否包含其他主导因子。",
+  "fixed_parameters": [
+    { "tag": "extruder_speed", "value": 100, "reason": "稳定厚度均值，避免引入挤出量扰动" },
+    { "tag": "line_speed", "value": 42, "reason": "保持产能和生产节奏不变" },
+    { "tag": "md_draw_ratio", "value": 3.18, "reason": "当前阶段不引入 MD 方向变动以隔离 TD/热定型响应" },
+    { "tag": "md_zone_temp", "value": 92, "reason": "非双折射主因，保持基线不变" },
+    { "tag": "casting_roll_temp", "value": 34, "reason": "铸片冷却，与 birefringence 关联弱" },
+    { "tag": "melt_temp", "value": 278, "reason": "熔体温度稳定，非当前优化目标" },
+    { "tag": "td_zone_2_temp", "value": 112, "reason": "作为 TD 区温度上锚点保持不变，仅提升 td_zone_1 以缩小温差" }
+  ],
+  "candidate_parameters": [
+    {
+      "rank": 1,
+      "tag": "heatset_temp",
+      "current_value": 218,
+      "direction": "increase",
+      "delta_range": { "min": 1, "max": 4, "step": 1 },
+      "target_range": [220, 224],
+      "priority_score": 0.95,
+      "rationale": "热定型温度是控制 PET 取向应力松弛的最高优先级杠杆。当前 218°C 处于允许范围 [210, 226] 的中下位，有 6°C 安全上调空间。提高 heatset_temp 使得 PET 分子链在热定型段获得更多热运动能量，促进链段弛豫和微晶完善，直接降低双折射均值和波动。产品文档确认'取向与热定型窗口较宽'，高置信度可调。",
+      "evidence": "birefringence_mean=0.09186 比 target 0.078 高出 17.8%，表明当前热定型松弛不足是全局取向过高的核心原因。Quality diagnosis 将此列为高置信度假说。PET 物理特性：热定型温度每升高 1°C，松弛时间常数降低约 3-5%，累积效应显著。",
+      "risk": "low",
+      "expected_effect": "birefringence_mean ↓0.004-0.012, birefringence_cv ↓0.1-0.3",
+      "interaction_notes": "与 td_zone_1_temp 升温强烈协同 — 热定型温度升高需要 TD 热区温度也升高以维持合理的横向温度剖面。与 relaxation_ratio 存在互补关系：高温+低松弛比和低温+高松弛比可能实现相似的双折射效果，但对厚度 CV 影响不同。",
+      "falsifiable": "如果 heatset_temp +2°C 后 birefringence_mean 降幅 <0.003，则取向应力主因不在热定型段松弛不足"
+    },
+    {
+      "rank": 2,
+      "tag": "td_zone_1_temp",
+      "current_value": 108,
+      "direction": "increase",
+      "delta_range": { "min": 1, "max": 4, "step": 1 },
+      "target_range": [110, 112],
+      "priority_score": 0.90,
+      "rationale": "TD zone 1 (108°C) 和 zone 2 (112°C) 之间 4°C 温差是造成双折射横向梯度 (center-peaked profile) 的主要原因。缩小温差至 0-2°C 直接改善 TD 方向的温度均匀性，使薄膜横向各区域的取向历史趋于一致，从而降低 birefringence_cv。当前 td_zone_1 距离下限 102°C 有 6°C 安全空间。",
+      "evidence": "birefringence 剖面呈 center-peaked (中心 0.092-0.093, 边缘 0.090-0.091)，与 TD 温度不均匀导致中心取向更高一致。Quality diagnosis 将此列为高置信度假说。缩小温差在 PET 双拉工艺中被广泛验证可降低双折射 CV。",
+      "risk": "low",
+      "expected_effect": "birefringence_cv ↓0.05-0.2, birefringence 剖面从 center-peaked 趋于平坦",
+      "interaction_notes": "与 heatset_temp 协同最重要 — 单独升温 td_zone_1 而不调 heatset 可能只有边际效果，因为总取向应力仍高。td_zone_1 过调 (超过 td_zone_2) 可能导致边缘取向过高产生相反的剖面形态。",
+      "falsifiable": "如果 td_zone_1 升至 110°C (温差缩至 2°C) 后 birefringence 剖面形态不变，则温度梯度非 center-peaked 主因"
+    },
+    {
+      "rank": 3,
+      "tag": "relaxation_ratio",
+      "current_value": 4.2,
+      "direction": "increase",
+      "delta_range": { "min": 0.2, "max": 0.6, "step": 0.2 },
+      "target_range": [4.4, 4.8],
+      "priority_score": 0.72,
+      "rationale": "松弛比控制薄膜在热定型段 MD 方向的松弛量。当前 4.2% 处于范围 [2.8, 5.6] 的中位。适度提高松弛比使薄膜在 TD 拉伸后有更多 MD 方向回缩空间，降低 MD/TD 取向不对称性，间接改善双折射均匀性。但松弛比过高会增加厚度波动风险。",
+      "evidence": "birefringence_mean 严重偏高提示 MD/TD 双向取向应力都过量。增大松弛比提供额外的 MD 应力释放通道。ledger 历史显示纯降 TD draw ratio 效果有限，说明 MD 方向应力也可能贡献显著。",
+      "risk": "medium",
+      "expected_effect": "birefringence_mean ↓0.002-0.006, birefringence_cv ↓0.03-0.1，可能轻微增加 thickness_cv (+0.05-0.2)",
+      "interaction_notes": "需与 heatset_temp 协同，单独提高松弛比在低温定型下效果打折扣。与 winder_tension 存在张力传递耦合 — 高松弛比可能导致收卷段张力波动。",
+      "falsifiable": "如果 relaxation_ratio +0.4 后 thickness_cv 增加 >0.3 而 birefringence_cv 改善 <0.05，则松弛比杠杆不可用"
+    },
+    {
+      "rank": 4,
+      "tag": "winder_tension",
+      "current_value": 118,
+      "direction": "decrease",
+      "delta_range": { "min": 2, "max": 5, "step": 2 },
+      "target_range": [113, 116],
+      "priority_score": 0.65,
+      "rationale": "收卷张力影响薄膜在冷却定型后的残余应力水平和厚度边缘均匀性。当前 118 处于范围 [105, 132] 中上位。适当降低收卷张力可减少薄膜在收卷前的横向拉伸，改善厚度边缘/中心偏差。这是 thickness_cv 优化的首选参数，对双折射影响预期中性偏正面。",
+      "evidence": "thickness_cv=2.54 严重超标 64%，thickness 剖面 M 形 (边缘高 12.15-12.18，中间低 12.09-12.14)。降低收卷张力有助于减轻边缘增厚。产品文档提示'厚度 CV 优先关注 TD 拉伸与收卷张力'。",
+      "risk": "low",
+      "expected_effect": "thickness_cv ↓0.1-0.5, birefringence 影响中性 (预期 CV 略微改善或不变)",
+      "interaction_notes": "相对独立于 TD/热定型温度调整，可在 birefringence 杠杆调整后单独执行。张力过低 (<110) 可能导致收卷不齐或薄膜松弛。",
+      "falsifiable": "如果 winder_tension -5 后 thickness_cv 不变 (>2.3)，则厚度问题主因是 TD 拉伸参数而非收卷张力"
+    }
+  ],
+  "intervention_strategy": {
+    "phase": "sequential_exploration_with_gate_check",
+    "description": "Exploit 阶段：逐轮执行单参数或小组合调整，每轮通过 quality review gate 验证效果后才推进下一轮。保持 fixed_parameters 稳定以建立清晰的因果归因。",
+    "sequences": [
+      {
+        "round": 1,
+        "label": "保守升温热定型",
+        "changes": [
+          { "tag": "heatset_temp", "current": 218, "target": 219, "delta": 1 }
+        ],
+        "rationale": "最小步长 (+1°C) 验证 heatset_temp 灵敏度。避免一次性大调导致不可归因的耦合效应。此为 ledger 中曾执行但被 rollback 的调整之一，重新验证原因。"
+      },
+      {
+        "round": 2,
+        "label": "进一步升温热定型 + 缩小 TD 温差",
+        "changes": [
+          { "tag": "heatset_temp", "current": 219, "target": 220, "delta": 1 },
+          { "tag": "td_zone_1_temp", "current": 108, "target": 109, "delta": 1 }
+        ],
+        "rationale": "如果 Round 1 有效但不足，继续升温 heatset 至 220 并同步 +1 td_zone_1。双参数协同检验 TD 热区-热定型耦合假说。"
+      },
+      {
+        "round": 3,
+        "label": "继续升温缩小温差",
+        "changes": [
+          { "tag": "heatset_temp", "current": 220, "target": 222, "delta": 2 },
+          { "tag": "td_zone_1_temp", "current": 109, "target": 111, "delta": 2 }
+        ],
+        "rationale": "如果双折射改善趋势明确，继续推进至中间目标：heatset=222, TD 温差=1°C (111 vs 112)。检验线性响应假设。"
+      },
+      {
+        "round": 4,
+        "label": "消除 TD 温差",
+        "changes": [
+          { "tag": "heatset_temp", "current": 222, "target": 223, "delta": 1 },
+          { "tag": "td_zone_1_temp", "current": 111, "target": 112, "delta": 1 }
+        ],
+        "rationale": "TD 温差归零 (td_zone_1 = td_zone_2 = 112)，heatset 升至 223。如果之前 rounds 效果正面，此轮应接近目标。"
+      },
+      {
+        "round": 5,
+        "label": "提高松弛比辅助松弛",
+        "changes": [
+          { "tag": "relaxation_ratio", "current": 4.2, "target": 4.5, "delta": 0.3 }
+        ],
+        "rationale": "在 heatset 调优基础上，提高松弛比进一步释放 MD 方向残余应力。仅在 birefringence_cv 仍 >3.4851 时执行。"
+      },
+      {
+        "round": 6,
+        "label": "降低收卷张力改善厚度均匀性",
+        "changes": [
+          { "tag": "winder_tension", "current": 118, "target": 115, "delta": -3 }
+        ],
+        "rationale": "在 birefringence 目标达成后，降低收卷张力针对性改善 thickness_cv。此轮独立于前 5 轮的双折射优化路径。"
+      }
+    ],
+    "early_exit_conditions": [
+      "birefringence_cv ≤ 3.4851 AND birefringence_mean ≤ 0.081 AND hold_window 30 ticks 确认稳定",
+      "任何 round 导致 birefringence_cv 恶化 >0.1 或 thickness_cv 恶化 >0.5",
+      "安全门拒绝 proposal (limit_applied=true 或 allowed=false)",
+      "产线报警触发"
+    ]
+  },
+  "secondary_constraints_check": {
+    "birefringence_mean_impact": "正面预期：heatset_temp 升高促进分子松弛 → birefringence_mean 从 0.09186 向 0.078 方向下降。每 +1°C heatset 预期降 0.002-0.003。4°C 升温后预期降至 0.080-0.084，进入或接近 tolerance [0.075, 0.081]。",
+    "birefringence_cv_impact": "正面预期：缩小 TD 温差消除中心-边缘取向梯度 → CV 从 3.6485 向 ≤3.4851 方向下降。4°C 温差缩小预期贡献 CV 降幅 0.1-0.3。",
+    "thickness_cv_impact": "中性偏正面：heatset 升温改善熔体流动性可能轻微改善厚度均匀性；relaxation_ratio 提高可能导致 thickness_cv 轻微上升 (+0.05-0.2)；winder_tension 降低预期直接改善 thickness_cv (-0.1-0.5)。净效应预期正面。",
+    "thickness_mean_impact": "中性：固定 extruder_speed=100 和 line_speed=42 不变，厚度均值应保持稳定在 12±0.22 内。"
+  },
+  "hold_time_minutes": 10,
+  "success_criteria": {
+    "primary": "birefringence_cv ≤ 3.4851 (5% 降幅达成)",
+    "secondary": "birefringence_mean ≤ 0.081 (进入 ±0.003 tolerance 范围)",
+    "tertiary": "thickness_cv 不恶化超过 15% (从 2.5428 不超过 2.92)",
+    "guard": "thickness_mean 保持在 11.78-12.22 (12±0.22)，产线无报警，安全门不拒绝"
+  },
+  "stop_rules": [
+    "连续 2 轮 birefringence_cv 变化 <0.03 → 进入 no_progress 判断，需重新诊断",
+    "birefringence_cv 恶化超过 0.15 累积 → 停止探索，rollback 并 re-diagnose",
+    "thickness_cv 恶化超过 0.5 → 停止，优先修复厚度",
+    "birefringence_mean 反而升高 >0.003 → 假说证伪，换方向",
+    "安全门拒绝 2 次 → 停止，重新评估参数边界",
+    "产线报警触发 → 立即停止所有调整"
+  ],
+  "replan_condition": "如果 Round 1-3 全部执行后 birefringence_cv 仍 >3.55 (改善不足 0.1) 或 birefringence_mean 仍 >0.086 (改善不足 0.005)，则 TD 热区-热定型耦合假说被部分证伪。此时需由 quality 重新诊断并考虑：下调 MD draw ratio、下调 TD draw ratio、或同时降低 MD+TD draw ratio 以直接减少取向应力源。如果安全门持续拒绝 proposal，需检查 max_delta_per_action 约束是否过紧 (如 heatset max_delta=1.5 每次) 并改为小步多次调整。",
+  "review_focus": "Process engineer 应重点监控: (1) 每轮调整后 birefringence_mean 的下降趋势和 birefringence_cv 的变化幅度 — 判断 heatset 灵敏度是否符合预期；(2) birefringence 剖面从 center-peaked 向平坦的转变 — 判断 td_zone_1 调温是否有效消除横向取向梯度；(3) thickness_cv 是否有恶化迹象 — 当 relaxation_ratio 提高时尤其需要关注；(4) 每轮执行后 quality agent 的自动复评结论。Quality agent 应关注: birefringence_mean 的实际降幅 vs 预期降幅 (0.002-0.003/°C heatset)，以验证或证伪热定型松弛假说。",
+  "strategy_guidance": "优先执行 Round 1 (heatset_temp +1) 建立灵敏度基线。如果 birefringence_mean 响应 <0.002/°C，考虑加速升温步长。如果 thickness_cv 在升温过程中持续恶化，暂停 TD 热区调整，先处理厚度杠杆 (winder_tension)。所有 rounds 执行前必须通过 preview_proposal 预检安全门。Process agent 持有唯一写入权限 — R&D 不直接调用任何 MCP write 工具。"
+}

@@ -1,0 +1,31 @@
+{
+  "protocol_version": "1.0",
+  "dispatch_id": "DSP-001",
+  "task_id": "OPT-20260612-T001",
+  "iteration": 1,
+  "strategy_cycle_id": "SC-001",
+  "process_iteration_in_cycle": 0,
+  "phase": "team-intake",
+  "timestamp": "2026-06-12T10:03:32Z",
+  "plan": {
+    "phase_1_quality_diagnosis": {
+      "actor": "quality-agent",
+      "action": "读取产线快照和质量数据，输出 quality_diagnosis.json",
+      "waits_for": [],
+      "unblocks": ["rd-agent"]
+    },
+    "phase_2_rd_strategy": {
+      "actor": "rd-agent",
+      "action": "基于质量诊断制定优化策略，输出 rd_optimization_plan.json",
+      "waits_for": ["quality-agent"],
+      "unblocks": ["process-agent"]
+    },
+    "phase_3_process_execution": {
+      "actor": "process-agent",
+      "action": "将策略转为 proposal + safety gate + 执行",
+      "waits_for": ["rd-agent"],
+      "unblocks": ["quality-agent (feedback loop)"]
+    }
+  },
+  "iteration_rule": "首次迭代 Quality→R&D→Process 顺序执行；后续 Process 可在策略活跃期间多轮微调"
+}
