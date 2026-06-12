@@ -2,7 +2,7 @@
   "mcpServers": {
     "industrial-film-line-sim": {
       "command": "node",
-      "args": ["simulator/industrial-film-line/mcp-server.mjs"]
+      "args": ["/Volumes/laxer/codes/skills/Online_optimizer/simulator/industrial-film-line/mcp-server-direct.mjs"]
     }
   }
 }
