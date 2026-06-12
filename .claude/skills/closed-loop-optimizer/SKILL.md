@@ -44,6 +44,15 @@ The command is the deterministic AgentTeam runtime for this repository. It creat
 
 The SDK command is the preferred Claude-native entry when Claude Code is available. It registers the project agents from `.claude/agents/` as SDK `AgentDefinition`s, starts the main thread as `closed-loop-optimization-orchestrator`, enables the `closed-loop-optimizer` skill, and asks the orchestrator to invoke the three teammate subagents through the Agent tool before running the same auditable campaign command.
 
+Runtime selection reference:
+
+- Use `claude_sdk` when Claude Code / Claude Agent SDK is available and you want the most native AgentTeam entry.
+- Use `team_claude_cli` when each quality / R&D / process role should use Claude structured reasoning during the campaign loop.
+- Use `team_deterministic` for stable acceptance tests and reproducible CI-style verification.
+- Use `single_campaign` only for low-level campaign debugging; it is not the full Teamwork mode.
+
+The full runtime matrix and Teamwork contract are documented in `docs/closed-loop-optimizer-runtimes-and-teamwork.md`.
+
 Supported simulated products are `PET_FILM_GRADE_A`, `PPAT_FILM_GRADE_A`, `PMMA_FILM_GRADE_A`, and `PVA_FILM_GRADE_A`. Legacy `BOPET_NEW_GRADE_A` maps to `PET_FILM_GRADE_A`. Product selection changes baseline recipe, writable parameter limits, target template, hidden simulation response, historical recipe memory, and AgentTeam brief context.
 
 Every task gets its own workspace under `workspace/optimization-tasks/<task-id>/`.

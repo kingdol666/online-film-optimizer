@@ -1,0 +1,2 @@
+- [PMMA 双折射优化 2026-06-12 Campaign](project_pmma_birefringence_campaign_20260612.md) — PMMA_FILM_GRADE_A birefringence_cv 4% 下降目标达成，2 轮迭代，td_zone_2_temp 主杠杆
+- [PMMA 双折射主杠杆排序](reference_pmma_lever_ranking.md) — R&D 审查结论：td_zone_2_temp > heatset_temp > winder_tension 优先级，历史 PASS/WARNING recipe 验证

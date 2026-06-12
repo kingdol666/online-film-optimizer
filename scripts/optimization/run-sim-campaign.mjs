@@ -353,6 +353,50 @@ function buildCadencePlan({ iteration, stage, target, config }) {
   };
 }
 
+function resolveProductionCampaignControl({ config, goalRequest, target, args }) {
+  const production = config.orchestrator.production_campaign || {};
+  const runUntilGoal = goalRequest.parsed_goal?.run_mode === 'continuous_goal_seek'
+    ? true
+    : Boolean(production.run_until_goal);
+  const configuredMaxTrials = Math.max(
+    1,
+    Number(production.max_trial_count || goalRequest.stop_criteria?.hard_iteration_cap || target.constraints.max_iterations || 36)
+  );
+  const maxIters = args.maxIters
+    || goalRequest.stop_criteria?.hard_iteration_cap
+    || target.constraints.max_iterations
+    || configuredMaxTrials;
+  return {
+    enabled: production.enabled !== false,
+    run_until_goal: runUntilGoal,
+    max_trial_count: Math.max(1, Number(maxIters || configuredMaxTrials)),
+    max_strategy_cycles: Math.max(
+      1,
+      Number(goalRequest.stop_criteria?.max_strategy_cycles || production.max_strategy_cycles || config.orchestrator.max_strategy_cycles || 6)
+    ),
+    max_runtime_minutes: Math.max(1, Number(production.max_runtime_minutes || 480)),
+    pass_hold_iterations: Math.max(
+      2,
+      Number(goalRequest.stop_criteria?.pass_hold_iterations || production.pass_hold_iterations || 2)
+    ),
+    stable_recipe_hold_minutes: Math.max(1, Number(production.stable_recipe_hold_minutes || 30)),
+    shadow_validation_required: production.shadow_validation_required !== false,
+    physics_constraints_enabled: production.physics_constraints_enabled !== false,
+    spc_diagnosis_enabled: production.spc_diagnosis_enabled !== false,
+    historian_window_minutes: Math.max(1, Number(production.historian_window_minutes || 120)),
+    hard_stop_on_alarm: production.hard_stop_on_alarm !== false,
+    hard_stop_on_sensor_failure: production.hard_stop_on_sensor_failure !== false,
+    stop_philosophy: runUntilGoal
+      ? 'continue_research_process_quality_cycles_until_goal_or_governance_limit'
+      : 'bounded_demo_campaign'
+  };
+}
+
+function runtimeLimitReached(startedAtMs, productionControl) {
+  const elapsedMinutes = (Date.now() - startedAtMs) / 60_000;
+  return elapsedMinutes >= productionControl.max_runtime_minutes;
+}
+
 async function validateLoadedRecipeHold({
   adapter,
   target,
@@ -360,7 +404,8 @@ async function validateLoadedRecipeHold({
   history,
   strategyState,
   stableWindow,
-  requiredWindows
+  requiredWindows,
+  productionGovernance = null
 }) {
   const result = {
     required_windows: requiredWindows,
@@ -382,7 +427,8 @@ async function validateLoadedRecipeHold({
       target,
       previousQuality,
       history,
-      strategyState
+      strategyState,
+      productionGovernance
     });
     result.observed_windows.push({
       index,
@@ -430,7 +476,14 @@ async function main() {
   const reasoningMode = goalRequest.execution?.reasoning_mode || config.orchestrator.reasoning_mode || 'deterministic';
   const claudeRoleConfig = config.orchestrator.claude || {};
 
-  const maxIters = args.maxIters || goalRequest.stop_criteria?.hard_iteration_cap || target.constraints.max_iterations || 10;
+  const productionControl = resolveProductionCampaignControl({
+    config,
+    goalRequest,
+    target,
+    args
+  });
+  const maxIters = productionControl.max_trial_count;
+  const campaignStartedAtMs = Date.now();
   const campaignId = `${target.campaign_id}-${uniqueNowId()}`;
   const runDir = path.resolve(args.baseDir, campaignId);
   const runId = path.basename(runDir);
@@ -449,6 +502,7 @@ async function main() {
 
   writeJson(path.join(runDir, '00_objective', 'orchestrator_goal_request.json'), goalRequest);
   writeJson(path.join(runDir, '00_objective', 'product_target.json'), target);
+  writeJson(path.join(runDir, '00_objective', 'production_campaign_governance.json'), productionControl);
 
   const adapter = createLineAdapter({ config, cwd: projectRoot, goalRequest });
   await adapter.start();
@@ -469,14 +523,14 @@ async function main() {
   let cachedStrategyBundle = null;
   let latestCycleState = null;
   const continuousControl = {
-    passHoldWindow: Math.max(2, goalRequest.stop_criteria?.pass_hold_iterations || 2),
+    passHoldWindow: productionControl.pass_hold_iterations,
     maxConsecutiveWorse: Math.max(
       4,
       config.orchestrator.max_consecutive_worse,
       goalRequest.stop_criteria?.max_consecutive_worse_before_hard_stop || 0
     ),
     maxConsecutiveRejected: Math.max(3, goalRequest.stop_criteria?.max_consecutive_rejected || 3),
-    maxStrategyCycles: Math.max(1, Number(goalRequest.stop_criteria?.max_strategy_cycles || config.orchestrator.max_strategy_cycles || 6))
+    maxStrategyCycles: productionControl.max_strategy_cycles
   };
 
   try {
@@ -493,6 +547,7 @@ async function main() {
     writeJson(path.join(runDir, '00_objective', 'orchestrator_goal_request.json'), goalRequest);
     writeJson(path.join(runDir, '00_objective', 'product_target.json'), target);
     writeJson(path.join(runDir, '00_objective', 'goal_interpretation.json'), targetMaterialization);
+    writeJson(path.join(runDir, '00_objective', 'production_campaign_governance.json'), productionControl);
     initializeBestRecipeMemory(runDir, {
       recipe_id: baselineWindow.snapshot.recipe_id,
       experiment_id: baselineWindow.snapshot.experiment_id,
@@ -507,6 +562,11 @@ async function main() {
       if (control.terminate_requested) {
         finalExecutionState = 'terminated';
         stoppedReason = 'terminate_requested';
+        break;
+      }
+      if (runtimeLimitReached(campaignStartedAtMs, productionControl)) {
+        finalExecutionState = 'governed_stop';
+        stoppedReason = 'production_runtime_budget_reached';
         break;
       }
 
@@ -577,6 +637,20 @@ async function main() {
       const beforeWindow = await adapter.runUntilStable(config.orchestrator.stable_window[stageForWindow].before);
       const snapshot = beforeWindow.snapshot;
       const quality = beforeWindow.online_quality;
+      let historianWindow = null;
+      try {
+        historianWindow = await adapter.readHistorianWindow({
+          minutes: productionControl.historian_window_minutes,
+          product_grade: target.product_grade,
+          strategy_stage: stageForWindow
+        });
+      } catch (error) {
+        historianWindow = {
+          unavailable: true,
+          error: error.message,
+          fallback: 'use_current_stable_window_and_campaign_history'
+        };
+      }
       let diagnosis;
       let diagnosisResult = null;
       let qualityReview;
@@ -596,7 +670,9 @@ async function main() {
               previousQuality,
               history,
               strategyState,
-              cadencePlan
+              cadencePlan,
+              historianWindow,
+              productionGovernance: productionControl
             }
           });
         } catch (error) {
@@ -608,7 +684,9 @@ async function main() {
               previousQuality,
               history,
               strategyState,
-              cadencePlan
+              cadencePlan,
+              historianWindow,
+              productionGovernance: productionControl
             }),
             baseline: null,
             reasoning: {
@@ -647,7 +725,17 @@ async function main() {
           cycleState
         });
       } else {
-        diagnosis = cachedStrategyBundle.diagnosis;
+        diagnosis = qualityEngineer({
+          snapshot,
+          quality,
+          target,
+          previousQuality,
+          history,
+          strategyState,
+          cadencePlan,
+          historianWindow,
+          productionGovernance: productionControl
+        });
         qualityReview = buildQualityReviewReport({
           snapshot,
           target,
@@ -659,6 +747,57 @@ async function main() {
           cadencePlan,
           cycleState
         });
+      }
+
+      if (productionControl.hard_stop_on_alarm && snapshot.alarm_active) {
+        let recoveryReceipt = null;
+        if (bestObserved?.setpoints) {
+          const baselineReceipt = await adapter.loadRecipeBaseline({
+            recipeId: bestObserved.recipe_id,
+            setpoints: bestObserved.setpoints,
+            reason: 'production_alarm_active_restore_best_observed_baseline'
+          });
+          const rollbackReceipt = await adapter.rollbackToRecipe('production_alarm_active_safe_rollback_to_best_observed');
+          recoveryReceipt = { baselineReceipt, rollbackReceipt };
+        }
+        finalExecutionState = 'safety_stopped';
+        stoppedReason = 'production_alarm_active';
+        finalDiagnosis = diagnosis;
+        finalQuality = quality;
+        finalLoss = diagnosis.current_loss;
+        writeJson(path.join(trialEvidenceDir, '00_production_hard_stop.json'), {
+          reason: stoppedReason,
+          snapshot,
+          quality,
+          production_governance: productionControl,
+          recovery_receipt: recoveryReceipt
+        });
+        break;
+      }
+      if (productionControl.hard_stop_on_sensor_failure && quality.sensor_health && quality.sensor_health !== 'OK') {
+        let recoveryReceipt = null;
+        if (bestObserved?.setpoints) {
+          const baselineReceipt = await adapter.loadRecipeBaseline({
+            recipeId: bestObserved.recipe_id,
+            setpoints: bestObserved.setpoints,
+            reason: 'sensor_health_blocked_restore_best_observed_baseline'
+          });
+          const rollbackReceipt = await adapter.rollbackToRecipe('sensor_health_blocked_safe_rollback_to_best_observed');
+          recoveryReceipt = { baselineReceipt, rollbackReceipt };
+        }
+        finalExecutionState = 'safety_stopped';
+        stoppedReason = 'production_sensor_health_blocked';
+        finalDiagnosis = diagnosis;
+        finalQuality = quality;
+        finalLoss = diagnosis.current_loss;
+        writeJson(path.join(trialEvidenceDir, '00_production_hard_stop.json'), {
+          reason: stoppedReason,
+          snapshot,
+          quality,
+          production_governance: productionControl,
+          recovery_receipt: recoveryReceipt
+        });
+        break;
       }
 
       if (!bestObserved || currentLoss < bestObserved.loss) {
@@ -676,6 +815,11 @@ async function main() {
           best_observed_recipe: bestObserved,
           best_history: [...(current.best_history || []), bestObserved]
         }));
+        await adapter.loadRecipeBaseline({
+          recipeId: bestObserved.recipe_id,
+          setpoints: bestObserved.setpoints,
+          reason: 'sync pre-execution best observed recipe as rollback baseline'
+        });
       }
 
       finalDiagnosis = diagnosis;
@@ -709,6 +853,8 @@ async function main() {
       writeJson(path.join(trialEvidenceDir, '01_before_window.json'), beforeWindow);
       writeJson(path.join(trialEvidenceDir, '02_snapshot.json'), snapshot);
       writeJson(path.join(trialEvidenceDir, '03_quality.json'), quality);
+      writeJson(path.join(trialEvidenceDir, '03b_historian_window.json'), historianWindow);
+      writeJson(path.join(trialEvidenceDir, '03c_production_governance.json'), productionControl);
       writeJson(path.join(trialEvidenceDir, '04_diagnosis.json'), diagnosis);
       writeJson(path.join(trialEvidenceDir, '05_strategy_state.json'), strategyState);
       writeJson(path.join(trialEvidenceDir, '05b_cadence_plan.json'), cadencePlan);
@@ -748,6 +894,9 @@ async function main() {
           cadence_plan_path: path.relative(runDir, cadencePath),
           dispatch_plan_path: path.relative(runDir, dispatchPlanPath),
           cycle_state: cycleState,
+          physics_context: diagnosis.physics_context,
+          spc_quality_context: diagnosis.spc_quality_context,
+          production_governance: productionControl,
           stage_recommendation: diagnosis.strategy_recommendation,
           summary: qualityReview
         }
@@ -804,7 +953,8 @@ async function main() {
               target,
               history,
               strategyState,
-              cadencePlan
+              cadencePlan,
+              productionGovernance: productionControl
             }
           });
         } catch (error) {
@@ -816,7 +966,8 @@ async function main() {
               target,
               history,
               strategyState,
-              cadencePlan
+              cadencePlan,
+              productionGovernance: productionControl
             }),
             baseline: null,
             reasoning: {
@@ -885,7 +1036,8 @@ async function main() {
           snapshot,
           strategyState,
           rollbackRecipeId: readBestRecipeMemory(runDir).active_baseline_recipe_id,
-          cadencePlan
+          cadencePlan,
+          productionGovernance: productionControl
         }
       });
       } catch (error) {
@@ -897,7 +1049,8 @@ async function main() {
             snapshot,
             strategyState,
             rollbackRecipeId: readBestRecipeMemory(runDir).active_baseline_recipe_id,
-            cadencePlan
+            cadencePlan,
+            productionGovernance: productionControl
           }),
           baseline: null,
           reasoning: {
@@ -1107,7 +1260,8 @@ async function main() {
           target,
           previousQuality: quality,
           history,
-          strategyState
+          strategyState,
+          productionGovernance: productionControl
         }).quality_state;
 
         if (!bestObserved || finalLoss < bestObserved.loss) {
@@ -1313,7 +1467,8 @@ async function main() {
       target,
       previousQuality,
       history,
-      strategyState
+      strategyState,
+      productionGovernance: productionControl
     });
     finalLoss = finalDiagnosis.current_loss;
 
@@ -1353,7 +1508,8 @@ async function main() {
           history,
           strategyState,
           stableWindow: config.orchestrator.stable_window.exploit.after,
-          requiredWindows: bestObservedGoalReachedCandidate ? continuousControl.passHoldWindow : 1
+          requiredWindows: bestObservedGoalReachedCandidate ? continuousControl.passHoldWindow : 1,
+          productionGovernance: productionControl
         });
         if (holdValidation.latest_snapshot) finalSnapshot = holdValidation.latest_snapshot;
         if (holdValidation.latest_quality) finalQuality = holdValidation.latest_quality;
@@ -1390,6 +1546,7 @@ async function main() {
       setpoints: stabilizedSnapshot.setpoints,
       metrics: finalQuality.metrics,
       checked_at: new Date().toISOString(),
+      production_hold_minutes_required: productionControl.stable_recipe_hold_minutes,
       production_use_policy: goalReached
         ? 'shadow_validation_required_before_full_release'
         : 'continue_optimization_before_release'
@@ -1427,6 +1584,10 @@ async function main() {
       final_setpoints: stabilizedSnapshot.setpoints,
       best_observed: bestObserved,
       best_observed_goal_reached: bestObservedGoalReached,
+      production_governance: productionControl,
+      continuation_policy: goalReached
+        ? 'freeze_best_recipe_then_run_shadow_validation_before_real_release'
+        : 'rollback_to_best_observed_recipe_and_continue_next_campaign_with_same_task_workspace',
       best_recipe_memory_file: '07_coordination/best_recipe_memory.json',
       final_recipe_stability_check: '06_recipe/final_recipe_stability_check.json',
       evidence_root: '08_trial_evidence',

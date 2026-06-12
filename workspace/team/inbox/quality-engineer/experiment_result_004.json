@@ -1,0 +1,85 @@
+{
+  "protocol_version": "1.0.0",
+  "message_id": "MSG-20260612124547800-EO49",
+  "role": "quality-engineer",
+  "from": "quality-engineer",
+  "to": [
+    "rd-engineer",
+    "process-engineer",
+    "team-lead"
+  ],
+  "stage": "exploit",
+  "purpose": "quality-feedback",
+  "summary": "decision=effective",
+  "inputs": [
+    "04_execution/execution_receipt_004.json",
+    "05_results/experiment_result_004.json"
+  ],
+  "outputs": [
+    "07_coordination/executive_summary_004.md"
+  ],
+  "risks": [],
+  "next_action": "keep_learning_same_direction",
+  "artifact_refs": [
+    "04_execution/execution_receipt_004.json",
+    "05_results/experiment_result_004.json"
+  ],
+  "requested_actions": [],
+  "requires_response": false,
+  "reply_to_message_id": null,
+  "persona_signal": "",
+  "payload": {
+    "stage": "exploit",
+    "purpose": "quality-feedback",
+    "summary": "decision=effective",
+    "inputs": [
+      "04_execution/execution_receipt_004.json",
+      "05_results/experiment_result_004.json"
+    ],
+    "outputs": [
+      "07_coordination/executive_summary_004.md"
+    ],
+    "risks": [],
+    "next_action": "keep_learning_same_direction",
+    "artifact_refs": [
+      "04_execution/execution_receipt_004.json",
+      "05_results/experiment_result_004.json"
+    ],
+    "cycle_state": {
+      "strategy_cycle_id": 1,
+      "process_iteration_in_cycle": 4,
+      "max_process_iterations_in_cycle": 4,
+      "plan_source": "carry_forward",
+      "replan_reason": "carry_forward_strategy",
+      "cycle_consecutive_ineffective": 0,
+      "cycle_consecutive_rejected": 0,
+      "cycle_consecutive_worse": 1,
+      "cycle_no_progress_count": 1
+    },
+    "result_path": "05_results/experiment_result_004.json",
+    "experiment_result": {
+      "campaign_id": "CMP-SIM-BOPET-NEW-GRADE-A-20260612124547672-736D",
+      "experiment_id": "EXP-004",
+      "executed": true,
+      "write_confirmed": true,
+      "stable_window_before": "win_EXP-003_88",
+      "stable_window_after": "win_EXP-004_104",
+      "control_mode": "exploit",
+      "online_response": {
+        "thickness_cv_change_pct": -3.8351,
+        "birefringence_cv_change_pct": -3.8329,
+        "quality_loss_change_pct": -59.9968
+      },
+      "decision": "effective",
+      "waste_meter": 210,
+      "operator_note": "simulated effective run",
+      "data_mining_summary": {
+        "response_strength": 59.9968,
+        "dominant_metric_shift": "thickness_cv",
+        "recommended_followup": "keep_learning_same_direction"
+      }
+    }
+  },
+  "created_at": "2026-06-12T04:45:47.800Z",
+  "message_name": "experiment_result_004"
+}

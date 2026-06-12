@@ -271,14 +271,24 @@ function updateActiveRunOnClose(code) {
   };
 }
 
+function resolveMaxIters({ normalizedGoalRequest, maxIters }) {
+  if (Number.isFinite(Number(maxIters)) && Number(maxIters) > 0) return Number(maxIters);
+  return Number(
+    normalizedGoalRequest.stop_criteria?.hard_iteration_cap
+      || config.orchestrator.production_campaign?.max_trial_count
+      || 36
+  );
+}
+
 function resolveLaunchSpec({ normalizedGoalRequest, launchMode, maxIters, seed, stateFile }) {
+  const effectiveMaxIters = resolveMaxIters({ normalizedGoalRequest, maxIters });
   if (launchMode === 'claude_sdk') {
     return {
       script: path.join(PROJECT_ROOT, 'scripts', 'optimization', 'run-claude-sdk-skill.mjs'),
       args: [
         '--goal-text', normalizedGoalRequest.goal_text || normalizedGoalRequest.user_objective?.performance_goal || '',
         '--product-grade', normalizedGoalRequest.product_grade,
-        '--max-iters', String(maxIters),
+        '--max-iters', String(effectiveMaxIters),
         '--seed', String(seed),
         '--reasoning-mode', normalizedGoalRequest.execution?.reasoning_mode || config.orchestrator.reasoning_mode || 'deterministic',
         '--max-turns', '20'
@@ -293,7 +303,7 @@ function resolveLaunchSpec({ normalizedGoalRequest, launchMode, maxIters, seed, 
         '--target', TARGET_FILE,
         '--goal-request', path.join(config.runtime_dir, 'goal-requests', `${normalizedGoalRequest.request_id}.json`),
         '--base-dir', TASK_BASE_DIR,
-        '--max-iters', String(maxIters),
+        '--max-iters', String(effectiveMaxIters),
         '--seed', String(seed),
         '--product-grade', normalizedGoalRequest.product_grade,
         '--reasoning-mode',
@@ -310,7 +320,7 @@ function resolveLaunchSpec({ normalizedGoalRequest, launchMode, maxIters, seed, 
       '--target', TARGET_FILE,
       '--goal-request', path.join(config.runtime_dir, 'goal-requests', `${normalizedGoalRequest.request_id}.json`),
       '--base-dir', CAMPAIGN_BASE_DIR,
-      '--max-iters', String(maxIters),
+      '--max-iters', String(effectiveMaxIters),
       '--seed', String(seed),
       '--state-file', stateFile,
       '--product-grade', normalizedGoalRequest.product_grade,
@@ -385,7 +395,7 @@ export function runOrchestrator({
   productGrade,
   reasoningMode,
   launchMode = 'team_deterministic',
-  maxIters = 12,
+  maxIters = null,
   seed = 20260610,
   stateFile = path.join(PROJECT_ROOT, 'workspace', 'runtime', 'simulator-state.json')
 } = {}) {

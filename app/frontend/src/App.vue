@@ -180,6 +180,140 @@
           </a-card>
         </section>
 
+        <section class="agent-studio-section">
+          <a-card class="glass-card agent-studio-card" :bordered="false">
+            <template #title>
+              <div class="card-title-row">
+                <span>AgentTeam 2D 协作现场</span>
+                <a-space wrap>
+                  <a-tag :color="strategyStage === 'recover' ? 'red' : strategyStage === 'exploit' ? 'blue' : 'green'">
+                    {{ strategyStage || 'waiting' }}
+                  </a-tag>
+                  <a-tag color="cyan">事件绑定 {{ visualTeamEvents.length }}</a-tag>
+                </a-space>
+              </div>
+            </template>
+
+            <div class="agent-studio">
+              <div class="studio-map">
+                <div class="studio-grid-glow"></div>
+                <div
+                  v-for="lane in activeMessageLanes"
+                  :key="lane.key"
+                  class="message-lane"
+                  :data-from="lane.from"
+                  :data-to="lane.to"
+                  :style="lane.style"
+                >
+                  <span class="message-packet">
+                    <span class="packet-icon">{{ lane.icon }}</span>
+                  </span>
+                  <span class="lane-label">{{ lane.label }}</span>
+                </div>
+
+                <button
+                  v-for="agent in studioAgents"
+                  :key="agent.role"
+                  class="studio-agent"
+                  :class="`studio-agent-${agent.role}`"
+                  :data-role="agent.role"
+                  :data-state="agent.state"
+                  :data-focused="focusAgent === agent.role"
+                  :style="{ left: `${agent.position.x}%`, top: `${agent.position.y}%` }"
+                  @click="focusAgent = agent.role"
+                >
+                  <span class="workspace-halo"></span>
+                  <span class="cartoon-agent">
+                    <span class="agent-head">
+                      <span class="agent-hair"></span>
+                      <span class="agent-eye left"></span>
+                      <span class="agent-eye right"></span>
+                      <span class="agent-mouth"></span>
+                    </span>
+                    <span class="agent-torso">
+                      <span class="agent-badge-icon">{{ agent.icon }}</span>
+                    </span>
+                    <span class="agent-arm agent-arm-left"></span>
+                    <span class="agent-arm agent-arm-right"></span>
+                    <span class="agent-desk-tool">{{ agent.toolIcon }}</span>
+                  </span>
+                  <span class="studio-agent-name">{{ agent.label }}</span>
+                  <span class="studio-agent-action">{{ agent.currentAction }}</span>
+                </button>
+
+                <div class="studio-center-console">
+                  <div class="console-orbit"></div>
+                  <div class="console-core">
+                    <span>Goal</span>
+                    <strong>{{ runSummary?.goal_reached ? '已达成' : '优化中' }}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="studio-side">
+                <div class="studio-brief">
+                  <div class="field-label">当前团队动作</div>
+                  <h3>{{ focusedAgentInfo.label }}</h3>
+                  <p>{{ focusedAgentInfo.currentAction }}</p>
+                  <a-tag :color="agentStateColor(focusedAgentInfo.state)">
+                    {{ agentStateText(focusedAgentInfo.state) }}
+                  </a-tag>
+                </div>
+
+                <div class="message-console">
+                  <div class="field-label">Agent 通信指令黑板</div>
+                  <div
+                    v-for="event in visualTeamEvents.slice(-5).reverse()"
+                    :key="`${event.key}-console`"
+                    class="message-console-row"
+                    :data-role="event.from"
+                  >
+                    <div class="message-route">
+                      <span>{{ agentMeta[event.from]?.label || event.from }}</span>
+                      <span class="route-arrow">→</span>
+                      <span>{{ event.to.map((role) => agentMeta[role]?.label || role).join(' / ') }}</span>
+                    </div>
+                    <div class="message-command">{{ event.actionText || event.summary }}</div>
+                    <div class="message-artifacts">
+                      {{ compactArtifacts(event.artifactRefs) }}
+                    </div>
+                  </div>
+                  <a-empty v-if="!visualTeamEvents.length" description="等待团队通信" />
+                </div>
+
+                <div class="workspace-grid">
+                  <div
+                    v-for="agent in studioAgents"
+                    :key="`${agent.role}-workspace`"
+                    class="workspace-card"
+                    :data-role="agent.role"
+                    :data-focused="focusAgent === agent.role"
+                    @click="focusAgent = agent.role"
+                  >
+                    <div class="workspace-head">
+                      <span class="workspace-icon">{{ agent.icon }}</span>
+                      <strong>{{ agent.workspaceTitle }}</strong>
+                    </div>
+                    <p>{{ agent.workspaceDescription }}</p>
+                    <div class="workspace-event">
+                      {{ agent.lastEvent?.summary || agent.summary || '等待上游交接文件' }}
+                    </div>
+                    <div class="workspace-artifacts">
+                      <a-tag
+                        v-for="artifact in agent.artifacts"
+                        :key="artifact"
+                        size="small"
+                      >
+                        {{ artifact }}
+                      </a-tag>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </a-card>
+        </section>
+
         <section class="content-grid triple-grid">
           <a-card class="glass-card" :bordered="false" title="实时执行脉冲">
             <div class="pulse-stack">
@@ -563,6 +697,164 @@ const eventFilterOptions = computed(() => ([
   { label: '研发', value: 'rd-engineer' },
   { label: '工艺', value: 'process-engineer' }
 ]));
+
+const agentMeta = {
+  'team-lead': {
+    label: '总编排',
+    icon: '◎',
+    toolIcon: '📋',
+    workspaceTitle: '调度室',
+    workspaceDescription: '拆解目标、安排角色、检查收敛与 recipe 冻结。',
+    position: { x: 50, y: 12 },
+    artifacts: ['goal_request', 'dispatch_plan', 'run_summary']
+  },
+  'quality-engineer': {
+    label: '质量 Agent',
+    icon: 'Q',
+    toolIcon: '⌁',
+    workspaceTitle: '质量实验台',
+    workspaceDescription: '读取稳定窗口、评价指标趋势、给出阶段建议。',
+    position: { x: 17, y: 68 },
+    artifacts: ['quality_review', 'strategy_state', 'quality_feedback']
+  },
+  'rd-engineer': {
+    label: '研发 Agent',
+    icon: 'R',
+    toolIcon: '✦',
+    workspaceTitle: '研发策略台',
+    workspaceDescription: '结合产品知识和响应记忆，生成主假设与候选杠杆。',
+    position: { x: 50, y: 78 },
+    artifacts: ['rd_plan', 'rd_brief', 'lever_memory']
+  },
+  'process-engineer': {
+    label: '工艺 Agent',
+    icon: 'P',
+    toolIcon: '⚙',
+    workspaceTitle: '工艺控制台',
+    workspaceDescription: '把研发策略转成安全门、审批包和 MCP 参数动作。',
+    position: { x: 83, y: 68 },
+    artifacts: ['proposal', 'safety_gate', 'execution_receipt']
+  }
+};
+
+function normalizeRole(role) {
+  if (!role) return 'team-lead';
+  if (role === 'quality') return 'quality-engineer';
+  if (role === 'rd') return 'rd-engineer';
+  if (role === 'process') return 'process-engineer';
+  return agentMeta[role] ? role : 'team-lead';
+}
+
+function eventSender(item) {
+  return normalizeRole(item?.from || item?.actor || item?.role);
+}
+
+function eventRecipients(item) {
+  const direct = Array.isArray(item?.to) ? item.to : item?.to ? [item.to] : [];
+  const normalized = direct.map(normalizeRole).filter((role) => role !== eventSender(item));
+  if (normalized.length) return [...new Set(normalized)];
+  const role = normalizeRole(item?.role);
+  const sender = eventSender(item);
+  if (role !== sender) return [role];
+  if (item?.purpose?.includes('quality')) return ['quality-engineer'];
+  if (item?.purpose?.includes('rd')) return ['rd-engineer'];
+  if (item?.purpose?.includes('process')) return ['process-engineer'];
+  return ['team-lead'];
+}
+
+function eventActionText(item) {
+  const purpose = item?.purpose || item?.kind || item?.type || 'team-event';
+  if (purpose.includes('quality')) return '质量评估';
+  if (purpose.includes('rd')) return '研发规划';
+  if (purpose.includes('process')) return '工艺执行';
+  if (purpose.includes('complete')) return '冻结结果';
+  if (purpose.includes('intake')) return '任务交接';
+  return purpose;
+}
+
+const visualTeamEvents = computed(() => {
+  const messages = teamMessages.value.length
+    ? teamMessages.value
+    : eventFeed.value;
+  return messages.map((item, index) => {
+    const from = eventSender(item);
+    const to = eventRecipients(item);
+    return {
+      ...item,
+      key: item.message_id || `${item.kind || item.type || 'event'}-${item.created_at || item.timestamp || index}`,
+      from,
+      to,
+      primaryTo: to[0] || 'team-lead',
+      label: eventActionText(item),
+      actionText: item.next_action || item.payload?.next_action || eventActionText(item),
+      artifactRefs: item.artifact_refs || item.payload?.artifact_refs || [],
+      timestamp: item.created_at || item.timestamp || null
+    };
+  });
+});
+
+function latestEventForRole(role) {
+  return [...visualTeamEvents.value].reverse().find((item) => (
+    item.from === role || item.to.includes(role) || normalizeRole(item.role) === role
+  )) || null;
+}
+
+const studioAgents = computed(() => {
+  const statusMap = Object.fromEntries(agentStatuses.value.map((agent) => [agent.role, agent]));
+  return Object.entries(agentMeta).map(([role, meta]) => {
+    const status = statusMap[role] || {};
+    const lastEvent = latestEventForRole(role);
+    return {
+      role,
+      ...meta,
+      state: status.state || (orchestrator.value?.activeRun?.status === 'running' ? 'working' : 'idle'),
+      stage: status.stage || strategyStage.value || '-',
+      summary: status.summary || lastEvent?.summary || '等待任务',
+      nextAction: status.nextAction || lastEvent?.actionText || '',
+      currentAction: lastEvent?.actionText || status.nextAction || status.summary || '等待任务',
+      lastEvent
+    };
+  });
+});
+
+const focusedAgentInfo = computed(() =>
+  studioAgents.value.find((agent) => agent.role === focusAgent.value)
+  || studioAgents.value[0]
+  || { label: '团队', currentAction: '等待任务', state: 'idle' }
+);
+
+function laneGeometry(fromRole, toRole) {
+  const from = agentMeta[fromRole]?.position || agentMeta['team-lead'].position;
+  const to = agentMeta[toRole]?.position || agentMeta['team-lead'].position;
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+  return {
+    left: `${from.x}%`,
+    top: `${from.y}%`,
+    width: `${length}%`,
+    transform: `rotate(${angle}deg)`,
+    '--lane-delay': `${Math.abs(dx + dy) % 5 * -0.18}s`
+  };
+}
+
+const activeMessageLanes = computed(() =>
+  visualTeamEvents.value
+    .filter((item) => item.from !== item.primaryTo)
+    .slice(-7)
+    .map((item, index) => ({
+      key: `${item.key}-${item.from}-${item.primaryTo}`,
+      from: item.from,
+      to: item.primaryTo,
+      label: item.label,
+      icon: agentMeta[item.from]?.icon || '•',
+      style: {
+        ...laneGeometry(item.from, item.primaryTo),
+        '--lane-order': String(index)
+      }
+    }))
+);
 const approvalPacket = computed(() =>
   latestTask.value?.latestCampaign?.approvalPacket
   || orchestrator.value?.latestRun?.latestApprovalPacket
@@ -683,6 +975,14 @@ function formatTime(value) {
   const date = new Date(normalized);
   if (Number.isNaN(date.getTime())) return normalized;
   return date.toLocaleTimeString('zh-CN', { hour12: false });
+}
+
+function compactArtifacts(artifacts = []) {
+  if (!artifacts.length) return 'artifact_refs: -';
+  const names = artifacts
+    .slice(0, 3)
+    .map((item) => String(item).split('/').pop());
+  return `artifact_refs: ${names.join(', ')}${artifacts.length > 3 ? ' ...' : ''}`;
 }
 
 function applyRealtimeSnapshot(snapshot) {

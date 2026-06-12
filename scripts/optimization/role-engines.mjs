@@ -24,6 +24,165 @@ const TUNING = Object.freeze({
   history_window: 6,
 });
 
+function buildProductionGovernanceContext(productionGovernance = null) {
+  if (!productionGovernance) {
+    return {
+      mode: 'campaign_default',
+      run_until_goal: true,
+      industrial_boundary: 'bounded_continuous_optimization'
+    };
+  }
+  return {
+    mode: productionGovernance.enabled ? 'production_campaign' : 'demo_campaign',
+    run_until_goal: Boolean(productionGovernance.run_until_goal),
+    max_trial_count: productionGovernance.max_trial_count ?? null,
+    max_strategy_cycles: productionGovernance.max_strategy_cycles ?? null,
+    max_runtime_minutes: productionGovernance.max_runtime_minutes ?? null,
+    pass_hold_iterations: productionGovernance.pass_hold_iterations ?? null,
+    stable_recipe_hold_minutes: productionGovernance.stable_recipe_hold_minutes ?? null,
+    shadow_validation_required: productionGovernance.shadow_validation_required ?? true,
+    physics_constraints_enabled: productionGovernance.physics_constraints_enabled ?? true,
+    spc_diagnosis_enabled: productionGovernance.spc_diagnosis_enabled ?? true,
+    industrial_boundary: 'continue_until_goal_or_governance_limit'
+  };
+}
+
+function buildBopetPhysicsContext({
+  snapshot,
+  quality,
+  target,
+  history = [],
+  metricEvaluations = []
+}) {
+  const profile = getProductProfile(target.product_grade);
+  const optimum = profile.model?.optimum || {};
+  const setpoints = snapshot.setpoints || {};
+  const metrics = quality.metrics || {};
+  const family = String(target.product_context?.material_family || profile.material_family || 'PET').toUpperCase();
+  const drawBalance = round((setpoints.td_draw_ratio || 0) - (setpoints.md_draw_ratio || 0), 5);
+  const heatRelaxationIndex = round(
+    ((setpoints.td_zone_1_temp || 0) + (setpoints.td_zone_2_temp || 0) + (setpoints.heatset_temp || 0)) / 3
+      - (profile.model?.heat_balance_reference || setpoints.td_zone_2_temp || 0),
+    5
+  );
+  const orientationGap = Number.isFinite(metrics.birefringence_mean)
+    ? round(metrics.birefringence_mean - target.targets.birefringence_mean.target, 6)
+    : null;
+  const primaryOutOfSpec = metricEvaluations
+    .filter((item) => !item.within_spec)
+    .map((item) => item.metric);
+  const leverCouplings = {
+    td_zone_2_temp: ['TD thermal uniformity', 'orientation relaxation', 'birefringence_cv'],
+    heatset_temp: ['residual stress relaxation', 'thermal shrinkage risk', 'birefringence_mean'],
+    td_draw_ratio: ['TD orientation', 'edge-center profile', 'thickness_cv'],
+    md_draw_ratio: ['MD orientation', 'draw balance', 'birefringence_mean'],
+    winder_tension: ['winding stability', 'profile amplification', 'thickness_cv'],
+    extruder_speed: ['throughput', 'thickness_mean', 'drawdown balance'],
+    line_speed: ['residence time', 'drawdown', 'thickness_mean']
+  };
+  const riskFlags = [];
+  if (Math.abs(orientationGap || 0) > target.targets.birefringence_mean.tolerance * 1.5) {
+    riskFlags.push('orientation_mean_offset');
+  }
+  if (primaryOutOfSpec.includes('birefringence_cv')) riskFlags.push('orientation_uniformity_risk');
+  if (primaryOutOfSpec.includes('thickness_cv')) riskFlags.push('profile_uniformity_risk');
+  if (Math.abs(drawBalance - ((optimum.td_draw_ratio || 0) - (optimum.md_draw_ratio || 0))) > 0.18) {
+    riskFlags.push('md_td_draw_balance_deviation');
+  }
+  if (family === 'PET' && Math.abs(heatRelaxationIndex) > 45) riskFlags.push('thermal_relaxation_window_deviation');
+  if (family !== 'PET' && Math.abs(heatRelaxationIndex) > 25) riskFlags.push('narrow_thermal_window_material');
+
+  return {
+    model: 'bopet_physics_reduced_order_v1',
+    material_family: family,
+    product_grade: target.product_grade,
+    primary_out_of_spec: primaryOutOfSpec,
+    draw_balance: drawBalance,
+    heat_relaxation_index: heatRelaxationIndex,
+    orientation_gap: orientationGap,
+    process_region_hypotheses: inferProcessRegionHypotheses(primaryOutOfSpec),
+    lever_couplings: leverCouplings,
+    best_history_count: history.length,
+    risk_flags: riskFlags,
+    overall_risk: snapshot.alarm_active
+      ? 'alarm_blocked'
+      : riskFlags.length >= 3
+        ? 'high'
+        : riskFlags.length >= 1
+          ? 'medium'
+          : 'low',
+    physical_constraints: {
+      do_not_change_all_coupled_draw_and_heat_levers_at_once: true,
+      hold_after_write_before_quality_judgement: true,
+      release_requires_shadow_validation: true
+    }
+  };
+}
+
+function inferProcessRegionHypotheses(metrics) {
+  const hypotheses = new Set();
+  if (metrics.includes('thickness_mean')) hypotheses.add('extrusion_drawdown_balance');
+  if (metrics.includes('thickness_cv')) hypotheses.add('casting_td_profile_winding_chain');
+  if (metrics.includes('birefringence_mean')) hypotheses.add('md_td_orientation_balance');
+  if (metrics.includes('birefringence_cv')) hypotheses.add('td_thermal_uniformity_heatset_relaxation');
+  if (hypotheses.size === 0) hypotheses.add('stable_recipe_hold_validation');
+  return [...hypotheses];
+}
+
+function buildSpcQualityContext({
+  quality,
+  previousQuality = null,
+  history = [],
+  historianWindow = null
+}) {
+  const metrics = quality.metrics || {};
+  const previousMetrics = previousQuality?.metrics || null;
+  const metricTrend = {};
+  for (const [metric, value] of Object.entries(metrics)) {
+    const previous = previousMetrics?.[metric];
+    metricTrend[metric] = {
+      current: round(value, 6),
+      previous: Number.isFinite(previous) ? round(previous, 6) : null,
+      delta: Number.isFinite(previous) ? round(value - previous, 6) : null,
+      delta_pct: Number.isFinite(previous) ? round(percentChange(value, previous), 4) : null
+    };
+  }
+  const recent = history.slice(-TUNING.history_window);
+  const lossSeries = recent
+    .map((item) => item.experiment_result?.online_response?.quality_loss_change_pct)
+    .filter((value) => Number.isFinite(value));
+  const avgLossChange = lossSeries.length > 0
+    ? round(lossSeries.reduce((sum, value) => sum + value, 0) / lossSeries.length, 4)
+    : null;
+  const positiveDrift = lossSeries.filter((value) => value > 3).length;
+  const negativeDrift = lossSeries.filter((value) => value < -3).length;
+
+  return {
+    model: 'spc_lightweight_v1',
+    historian_window_available: Boolean(historianWindow),
+    recent_trials: recent.length,
+    sensor_health: quality.sensor_health || 'UNKNOWN',
+    metric_trend: metricTrend,
+    quality_loss_change_avg_pct: avgLossChange,
+    cusum_like_signal: {
+      positive_worsening_count: positiveDrift,
+      negative_improvement_count: negativeDrift
+    },
+    control_state: quality.sensor_health && quality.sensor_health !== 'OK'
+      ? 'sensor_degraded'
+      : positiveDrift >= 3
+        ? 'drifting_worse'
+        : negativeDrift >= 2
+          ? 'improving'
+          : recent.length >= 3
+            ? 'stable_or_mixed'
+            : 'insufficient_history',
+    required_next_evidence: recent.length >= 3
+      ? ['stable_window_after_write', 'profile_repeatability']
+      : ['more_trials_for_spc_confidence']
+  };
+}
+
 export function qualityEngineer({
   snapshot,
   quality,
@@ -31,7 +190,9 @@ export function qualityEngineer({
   previousQuality = null,
   history = [],
   strategyState = null,
-  cadencePlan = null
+  cadencePlan = null,
+  historianWindow = null,
+  productionGovernance = null
 }) {
   const metrics = quality.metrics;
   const targetSpec = target.targets;
@@ -45,6 +206,19 @@ export function qualityEngineer({
   const lossPrevious = previousQuality ? qualityLoss(previousQuality.metrics, target) : null;
   const responseAssessment = classifyResponse(lossPrevious, lossCurrent);
   const recentDecisionTrail = summarizeRecentDecisionTrail(history);
+  const physicsContext = buildBopetPhysicsContext({
+    snapshot,
+    quality,
+    target,
+    history,
+    metricEvaluations
+  });
+  const spcContext = buildSpcQualityContext({
+    quality,
+    previousQuality,
+    history,
+    historianWindow
+  });
 
   const processRegionMap = {
     thickness_mean: ['extrusion_casting_stretch_balance'],
@@ -75,7 +249,9 @@ export function qualityEngineer({
     history_signal: historySignals.summary,
     response_assessment: responseAssessment,
     stage_recommendation: stageRecommendation.next_stage,
-    cadence_mode: cadenceMode
+    cadence_mode: cadenceMode,
+    physics_risk: physicsContext.overall_risk,
+    spc_state: spcContext.control_state
   };
 
   return {
@@ -91,6 +267,9 @@ export function qualityEngineer({
     current_loss: round(lossCurrent, 5),
     metric_evaluations: metricEvaluations,
     process_risk_summary: processRisk,
+    spc_quality_context: spcContext,
+    physics_context: physicsContext,
+    production_governance_context: buildProductionGovernanceContext(productionGovernance),
     history_signal_summary: historySignals,
     recent_decision_trail: recentDecisionTrail,
     decision_context: decisionContext,
@@ -114,7 +293,8 @@ export function rdEngineer({
   target,
   history = [],
   strategyState = null,
-  cadencePlan = null
+  cadencePlan = null,
+  productionGovernance = null
 }) {
   const metrics = quality.metrics;
   const setpoints = snapshot.setpoints;
@@ -167,7 +347,13 @@ export function rdEngineer({
       selected_primary_lever: selected.name,
       selected_reason: selected.rationale,
       control_mode: stage,
-      mode_reason: strategyState?.transition_reason || 'default_stage_logic'
+      mode_reason: strategyState?.transition_reason || 'default_stage_logic',
+      physics_data_dual_drive: {
+        physics_context: diagnosis.physics_context || null,
+        spc_context: diagnosis.spc_quality_context || null,
+        historian_window_used: Boolean(diagnosis.spc_quality_context?.historian_window_available),
+        governance: buildProductionGovernanceContext(productionGovernance)
+      }
     },
     review_focus: selected.review_focus,
     strategy_guidance: {
@@ -186,7 +372,8 @@ export function processEngineer({
   snapshot,
   strategyState = null,
   rollbackRecipeId = null,
-  cadencePlan = null
+  cadencePlan = null,
+  productionGovernance = null
 }) {
   const primary = plan.candidate_parameters[0];
   if (!primary) {
@@ -216,12 +403,21 @@ export function processEngineer({
     ],
     rollback_recipe: rollbackRecipeId || snapshot.recipe_id,
     expected_lag_minutes: plan.hold_time_minutes || cadencePlan?.process_settle_minutes || 8,
+    production_execution_policy: {
+      execution_mode: 'approval_gated',
+      stable_wait_required: true,
+      expected_stabilization_minutes: plan.hold_time_minutes || cadencePlan?.process_settle_minutes || 8,
+      rollback_baseline_required: true,
+      shadow_validation_required: productionGovernance?.shadow_validation_required ?? true,
+      real_line_write_boundary: 'MCP/online bridge only after safety gate and approval'
+    },
     execution_intent: {
       primary_objective: plan.objective,
       primary_hypothesis: plan.hypothesis,
       risk_guardrails: plan.stop_rules,
       control_mode: strategyState?.stage || plan.control_mode || 'explore',
-      operator_message: `调整 ${primary.name} 以验证：${primary.expected_response}`
+      operator_message: `调整 ${primary.name} 以验证：${primary.expected_response}`,
+      physics_risk_screen: plan.plan_rationale?.physics_data_dual_drive?.physics_context || null
     }
   };
 }
@@ -410,6 +606,8 @@ export function buildRDAgentBrief({
     recommendation_from_quality: diagnosis.recommended_next_action,
     strategy_stage: strategyState?.stage || diagnosis.strategy_recommendation?.next_stage || 'explore',
     cadence_plan: cadencePlan,
+    physics_context: diagnosis.physics_context || null,
+    spc_quality_context: diagnosis.spc_quality_context || null,
     history_signal: diagnosis.history_signal_summary?.summary || 'no_history',
     response_memory_window: history.slice(-3).map((item) => ({
       iteration: item.iteration,
@@ -443,6 +641,9 @@ export function buildProcessAgentBrief({
     cadence_plan: cadencePlan,
     review_focus: plan.review_focus || [],
     diagnosis_priority: diagnosis.primary_quality_gap,
+    physics_risk: diagnosis.physics_context?.overall_risk || 'unknown',
+    spc_state: diagnosis.spc_quality_context?.control_state || 'unknown',
+    stable_wait_minutes: plan.hold_time_minutes || cadencePlan?.process_settle_minutes || null,
     risk_posture: diagnosis.process_risk_summary?.execution_readiness || 'ready',
     approval_required: Boolean(approvalRequired)
   };
@@ -481,6 +682,9 @@ export function buildQualityReviewReport({
     },
     metric_evaluations: diagnosis.metric_evaluations,
     process_risk_summary: diagnosis.process_risk_summary,
+    spc_quality_context: diagnosis.spc_quality_context || null,
+    physics_context: diagnosis.physics_context || null,
+    production_governance_context: diagnosis.production_governance_context || null,
     history_signal_summary: diagnosis.history_signal_summary,
     stage_recommendation: diagnosis.strategy_recommendation,
     cadence_plan: cadencePlan,
@@ -533,6 +737,8 @@ export function buildExecutiveSummary({
     `- Quality state: ${diagnosis?.quality_state || 'unknown'}`,
     `- Current loss: ${diagnosis?.current_loss ?? 'n/a'}`,
     `- Primary gap: ${diagnosis?.primary_quality_gap || 'none'}`,
+    `- SPC state: ${diagnosis?.spc_quality_context?.control_state || 'n/a'}`,
+    `- Physics risk: ${diagnosis?.physics_context?.overall_risk || 'n/a'}`,
     `- Selected lever: ${plan?.candidate_parameters?.[0]?.name || 'none'}`,
     `- Approval status: ${approvalPacket?.approval_status || 'n/a'}`,
     `- Experiment decision: ${experimentResult?.decision || 'pending'}`,
@@ -948,7 +1154,8 @@ function candidateSpec({
   evidence,
   priority_score,
   review_focus,
-  lever_confidence
+  lever_confidence,
+  hold_time_minutes
 }) {
   const signed_step = signedDelta(direction, step);
   return {
@@ -966,7 +1173,7 @@ function candidateSpec({
     priority_score: round(priority_score, 4),
     success_criteria: ['target_loss_decreases_gt_3_percent', 'no_alarm', 'no_major_secondary_metric_worsening'],
     stop_rules: ['alarm_active', 'quality_loss_worse_gt_5_percent', 'mcp_safety_reject', 'max_iterations_reached'],
-    hold_time_minutes: 10,
+    hold_time_minutes: Math.max(1, Number(hold_time_minutes || 10)),
     review_focus,
     lever_confidence: round(lever_confidence, 4)
   };

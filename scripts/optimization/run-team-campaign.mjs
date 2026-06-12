@@ -8,7 +8,7 @@ function parseArgs(argv) {
   const args = {
     target: 'examples/targets/bopet_new_grade_a.json',
     baseDir: null,
-    maxIters: 12,
+    maxIters: null,
     seed: 20260610,
     goalText: null,
     goalRequest: null,
@@ -98,7 +98,7 @@ async function main() {
     '--target', args.target,
     '--goal-request', goalRequestPath,
     '--base-dir', taskWorkspace.campaignRoot,
-    '--max-iters', String(args.maxIters),
+    ...(args.maxIters ? ['--max-iters', String(args.maxIters)] : []),
     '--seed', String(args.seed),
     '--product-grade', goalRequest.product_grade,
     '--reasoning-mode', goalRequest.execution?.reasoning_mode || 'deterministic'

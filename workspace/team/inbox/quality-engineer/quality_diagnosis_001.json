@@ -1,0 +1,218 @@
+{
+  "protocol_version": "1.0.0",
+  "message_id": "MSG-20260612124547741-CJOD",
+  "role": "quality-engineer",
+  "from": "quality-engineer",
+  "to": [
+    "rd-engineer",
+    "process-engineer",
+    "team-lead"
+  ],
+  "stage": "exploit",
+  "purpose": "quality-diagnosis",
+  "summary": "quality_diagnosis_001",
+  "inputs": [
+    "07_coordination/team_dispatch_plan_001.json",
+    "01_snapshots/process_snapshot_001.json",
+    "01_snapshots/online_quality_001.json",
+    "02_quality/quality_diagnosis_001.json"
+  ],
+  "outputs": [
+    "07_coordination/quality_review_001.json",
+    "07_coordination/strategy_state_001.json"
+  ],
+  "risks": [],
+  "next_action": "exploit",
+  "artifact_refs": [
+    "07_coordination/team_dispatch_plan_001.json",
+    "01_snapshots/process_snapshot_001.json",
+    "01_snapshots/online_quality_001.json",
+    "02_quality/quality_diagnosis_001.json"
+  ],
+  "requested_actions": [
+    "read stable snapshot",
+    "diagnose target gaps",
+    "recommend explore/exploit/recover"
+  ],
+  "requires_response": false,
+  "reply_to_message_id": null,
+  "persona_signal": "",
+  "payload": {
+    "stage": "exploit",
+    "purpose": "quality-diagnosis",
+    "summary": {
+      "role": "quality-engineer",
+      "iteration": 1,
+      "strategy_cycle_id": 1,
+      "process_iteration_in_cycle": 1,
+      "report_type": "periodic_quality_review",
+      "user_goal": "获得厚度均匀、双折射稳定、可进入真实产线 shadow validation 的新产品配方",
+      "product_grade": "PET_FILM_GRADE_A",
+      "strategy_stage": "exploit",
+      "line_state": "STABLE",
+      "sensor_health": "OK",
+      "current_recipe": "RCP-BASELINE",
+      "current_setpoints": {
+        "extruder_speed": 100,
+        "melt_temp": 278,
+        "casting_roll_temp": 34,
+        "md_draw_ratio": 3.18,
+        "md_zone_temp": 92,
+        "td_draw_ratio": 3.62,
+        "td_zone_1_temp": 108,
+        "td_zone_2_temp": 112,
+        "heatset_temp": 218,
+        "relaxation_ratio": 4.2,
+        "line_speed": 42,
+        "winder_tension": 118
+      },
+      "key_metrics": {
+        "thickness_mean": 12.103,
+        "thickness_cv": 1.5583,
+        "thickness_edge_center_delta": 0.1227,
+        "birefringence_mean": 0.093806,
+        "birefringence_cv": 3.7895,
+        "birefringence_edge_center_delta": -0.003444
+      },
+      "diagnosis_summary": {
+        "quality_state": "WARNING",
+        "primary_quality_gap": "birefringence_cv",
+        "recommended_next_action": "continue_optimization",
+        "current_loss": 0.02151
+      },
+      "metric_evaluations": [
+        {
+          "metric": "thickness_mean",
+          "actual": 12.103,
+          "target": 12,
+          "tolerance": 0.25,
+          "gap": 0,
+          "normalized_gap": 0,
+          "within_spec": true
+        },
+        {
+          "metric": "thickness_cv",
+          "actual": 1.5583,
+          "max": 1.8,
+          "gap": 0,
+          "normalized_gap": 0,
+          "within_spec": true
+        },
+        {
+          "metric": "birefringence_mean",
+          "actual": 0.093806,
+          "target": 0.082,
+          "tolerance": 0.012,
+          "gap": 0,
+          "normalized_gap": 0,
+          "within_spec": true
+        },
+        {
+          "metric": "birefringence_cv",
+          "actual": 3.7895,
+          "max": 3.5,
+          "gap": 0.2895,
+          "normalized_gap": 0.082714,
+          "within_spec": false
+        }
+      ],
+      "process_risk_summary": {
+        "alarm_active": false,
+        "line_state": "STABLE",
+        "sensor_health": "OK",
+        "history_risk": "no_history",
+        "recent_decision_trend": "mixed",
+        "execution_readiness": "ready"
+      },
+      "history_signal_summary": {
+        "recent_iterations_considered": 0,
+        "effective_count": 0,
+        "worse_count": 0,
+        "ineffective_count": 0,
+        "summary": "no_history"
+      },
+      "stage_recommendation": {
+        "next_stage": "exploit",
+        "reason": "sufficient_positive_signal",
+        "trigger": "convergence",
+        "review_mode": "fast_review"
+      },
+      "cadence_plan": {
+        "iteration": 1,
+        "stage": "explore",
+        "product_grade": "PET_FILM_GRADE_A",
+        "material_family": "PET",
+        "process_settle_minutes": 14,
+        "process_settle_ticks": 7,
+        "before_window_bias_ticks": 2,
+        "quality_review_mode": "fast_review",
+        "quality_review_every": 2,
+        "rd_cycle_mode": "full_replan",
+        "rd_full_replan_every": 1,
+        "orchestration_note": "优先保证试验后充分稳定，再进入下一轮研发判断。"
+      },
+      "cross_role_guidance": {
+        "for_rd": {
+          "quality_priority": "birefringence_cv",
+          "improvement_urgency": "medium",
+          "history_signal": "no_history",
+          "response_assessment": "baseline",
+          "stage_recommendation": "exploit",
+          "cadence_mode": "fast_review"
+        },
+        "for_process": {
+          "execution_readiness": "ready",
+          "blocking_issues": []
+        }
+      },
+      "recent_response_digest": []
+    },
+    "inputs": [
+      "07_coordination/team_dispatch_plan_001.json",
+      "01_snapshots/process_snapshot_001.json",
+      "01_snapshots/online_quality_001.json",
+      "02_quality/quality_diagnosis_001.json"
+    ],
+    "outputs": [
+      "07_coordination/quality_review_001.json",
+      "07_coordination/strategy_state_001.json"
+    ],
+    "risks": [],
+    "next_action": "exploit",
+    "artifact_refs": [
+      "07_coordination/team_dispatch_plan_001.json",
+      "01_snapshots/process_snapshot_001.json",
+      "01_snapshots/online_quality_001.json",
+      "02_quality/quality_diagnosis_001.json"
+    ],
+    "requestedActions": [
+      "read stable snapshot",
+      "diagnose target gaps",
+      "recommend explore/exploit/recover"
+    ],
+    "snapshot_path": "01_snapshots/process_snapshot_001.json",
+    "quality_path": "01_snapshots/online_quality_001.json",
+    "diagnosis_path": "02_quality/quality_diagnosis_001.json",
+    "cadence_plan_path": "07_coordination/cadence_plan_001.json",
+    "dispatch_plan_path": "07_coordination/team_dispatch_plan_001.json",
+    "cycle_state": {
+      "strategy_cycle_id": 1,
+      "process_iteration_in_cycle": 1,
+      "max_process_iterations_in_cycle": 3,
+      "plan_source": "replanned",
+      "replan_reason": "initial_cycle_plan",
+      "cycle_consecutive_ineffective": 0,
+      "cycle_consecutive_rejected": 0,
+      "cycle_consecutive_worse": 0,
+      "cycle_no_progress_count": 0
+    },
+    "stage_recommendation": {
+      "next_stage": "exploit",
+      "reason": "sufficient_positive_signal",
+      "trigger": "convergence",
+      "review_mode": "fast_review"
+    }
+  },
+  "created_at": "2026-06-12T04:45:47.741Z",
+  "message_name": "quality_diagnosis_001"
+}

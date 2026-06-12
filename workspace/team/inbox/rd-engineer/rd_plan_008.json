@@ -1,0 +1,147 @@
+{
+  "protocol_version": "1.0.0",
+  "message_id": "MSG-20260612124547839-L6GY",
+  "role": "rd-engineer",
+  "from": "rd-engineer",
+  "to": [
+    "process-engineer",
+    "quality-engineer",
+    "team-lead"
+  ],
+  "stage": "exploit",
+  "purpose": "rd-plan",
+  "summary": "rd_plan_008",
+  "inputs": [
+    "07_coordination/team_dispatch_plan_008.json",
+    "02_quality/quality_diagnosis_008.json",
+    "03_rd_plan/rd_optimization_plan_008.json",
+    "07_coordination/rd_brief_008.json"
+  ],
+  "outputs": [
+    "04_execution/parameter_delta_proposal_008.json",
+    "04_execution/safety_gate_result_008.json"
+  ],
+  "risks": [
+    "alarm_active",
+    "quality_loss_worse_gt_5_percent",
+    "mcp_safety_reject",
+    "max_iterations_reached"
+  ],
+  "next_action": "hand off to process engineer for safety-gated proposal",
+  "artifact_refs": [
+    "07_coordination/team_dispatch_plan_008.json",
+    "02_quality/quality_diagnosis_008.json",
+    "03_rd_plan/rd_optimization_plan_008.json",
+    "07_coordination/rd_brief_008.json"
+  ],
+  "requested_actions": [
+    "read quality review",
+    "rank product-aware levers",
+    "write active strategy for process"
+  ],
+  "requires_response": false,
+  "reply_to_message_id": null,
+  "persona_signal": "",
+  "payload": {
+    "stage": "exploit",
+    "purpose": "rd-plan",
+    "summary": {
+      "role": "rd-engineer",
+      "iteration": 8,
+      "strategy_cycle_id": 3,
+      "process_iteration_in_cycle": 1,
+      "plan_source": "replanned",
+      "replan_reason": "no_progress_replan",
+      "user_goal": "获得厚度均匀、双折射稳定、可进入真实产线 shadow validation 的新产品配方",
+      "business_context": "研发希望在有限废料和有限试验次数内收敛到最优候选 recipe",
+      "target_priority_order": [
+        "birefringence_cv",
+        "thickness_cv",
+        "birefringence_mean",
+        "thickness_mean"
+      ],
+      "diagnosis_priority": "birefringence_cv",
+      "recommendation_from_quality": "continue_optimization",
+      "strategy_stage": "exploit",
+      "cadence_plan": {
+        "iteration": 8,
+        "stage": "exploit",
+        "product_grade": "PET_FILM_GRADE_A",
+        "material_family": "PET",
+        "process_settle_minutes": 12,
+        "process_settle_ticks": 6,
+        "before_window_bias_ticks": 2,
+        "quality_review_mode": "deep_review",
+        "quality_review_every": 2,
+        "rd_cycle_mode": "full_replan",
+        "rd_full_replan_every": 2,
+        "orchestration_note": "优先围绕主杠杆微调，并通过质量深检定期确认稳定性。"
+      },
+      "history_signal": "recent_positive_signal_exists",
+      "response_memory_window": [
+        {
+          "iteration": 5,
+          "decision": "worse",
+          "lever": "td_zone_2_temp"
+        },
+        {
+          "iteration": 6,
+          "decision": "effective",
+          "lever": "td_zone_2_temp"
+        },
+        {
+          "iteration": 7,
+          "decision": "worse",
+          "lever": "td_zone_2_temp"
+        }
+      ]
+    },
+    "inputs": [
+      "07_coordination/team_dispatch_plan_008.json",
+      "02_quality/quality_diagnosis_008.json",
+      "03_rd_plan/rd_optimization_plan_008.json",
+      "07_coordination/rd_brief_008.json"
+    ],
+    "outputs": [
+      "04_execution/parameter_delta_proposal_008.json",
+      "04_execution/safety_gate_result_008.json"
+    ],
+    "risks": [
+      "alarm_active",
+      "quality_loss_worse_gt_5_percent",
+      "mcp_safety_reject",
+      "max_iterations_reached"
+    ],
+    "next_action": "hand off to process engineer for safety-gated proposal",
+    "artifact_refs": [
+      "07_coordination/team_dispatch_plan_008.json",
+      "02_quality/quality_diagnosis_008.json",
+      "03_rd_plan/rd_optimization_plan_008.json",
+      "07_coordination/rd_brief_008.json"
+    ],
+    "requestedActions": [
+      "read quality review",
+      "rank product-aware levers",
+      "write active strategy for process"
+    ],
+    "diagnosis_path": "02_quality/quality_diagnosis_008.json",
+    "plan_path": "03_rd_plan/rd_optimization_plan_008.json",
+    "rd_brief_path": "07_coordination/rd_brief_008.json",
+    "cadence_plan_path": "07_coordination/cadence_plan_008.json",
+    "dispatch_plan_path": "07_coordination/team_dispatch_plan_008.json",
+    "cycle_state": {
+      "strategy_cycle_id": 3,
+      "process_iteration_in_cycle": 1,
+      "max_process_iterations_in_cycle": 4,
+      "plan_source": "replanned",
+      "replan_reason": "no_progress_replan",
+      "cycle_consecutive_ineffective": 0,
+      "cycle_consecutive_rejected": 0,
+      "cycle_consecutive_worse": 1,
+      "cycle_no_progress_count": 2
+    },
+    "next_stage": "exploit"
+  },
+  "created_at": "2026-06-12T04:45:47.839Z",
+  "message_name": "rd_plan_008"
+}

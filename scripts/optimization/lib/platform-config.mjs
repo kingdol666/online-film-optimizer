@@ -15,7 +15,22 @@ const DEFAULTS = {
     approval_poll_ms: 1500,
     max_approval_wait_ms: 15 * 60 * 1000,
     max_consecutive_worse: 4,
-    max_strategy_cycles: 6,
+    max_strategy_cycles: 36,
+    production_campaign: {
+      enabled: true,
+      run_until_goal: true,
+      max_trial_count: 36,
+      max_strategy_cycles: 36,
+      max_runtime_minutes: 480,
+      pass_hold_iterations: 3,
+      stable_recipe_hold_minutes: 30,
+      shadow_validation_required: true,
+      physics_constraints_enabled: true,
+      spc_diagnosis_enabled: true,
+      historian_window_minutes: 120,
+      hard_stop_on_alarm: true,
+      hard_stop_on_sensor_failure: true
+    },
     process_iterations_per_strategy_cycle: {
       explore: 3,
       exploit: 4,
@@ -162,6 +177,37 @@ export function loadPlatformConfig({
   const provider = process.env.LINE_PROVIDER || mergedDefaults.orchestrator.provider;
   const executionMode = process.env.EXECUTION_MODE || mergedDefaults.orchestrator.execution_mode;
   const reasoningMode = process.env.ORCHESTRATOR_REASONING_MODE || mergedDefaults.orchestrator.reasoning_mode;
+  const productionCampaign = {
+    ...mergedDefaults.orchestrator.production_campaign,
+    enabled: boolFromEnv(
+      process.env.PRODUCTION_CAMPAIGN_ENABLED,
+      mergedDefaults.orchestrator.production_campaign?.enabled ?? true
+    ),
+    run_until_goal: boolFromEnv(
+      process.env.RUN_UNTIL_GOAL,
+      mergedDefaults.orchestrator.production_campaign?.run_until_goal ?? true
+    ),
+    max_trial_count: numberFromEnv(
+      process.env.PRODUCTION_MAX_TRIALS,
+      mergedDefaults.orchestrator.production_campaign?.max_trial_count ?? 36
+    ),
+    max_strategy_cycles: numberFromEnv(
+      process.env.PRODUCTION_MAX_STRATEGY_CYCLES,
+      mergedDefaults.orchestrator.production_campaign?.max_strategy_cycles ?? 12
+    ),
+    max_runtime_minutes: numberFromEnv(
+      process.env.PRODUCTION_MAX_RUNTIME_MINUTES,
+      mergedDefaults.orchestrator.production_campaign?.max_runtime_minutes ?? 480
+    ),
+    pass_hold_iterations: numberFromEnv(
+      process.env.PRODUCTION_PASS_HOLD_ITERATIONS,
+      mergedDefaults.orchestrator.production_campaign?.pass_hold_iterations ?? 3
+    ),
+    stable_recipe_hold_minutes: numberFromEnv(
+      process.env.PRODUCTION_STABLE_RECIPE_HOLD_MINUTES,
+      mergedDefaults.orchestrator.production_campaign?.stable_recipe_hold_minutes ?? 30
+    )
+  };
   const autoApproveSimulator = boolFromEnv(
     process.env.AUTO_APPROVE_SIMULATOR,
     mergedDefaults.orchestrator.auto_approve_simulator
@@ -182,6 +228,7 @@ export function loadPlatformConfig({
       provider,
       execution_mode: executionMode,
       reasoning_mode: reasoningMode,
+      production_campaign: productionCampaign,
       auto_approve_simulator: autoApproveSimulator
     },
     online: {

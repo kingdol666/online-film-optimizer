@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>薄膜双拉在线工艺优化 Agent 平台蓝图</title>
+<style>
+:root {
+  --bg: #f5f7fa;
+  --panel: #ffffff;
+  --panel-2: #f0f4f8;
+  --ink: #17202f;
+  --muted: #66758a;
+  --line: #d9e1ea;
+  --line-strong: #b8c4d2;
+  --blue: #1c6dd0;
+  --blue-soft: #e5f0ff;
+  --green: #198754;
+  --green-soft: #e5f6ee;
+  --amber: #bd6b00;
+  --amber-soft: #fff2dc;
+  --red: #c7352c;
+  --red-soft: #ffe8e6;
+  --teal: #087f8c;
+  --teal-soft: #ddf7fa;
+  --violet: #7256c9;
+  --violet-soft: #eeeaff;
+  --shadow: 0 16px 38px rgba(23, 32, 47, 0.08);
+  --radius: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: "SF Pro Display", "SF Pro Text", "Segoe UI", "Microsoft YaHei", sans-serif;
+  background:
+    linear-gradient(135deg, rgba(28, 109, 208, 0.08), transparent 34%),
+    linear-gradient(180deg, #fbfcfe 0%, var(--bg) 48%, #edf2f7 100%);
+  color: var(--ink);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 296px minmax(0, 1fr);
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(16px);
+  padding: 22px 16px;
+}
+
+.brand {
+  padding: 8px 8px 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+.brand-kicker {
+  font-size: 12px;
+  color: var(--teal);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 760;
+}
+
+.brand h1 {
+  margin: 8px 0 8px;
+  font-size: 23px;
+  line-height: 1.16;
+  letter-spacing: 0;
+}
+
+.brand p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.nav-title {
+  margin: 18px 8px 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.nav-btn {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 10px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+  border-color: var(--line);
+  background: var(--panel-2);
+}
+
+.nav-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.dot-blue { background: var(--blue); }
+.dot-green { background: var(--green); }
+.dot-amber { background: var(--amber); }
+.dot-red { background: var(--red); }
+.dot-teal { background: var(--teal); }
+.dot-violet { background: var(--violet); }
+
+.nav-copy {
+  min-width: 0;
+}
+
+.nav-copy strong {
+  display: block;
+  font-size: 13px;
+}
+
+.nav-copy span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.main {
+  padding: 28px;
+  max-width: 1500px;
+  width: 100%;
+}
+
+.hero {
+  min-height: 310px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.76)),
+    repeating-linear-gradient(90deg, rgba(28, 109, 208, 0.12) 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(0deg, rgba(8, 127, 140, 0.08) 0 1px, transparent 1px 26px);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+.hero h2 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.hero-lead {
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.75;
+  max-width: 820px;
+}
+
+.hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.tag {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.hero-board {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.line-unit {
+  display: grid;
+  grid-template-columns: 108px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.line-unit strong {
+  font-size: 13px;
+}
+
+.line-unit span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.progress-bar {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--panel-2);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.fill-blue { background: var(--blue); width: 76%; }
+.fill-green { background: var(--green); width: 62%; }
+.fill-amber { background: var(--amber); width: 48%; }
+.fill-teal { background: var(--teal); width: 84%; }
+
+.section {
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.section h3 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.18;
+}
+
+.section-head p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.pill {
+  white-space: nowrap;
+  background: var(--blue-soft);
+  color: var(--blue);
+  border: 1px solid rgba(28, 109, 208, 0.18);
+  font-size: 12px;
+  font-weight: 760;
+  padding: 7px 10px;
+  border-radius: 999px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.card h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.card ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.card li {
+  margin: 4px 0;
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric {
+  padding: 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.metric strong {
+  display: block;
+  font-size: 22px;
+  margin-bottom: 3px;
+}
+
+.metric span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.verdict-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 14px;
+}
+
+.verdict-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 18px;
+}
+
+.verdict-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.verdict-score {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green);
+  border: 1px solid rgba(25, 135, 84, 0.2);
+  font-size: 20px;
+  font-weight: 820;
+  flex: 0 0 auto;
+}
+
+.verdict-title h4 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.verdict-title span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.review-list {
+  display: grid;
+  gap: 10px;
+}
+
+.review-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  padding: 12px;
+}
+
+.review-item strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.review-item span {
+  color: var(--muted);
+  display: block;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.architecture {
+  display: grid;
+  gap: 12px;
+}
+
+.arch-row {
+  display: grid;
+  grid-template-columns: 150px repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+.arch-label {
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  border-radius: var(--radius);
+  padding: 12px;
+  font-weight: 800;
+  font-size: 13px;
+  display: grid;
+  align-items: center;
+}
+
+.arch-box {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 12px;
+  min-height: 76px;
+}
+
+.arch-box strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.arch-box span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.arch-arrow {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+.guardrail-strip {
+  border: 1px solid rgba(199, 53, 44, 0.2);
+  border-radius: var(--radius);
+  background: var(--red-soft);
+  color: #7d221c;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.mvp-chain {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(128px, 1fr));
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.mvp-step {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 12px;
+  min-height: 136px;
+  position: relative;
+}
+
+.mvp-step::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  width: 10px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.mvp-step:last-child::after {
+  display: none;
+}
+
+.mvp-step strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+
+.mvp-step span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.priority-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.priority-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 14px;
+}
+
+.priority-card .rank {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 5px 9px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.priority-card strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.priority-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.52;
+}
+
+.decision-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.decision-table th,
+.decision-table td {
+  border: 1px solid var(--line);
+  padding: 10px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.decision-table th {
+  background: var(--panel-2);
+}
+
+.decision-table td {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.tabbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.tab-btn {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 720;
+}
+
+.tab-btn.active {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+
+.layer-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.85fr) minmax(0, 1.15fr);
+  gap: 14px;
+}
+
+.node-list {
+  display: grid;
+  gap: 8px;
+}
+
+.node-btn {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.node-btn:hover,
+.node-btn.active {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.node-btn strong {
+  display: block;
+  font-size: 14px;
+}
+
+.node-btn span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.detail {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 18px;
+  min-height: 440px;
+}
+
+.detail h4 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.detail-sub {
+  color: var(--muted);
+  margin: 8px 0 14px;
+  line-height: 1.6;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mini {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  padding: 12px;
+}
+
+.mini strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+
+.mini ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 13px;
+}
+
+.flow {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(145px, 1fr));
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.flow-card {
+  min-height: 156px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 13px;
+  position: relative;
+}
+
+.flow-card::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  width: 10px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.flow-card:last-child::after {
+  display: none;
+}
+
+.flow-card strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.flow-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.matrix th,
+.matrix td {
+  border: 1px solid var(--line);
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.matrix th {
+  background: var(--panel-2);
+  color: var(--ink);
+}
+
+.matrix td {
+  color: var(--muted);
+  background: var(--panel);
+  line-height: 1.5;
+}
+
+.lane {
+  display: grid;
+  grid-template-columns: 180px repeat(5, minmax(150px, 1fr));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  background: var(--panel);
+}
+
+.lane-cell {
+  min-height: 106px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 12px;
+}
+
+.lane-cell:nth-child(6n) {
+  border-right: none;
+}
+
+.lane-head {
+  background: var(--panel-2);
+  font-weight: 780;
+}
+
+.lane-cell strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.lane-cell span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.risk {
+  border-left: 4px solid var(--red);
+}
+
+.ok {
+  border-left: 4px solid var(--green);
+}
+
+.warn {
+  border-left: 4px solid var(--amber);
+}
+
+.blue {
+  border-left: 4px solid var(--blue);
+}
+
+.teal {
+  border-left: 4px solid var(--teal);
+}
+
+.violet {
+  border-left: 4px solid var(--violet);
+}
+
+.code {
+  font-family: "SF Mono", "JetBrains Mono", Consolas, monospace;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #111827;
+  color: #e9eef6;
+  padding: 14px;
+  overflow-x: auto;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.search {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 11px 12px;
+  outline: none;
+  margin-bottom: 12px;
+}
+
+.search:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(28, 109, 208, 0.13);
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 1100px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: relative;
+    height: auto;
+  }
+
+  .main {
+    padding: 16px;
+  }
+
+  .hero,
+  .layer-layout,
+  .grid-2,
+  .grid-3,
+  .detail-grid,
+  .metric-row,
+  .verdict-grid,
+  .arch-row,
+  .priority-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-head {
+    display: block;
+  }
+
+  .pill {
+    display: inline-block;
+    margin-top: 10px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-kicker">Biaxial Film Online R&D</div>
+      <h1>在线工艺参数优化 Agent 平台</h1>
+      <p>面向从挤出到收卷的薄膜双拉中试线，连接在线厚度与双折射检测，形成快速调参和深度研发双闭环。</p>
+    </div>
+
+    <div class="nav-title">快速导航</div>
+    <button class="nav-btn active" data-scroll="overview"><span class="nav-dot dot-blue"></span><span class="nav-copy"><strong>总览</strong><span>平台定位与边界</span></span></button>
+    <button class="nav-btn" data-scroll="review"><span class="nav-dot dot-red"></span><span class="nav-copy"><strong>逻辑审查</strong><span>合理性与薄弱点</span></span></button>
+    <button class="nav-btn" data-scroll="architecture"><span class="nav-dot dot-violet"></span><span class="nav-copy"><strong>整体架构图</strong><span>从设备到研发策略</span></span></button>
+    <button class="nav-btn" data-scroll="mvp"><span class="nav-dot dot-green"></span><span class="nav-copy"><strong>最小闭环</strong><span>第一版必须打通</span></span></button>
+    <button class="nav-btn" data-scroll="layers"><span class="nav-dot dot-teal"></span><span class="nav-copy"><strong>三层架构</strong><span>MCP / Skill / Agent</span></span></button>
+    <button class="nav-btn" data-scroll="dual-loop"><span class="nav-dot dot-green"></span><span class="nav-copy"><strong>快环与深环</strong><span>在线调参和研发迭代</span></span></button>
+    <button class="nav-btn" data-scroll="flow"><span class="nav-dot dot-violet"></span><span class="nav-copy"><strong>交互流程</strong><span>从目标到下发执行</span></span></button>
+    <button class="nav-btn" data-scroll="roadmap"><span class="nav-dot dot-amber"></span><span class="nav-copy"><strong>开发路线</strong><span>从只读到产业落地</span></span></button>
+    <button class="nav-btn" data-scroll="contracts"><span class="nav-dot dot-red"></span><span class="nav-copy"><strong>数据契约</strong><span>Schema、安全门、审计</span></span></button>
+    <button class="nav-btn" data-scroll="implementation"><span class="nav-dot dot-teal"></span><span class="nav-copy"><strong>开发清单</strong><span>模块任务与验收</span></span></button>
+  </aside>
+
+  <main class="main">
+    <section class="hero" id="overview">
+      <div>
+        <h2>把中试线变成会学习的研发优化平台</h2>
+        <p class="hero-lead">
+          最优方案不是让大模型直接控制设备，而是让 Claude Code 作为 Agent harness，编排 MCP 工业连接、受约束优化算法、现有工业诊断 Skill，以及两个不同节奏的工程角色。快环负责稳定、安全、小步在线调参；深环负责机理理解、实验设计、性能目标分解和下一轮研发策略。
+        </p>
+        <div class="hero-tags">
+          <span class="tag">PLC 仍做硬实时控制</span>
+          <span class="tag">Agent 做分钟级监督优化</span>
+          <span class="tag">厚度 + 双折射在线闭环</span>
+          <span class="tag">离线性能慢反馈校正</span>
+          <span class="tag">全量变更可审计可回滚</span>
+        </div>
+      </div>
+      <div class="hero-board" aria-label="产线优化状态示意">
+        <div class="line-unit"><strong>在线厚度</strong><span>横向 profile、均匀性、边部偏差、时间漂移</span><div class="progress-bar"><div class="progress-fill fill-blue"></div></div></div>
+        <div class="line-unit"><strong>在线双折射</strong><span>取向 proxy、MD/TD 拉伸响应、热定型记忆</span><div class="progress-bar"><div class="progress-fill fill-teal"></div></div></div>
+        <div class="line-unit"><strong>快环调参</strong><span>5 秒到 2 分钟，小步幅、限速、限窗</span><div class="progress-bar"><div class="progress-fill fill-green"></div></div></div>
+        <div class="line-unit"><strong>深环研发</strong><span>批次级 DOE、贝叶斯优化、机理审计</span><div class="progress-bar"><div class="progress-fill fill-amber"></div></div></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="metric-row">
+        <div class="metric"><strong>可行</strong><span>逻辑成立：接口具备后，核心难点转为闭环治理</span></div>
+        <div class="metric"><strong>2</strong><span>核心 Skill：快速调参 + 深度研发</span></div>
+        <div class="metric"><strong>7+</strong><span>MCP 服务：设备、质量、配方、报警、审计</span></div>
+        <div class="metric"><strong>5</strong><span>上线阶段：观测、建议、半自动、闭环研发、多牌号沉淀</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="review">
+      <div class="section-head">
+        <div>
+          <h3>全面审查结论：模式合理，但必须补强闭环治理</h3>
+          <p>你已有设备和检测接口，这是很大的前提优势。现在真正决定成败的是：数据能否被正确对齐、实验能否被正确标记、参数写入能否受控、在线代理指标能否被离线性能校准。</p>
+        </div>
+        <span class="pill">架构审查</span>
+      </div>
+
+      <div class="verdict-grid">
+        <div class="verdict-card">
+          <div class="verdict-title">
+            <div class="verdict-score">8.5</div>
+            <div>
+              <h4>当前设计逻辑评分</h4>
+              <span>已具备落地基础，但需要从 Agent 想法升级为工程控制系统。</span>
+            </div>
+          </div>
+          <div class="review-list">
+            <div class="review-item"><strong>合理点 1：快环和深环分工正确</strong><span>快环解决在线稳定和快速采样，深环解决机理、DOE、产品性能和长期最优，这正好匹配薄膜双拉研发的时间尺度。</span></div>
+            <div class="review-item"><strong>合理点 2：Claude Code 适合作为 harness</strong><span>它擅长编排工具、读写结构化产物、调用子 Agent 和维持流程，不应该直接承担硬实时控制。</span></div>
+            <div class="review-item"><strong>合理点 3：在线厚度和双折射是强代理指标</strong><span>这两个指标能快速反馈取向、均匀性、热定型和拉伸响应，是中试线在线优化的关键抓手。</span></div>
+          </div>
+        </div>
+
+        <div class="verdict-card">
+          <div class="review-list">
+            <div class="review-item risk"><strong>不合理点 1：如果快环也尝试做研发策略，会造成目标漂移</strong><span>补强：快环只执行 experiment_plan，不自行扩大参数空间；超过计划窗口必须请求深环更新。</span></div>
+            <div class="review-item risk"><strong>不合理点 2：只优化厚度和双折射，可能得到在线好但性能差的产品</strong><span>补强：建立 online proxy model，并把离线性能作为慢标签回灌；没有离线标签时结论只能是代理指标最优。</span></div>
+            <div class="review-item risk"><strong>不合理点 3：没有 experiment_id，数据会不可学习</strong><span>补强：每次参数变更必须生成实验 ID，记录前稳态、变更、滞后、后稳态、废料米数和人工备注。</span></div>
+            <div class="review-item risk"><strong>不合理点 4：多参数同时调整会破坏因果识别</strong><span>补强：初期采用单因素或低维 DOE；多参数调整必须由深环产生，并明确可辨识性和混杂风险。</span></div>
+            <div class="review-item risk"><strong>不合理点 5：LLM 建议如果没有硬安全门，无法产业上线</strong><span>补强：写入路径只能是 proposal -> safety gate -> PLC MCP -> 回读确认 -> ledger，任何一步缺失都不执行。</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="architecture">
+      <div class="section-head">
+        <div>
+          <h3>整体布局架构图</h3>
+          <p>这是推荐的落地总架构：设备与检测在最底层，MCP 做唯一接口层，Skill 做标准作业流程，Agent 做角色决策和编排，优化内核提供数值解，审计层保证可上线。</p>
+        </div>
+        <span class="pill">System Layout</span>
+      </div>
+
+      <div class="architecture">
+        <div class="arch-row">
+          <div class="arch-label">人机协同层</div>
+          <div class="arch-box blue"><strong>研发负责人</strong><span>定义产品性能、成本、废料和试验边界。</span></div>
+          <div class="arch-box ok"><strong>工艺工程师</strong><span>审批高风险动作、处理异常、补充经验备注。</span></div>
+          <div class="arch-box warn"><strong>操作员控制台</strong><span>查看建议、风险、趋势、批准、暂停、回滚。</span></div>
+          <div class="arch-box violet"><strong>管理看板</strong><span>campaign 进度、最优 recipe、收益和风险。</span></div>
+        </div>
+        <div class="arch-arrow">↓ 目标、审批、人工备注 ↑ 报告、告警、策略解释</div>
+        <div class="arch-row">
+          <div class="arch-label">Agent 编排层</div>
+          <div class="arch-box violet"><strong>Campaign Orchestrator</strong><span>状态机、权限、事件流、任务调度。</span></div>
+          <div class="arch-box ok"><strong>Process Engineer Agent</strong><span>快环执行、小步调参、响应判断。</span></div>
+          <div class="arch-box blue"><strong>R&D Engineer Agent</strong><span>深环策略、DOE、贝叶斯优化、机理解释。</span></div>
+          <div class="arch-box risk"><strong>Safety Reviewer Agent</strong><span>解释安全门结果，审计证据不足和不可回滚动作。</span></div>
+        </div>
+        <div class="arch-arrow">↓ Skill 调用、结构化合同 ↑ 执行产物、审计结论</div>
+        <div class="arch-row">
+          <div class="arch-label">Skill 流程层</div>
+          <div class="arch-box ok"><strong>Online Process Tuner</strong><span>稳态识别、偏差诊断、delta proposal、执行回执。</span></div>
+          <div class="arch-box blue"><strong>R&D Strategy Optimizer</strong><span>产品目标分解、实验计划、代理模型、参数窗口。</span></div>
+          <div class="arch-box violet"><strong>Industrial Deep Diagnostic</strong><span>本体、统计验证、竞争假设、Judge、物理审计。</span></div>
+          <div class="arch-box warn"><strong>Simulation Skill</strong><span>历史预演、响应滞后、风险评分、计划剪裁。</span></div>
+        </div>
+        <div class="arch-arrow">↓ 工具调用、数据读取、参数写入 ↑ 快照、回执、离线标签</div>
+        <div class="arch-row">
+          <div class="arch-label">MCP 接口层</div>
+          <div class="arch-box teal"><strong>historian / inspection</strong><span>过程时间序列、厚度 profile、双折射 profile。</span></div>
+          <div class="arch-box risk"><strong>safety / plc gateway</strong><span>确定性白名单、限幅、限速、写入、回读、回滚。</span></div>
+          <div class="arch-box warn"><strong>recipe / ledger</strong><span>配方版本、实验账本、最佳配方、失败禁区。</span></div>
+          <div class="arch-box blue"><strong>quality / lab</strong><span>离线性能、样品位置、测试方法、慢标签。</span></div>
+        </div>
+        <div class="arch-arrow">↓ 控制写入、数据采集 ↑ 设备状态、在线检测、报警</div>
+        <div class="arch-row">
+          <div class="arch-label">设备与数据层</div>
+          <div class="arch-box"><strong>挤出-铸片</strong><span>熔体温度、压力、流量、模头、铸片辊。</span></div>
+          <div class="arch-box"><strong>MD / TD 拉伸</strong><span>温区、速比、链夹、横拉宽度、张力。</span></div>
+          <div class="arch-box"><strong>热定型-收卷</strong><span>定型温度、松弛、冷却、收卷张力。</span></div>
+          <div class="arch-box"><strong>在线检测</strong><span>厚度 map、双折射 map、检测健康状态。</span></div>
+        </div>
+      </div>
+
+      <div class="guardrail-strip" style="margin-top:14px">
+        上线原则：所有自动写入都必须经过结构化计划、硬安全门、PLC 回读确认和实验账本。深环可以提出大胆研发假设，快环只能执行受限动作；这样才能既快又不失控。
+      </div>
+    </section>
+
+    <section class="section" id="mvp">
+      <div class="section-head">
+        <div>
+          <h3>最合理可行的第一版：MVP-1 安全闭环</h3>
+          <p>第一版不要追求完整自动研发，也不要一开始做复杂数字孪生。最应该先打通的是一条可审计、可回滚、可学习的在线参数试验闭环。</p>
+        </div>
+        <span class="pill">Build This First</span>
+      </div>
+
+      <div class="mvp-chain">
+        <div class="mvp-step blue"><strong>1. 采集快照</strong><span>historian + inspection 读取过程量、厚度、双折射、报警、当前 recipe。</span></div>
+        <div class="mvp-step violet"><strong>2. 生成实验计划</strong><span>深环只给一个低维计划：参数窗口、试验点、保持时间、停止条件。</span></div>
+        <div class="mvp-step ok"><strong>3. 快环拆步</strong><span>把实验计划拆成单次 delta，检查稳态和在线偏差。</span></div>
+        <div class="mvp-step risk"><strong>4. 安全门预审</strong><span>限幅、限速、联锁、报警、回滚配方和人工审批。</span></div>
+        <div class="mvp-step warn"><strong>5. 人工确认</strong><span>第一版所有写入都需要工艺工程师确认，系统只做建议和执行助手。</span></div>
+        <div class="mvp-step teal"><strong>6. 写入与回读</strong><span>PLC MCP 下发参数后必须回读确认，失败立即撤销本次实验。</span></div>
+        <div class="mvp-step blue"><strong>7. 形成样本</strong><span>保存 experiment_result，包含前后稳态窗口、响应、废料和操作备注。</span></div>
+      </div>
+
+      <div class="priority-grid" style="margin-top:16px">
+        <div class="priority-card">
+          <span class="rank">P0 必做</span>
+          <strong>统一数据与时间对齐</strong>
+          <span>没有稳定窗口、时间对齐和 profile 特征，后续任何优化都会变成看似智能的噪声拟合。</span>
+        </div>
+        <div class="priority-card">
+          <span class="rank">P0 必做</span>
+          <strong>安全门和配方账本</strong>
+          <span>参数白名单、限幅限速、回读确认、rollback recipe 和 experiment ledger 是上线资格，不是增强功能。</span>
+        </div>
+        <div class="priority-card">
+          <span class="rank">P1 再做</span>
+          <strong>深环 DOE 策略</strong>
+          <span>先从低维 DOE 和专家约束开始，不急着上复杂全局优化；等有足够样本再引入贝叶斯优化。</span>
+        </div>
+        <div class="priority-card">
+          <span class="rank">P2 后置</span>
+          <strong>数字孪生与自动写入</strong>
+          <span>仿真和半自动写入必须等 MVP 闭环稳定、建议命中率和安全门可靠性都被验证后再开放。</span>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <table class="decision-table">
+          <thead>
+            <tr>
+              <th>原设计中不够合理的点</th>
+              <th>为什么会影响落地</th>
+              <th>最可行改法</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>第一版同时做全量 MCP、复杂 Agent、仿真和自动优化</td>
+              <td>开发面太宽，任何一层不稳定都会让闭环失败，团队难以验收。</td>
+              <td>第一版只打通 MVP-1 安全闭环，其他模块作为插件逐步接入。</td>
+            </tr>
+            <tr>
+              <td>深环直接输出复杂多参数最优解</td>
+              <td>中试线样本少、变量强耦合，容易产生不可辨识的伪最优。</td>
+              <td>先输出低维实验计划和固定参数清单，明确每轮只验证一个主假设。</td>
+            </tr>
+            <tr>
+              <td>快环承担“优化”和“执行”两个角色</td>
+              <td>快环会在在线波动中追逐短期指标，造成研发目标漂移。</td>
+              <td>快环只做计划内执行、稳态判断、响应记录和异常暂停。</td>
+            </tr>
+            <tr>
+              <td>把离线性能放到第一闭环核心路径</td>
+              <td>离线标签延迟长，第一版如果强依赖它，平台很难快速迭代。</td>
+              <td>MVP 先优化在线代理指标，同时保留离线标签字段；P1 再校准代理模型。</td>
+            </tr>
+            <tr>
+              <td>把 Safety Judge 设计成纯 Agent</td>
+              <td>安全规则如果只在 Agent 推理里，无法满足工业写入的可验证要求。</td>
+              <td>安全必须是 deterministic MCP/service，Agent 只能解释和复核，不能替代硬规则。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="layers">
+      <div class="section-head">
+        <div>
+          <h3>MCP、Skill、Agent 三层怎么做</h3>
+          <p>点击下面的节点查看每一部分的职责、开发步骤、输入输出和验收标准。</p>
+        </div>
+        <span class="pill">交互式任务拆解</span>
+      </div>
+
+      <div class="tabbar">
+        <button class="tab-btn active" data-layer="mcp">MCP 工业连接层</button>
+        <button class="tab-btn" data-layer="skill">Skill 作业流程层</button>
+        <button class="tab-btn" data-layer="agent">Agent 决策角色层</button>
+      </div>
+
+      <div class="layer-layout">
+        <div>
+          <input class="search" id="nodeSearch" placeholder="搜索节点，例如 PLC、贝叶斯、Judge、配方">
+          <div class="node-list" id="nodeList"></div>
+        </div>
+        <div class="detail" id="nodeDetail"></div>
+      </div>
+    </section>
+
+    <section class="section" id="dual-loop">
+      <div class="section-head">
+        <div>
+          <h3>快环与深环的实践策略</h3>
+          <p>你提出的“工艺工程师在线快速调参 + 研发工程师深度分析迭代”是正确主线。关键是让两者通过标准化实验计划和执行回执耦合。</p>
+        </div>
+        <span class="pill">双闭环</span>
+      </div>
+
+      <div class="grid-2">
+        <div class="card ok">
+          <h4>快环 Skill：Online Process Tuner</h4>
+          <p>它像现场工艺工程师，吃实时数据和研发计划，只做小步、可解释、可回滚的参数调整。它的目标不是发现全局最优，而是在安全窗口内快速获取高质量试验数据，并把在线厚度、双折射拉回目标区域。</p>
+          <ul>
+            <li>周期：5 秒到 2 分钟，按设备响应滞后设定。</li>
+            <li>输入：当前 recipe、稳定状态、在线检测、报警、深环 experiment_plan。</li>
+            <li>输出：parameter_delta_proposal、hold_time、预期响应、回滚条件。</li>
+            <li>算法：稳态识别、局部响应模型、MPC-lite、规则约束、CUSUM/变点检测。</li>
+          </ul>
+        </div>
+        <div class="card blue">
+          <h4>深环 Skill：R&D Strategy Optimizer</h4>
+          <p>它像研发工程师，综合历史批次、在线代理指标、离线性能和物理本体，判断下一轮该探索哪里。它要处理厚度/双折射与最终性能之间的延迟、混杂和目标冲突。</p>
+          <ul>
+            <li>周期：一个稳定窗口、一个卷、一个实验批次或一天。</li>
+            <li>输入：campaign 数据、离线性能、工艺本体、快环执行回执。</li>
+            <li>输出：DOE/贝叶斯优化计划、参数窗口、禁区、验收指标。</li>
+            <li>算法：分层因果分析、混杂校正、受约束贝叶斯优化、多目标 Pareto。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top:14px">
+        <div class="card warn">
+          <h4>在线指标的真实定位</h4>
+          <p>厚度和双折射是非常强的快速代理指标，但不能单独代表最终产品。必须把拉伸强度、模量、热收缩、雾度、光学均匀性等离线指标作为慢标签回灌。</p>
+        </div>
+        <div class="card ok">
+          <h4>研发试验的真实单位</h4>
+          <p>每一次参数改变都必须产生 experiment_id，并记录稳定前、稳定中、稳定后窗口。否则后续算法无法区分“参数导致的响应”和“自然漂移”。</p>
+        </div>
+        <div class="card risk">
+          <h4>安全边界的真实底线</h4>
+          <p>Agent 不能越过 PLC 联锁、工艺窗口、升降速限制、温度斜率限制和人工审批等级。任何写入都必须能一键回滚到 last_known_good_recipe。</p>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top:14px">
+        <div class="card blue">
+          <h4>快环不能做的事</h4>
+          <p>不能自行扩大参数范围，不能一次性改变多个强耦合参数，不能在未稳态、报警、检测异常或材料批次切换时探索。它只负责把深环计划拆成安全小步。</p>
+        </div>
+        <div class="card violet">
+          <h4>深环必须做的事</h4>
+          <p>必须解释为什么选择这组参数，必须声明哪些参数固定、哪些参数探索、哪些结果可以区分竞争机理，并给快环明确停止条件。</p>
+        </div>
+        <div class="card ok">
+          <h4>闭环真正成立的条件</h4>
+          <p>每次执行都要形成计划、提案、安全门、写入回执、响应窗口、离线标签和复盘结论。少任何一环，数据就只能看，不能可靠学习。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="flow">
+      <div class="section-head">
+        <div>
+          <h3>端到端交互流程图</h3>
+          <p>从用户提出目标，到深环设计实验，再到快环执行、MCP 下发、在线检测回传、深环复盘。</p>
+        </div>
+        <span class="pill">目标驱动闭环</span>
+      </div>
+
+      <div class="flow">
+        <div class="flow-card blue"><strong>1. 研发目标</strong><p>输入产品牌号、厚度规格、双折射目标、离线性能需求、允许废料、设备边界。</p></div>
+        <div class="flow-card violet"><strong>2. 深环建模</strong><p>构建 BOPET/双拉本体，映射参数到物理机制，生成目标函数和约束。</p></div>
+        <div class="flow-card warn"><strong>3. 实验计划</strong><p>输出下一轮 recipe window、DOE 点位、每点保持时间、响应预测和停止条件。</p></div>
+        <div class="flow-card ok"><strong>4. 快环执行</strong><p>检查稳态、报警、联锁和当前偏差，拆成小步参数 delta，逐步执行。</p></div>
+        <div class="flow-card teal"><strong>5. MCP 下发</strong><p>通过白名单工具写入 PLC/DCS 参数，记录审批、限幅、回滚配方。</p></div>
+        <div class="flow-card blue"><strong>6. 数据回流</strong><p>在线厚度/双折射、过程量、报警、离线标签进入 campaign ledger，深环更新策略。</p></div>
+      </div>
+
+      <div style="margin-top:18px" class="code">User Objective
+  -> R&D Strategy Skill
+  -> experiment_plan.json
+  -> Online Tuner Skill
+  -> safety_gate + parameter_delta_proposal
+  -> MCP write_recipe_delta()
+  -> PLC/DCS executes under native interlocks
+  -> online_thickness_map + birefringence_map + process historian
+  -> experiment_result.json
+  -> Deep Diagnostic + BO/DOE update
+  -> next experiment_plan.json</div>
+    </section>
+
+    <section class="section" id="roadmap">
+      <div class="section-head">
+        <div>
+          <h3>产业落地开发路线</h3>
+          <p>建议严格分四阶段上线。每阶段都能产生价值，同时避免一开始就承担自动控设备的风险。</p>
+        </div>
+        <span class="pill">可执行路线</span>
+      </div>
+
+      <div class="lane">
+        <div class="lane-cell lane-head">阶段</div>
+        <div class="lane-cell lane-head">P0 只读观测</div>
+        <div class="lane-cell lane-head">P1 人工确认建议</div>
+        <div class="lane-cell lane-head">P2 受控半自动</div>
+        <div class="lane-cell lane-head">P3 闭环研发优化</div>
+        <div class="lane-cell lane-head">P4 多牌号沉淀</div>
+
+        <div class="lane-cell lane-head">核心目标</div>
+        <div class="lane-cell"><strong>建立事实层</strong><span>采集、对齐、稳态窗口、在线 map 与过程参数同步。</span></div>
+        <div class="lane-cell"><strong>验证建议质量</strong><span>Agent 只给建议，工艺工程师确认执行。</span></div>
+        <div class="lane-cell"><strong>开放低风险写入</strong><span>少数参数、小步幅、硬限幅、自动回滚。</span></div>
+        <div class="lane-cell"><strong>研发闭环</strong><span>DOE/贝叶斯优化驱动实验，离线性能回灌。</span></div>
+        <div class="lane-cell"><strong>产品族知识库</strong><span>不同牌号、厚度、材料批次形成迁移模型。</span></div>
+
+        <div class="lane-cell lane-head">必须交付</div>
+        <div class="lane-cell"><strong>historian-mcp</strong><span>数据接入、run ledger、在线检测 schema。</span></div>
+        <div class="lane-cell"><strong>proposal UI</strong><span>建议卡片、原因、风险、人工批准按钮。</span></div>
+        <div class="lane-cell"><strong>plc-mcp 写入</strong><span>白名单、审批、限速、限幅、回滚。</span></div>
+        <div class="lane-cell"><strong>strategy skill</strong><span>实验计划、响应模型、Judge 审计。</span></div>
+        <div class="lane-cell"><strong>recipe memory</strong><span>best-known recipe、禁区、跨批次迁移。</span></div>
+
+        <div class="lane-cell lane-head">验收标准</div>
+        <div class="lane-cell"><strong>数据完整率</strong><span>关键点位丢失率小于 1%，时钟偏差可追踪。</span></div>
+        <div class="lane-cell"><strong>建议命中率</strong><span>建议方向与实际响应一致率逐步超过 70%。</span></div>
+        <div class="lane-cell"><strong>零越界</strong><span>所有写入均通过安全门，无非法参数变更。</span></div>
+        <div class="lane-cell"><strong>试验效率</strong><span>相同研发目标下减少无效试验和过渡废料。</span></div>
+        <div class="lane-cell"><strong>知识复用</strong><span>新牌号初始试验数量显著下降。</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="contracts">
+      <div class="section-head">
+        <div>
+          <h3>关键数据契约与安全门</h3>
+          <p>这些契约是产业落地的骨架。没有它们，Agent 很容易变成“会写报告但无法闭环”的系统。</p>
+        </div>
+        <span class="pill">工程合同</span>
+      </div>
+
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>契约</th>
+            <th>核心字段</th>
+            <th>谁生产</th>
+            <th>谁消费</th>
+            <th>落地意义</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>process_snapshot.json</strong></td>
+            <td>timestamp、recipe_id、zone_temps、stretch_ratios、line_speed、tension、alarm_state</td>
+            <td>historian-mcp</td>
+            <td>快环、深环</td>
+            <td>提供每一刻设备真实状态。</td>
+          </tr>
+          <tr>
+            <td><strong>online_quality_map.json</strong></td>
+            <td>thickness_profile、birefringence_profile、MD/TD position、uniformity、edge_bias</td>
+            <td>inspection-mcp</td>
+            <td>快环、深环</td>
+            <td>把在线检测从图片/曲线变成可优化特征。</td>
+          </tr>
+          <tr>
+            <td><strong>experiment_plan.json</strong></td>
+            <td>objective、parameter_window、trial_points、hold_time、expected_response、stop_rules</td>
+            <td>深环 Skill</td>
+            <td>快环 Skill</td>
+            <td>研发策略交给现场执行的唯一合同。</td>
+          </tr>
+          <tr>
+            <td><strong>parameter_delta_proposal.json</strong></td>
+            <td>setpoint、delta、reason、expected_lag、risk_level、rollback_condition</td>
+            <td>快环 Skill</td>
+            <td>safety-mcp、plc-mcp</td>
+            <td>所有参数调整必须先成为结构化建议。</td>
+          </tr>
+          <tr>
+            <td><strong>safety_gate_result.json</strong></td>
+            <td>allowed、violations、approval_required、limit_applied、rollback_recipe</td>
+            <td>safety-mcp</td>
+            <td>plc-mcp、审计 UI</td>
+            <td>阻止 LLM 或算法越过设备和工艺边界。</td>
+          </tr>
+          <tr>
+            <td><strong>experiment_result.json</strong></td>
+            <td>actual_delta、stable_window、response_vector、waste_meter、operator_note、offline_label_pending</td>
+            <td>快环 Skill</td>
+            <td>深环 Skill</td>
+            <td>把每次调参变成可学习样本。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section" id="implementation">
+      <div class="section-head">
+        <div>
+          <h3>开发实施清单：按这个顺序做，平台才会真的跑起来</h3>
+          <p>这里把方案压成可开发任务。第一期目标不是“最聪明”，而是“闭环真实、数据可信、写入可控、结果可学习”。</p>
+        </div>
+        <span class="pill">Execution Checklist</span>
+      </div>
+
+      <table class="decision-table">
+        <thead>
+          <tr>
+            <th>开发模块</th>
+            <th>第一版必须实现</th>
+            <th>暂时不要做</th>
+            <th>验收标准</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>mcp/industrial-historian</strong></td>
+            <td>读实时 tag、读时间窗口、输出 process_snapshot 和 stable_window。</td>
+            <td>复杂流处理平台、预测模型、自动特征选择。</td>
+            <td>同一 experiment_id 下过程量和检测 profile 能按时间对齐复算。</td>
+          </tr>
+          <tr>
+            <td><strong>mcp/online-inspection</strong></td>
+            <td>解析厚度和双折射 profile，输出均值、标准差、边中差、漂移斜率。</td>
+            <td>一开始做复杂图像识别或 VLM 读曲线。</td>
+            <td>任意一个在线 profile 都能追溯到产线时间、膜宽位置和设备健康状态。</td>
+          </tr>
+          <tr>
+            <td><strong>mcp/safety-gate</strong></td>
+            <td>确定性白名单、上下限、变化率、报警联锁、回滚检查。</td>
+            <td>把安全判断交给 LLM 或自然语言规则。</td>
+            <td>越界写入 100% 被拒绝，拒绝原因结构化输出。</td>
+          </tr>
+          <tr>
+            <td><strong>mcp/plc-control-gateway</strong></td>
+            <td>preview、write、readback、rollback 四个工具，第一期默认人工确认。</td>
+            <td>全自动连续写入、多参数大幅联动。</td>
+            <td>每次写入都有 before/after、审批、回读和失败处理记录。</td>
+          </tr>
+          <tr>
+            <td><strong>mcp/recipe-ledger</strong></td>
+            <td>recipe_version、experiment_id、变更日志、last_known_good_recipe。</td>
+            <td>一开始做复杂产品族知识图谱。</td>
+            <td>任意实验都能重放参数轨迹、在线响应和人工备注。</td>
+          </tr>
+          <tr>
+            <td><strong>online-film-process-tuner Skill</strong></td>
+            <td>稳态检查、偏差识别、单步 delta proposal、执行回执。</td>
+            <td>自主选择全局最优参数。</td>
+            <td>未稳态、报警、检测异常、越界窗口时不会提出可执行写入。</td>
+          </tr>
+          <tr>
+            <td><strong>film-rd-strategy-optimizer Skill</strong></td>
+            <td>低维 DOE 计划、固定参数清单、预期响应、停止条件。</td>
+            <td>样本不足时直接上复杂贝叶斯全局优化。</td>
+            <td>每个实验计划都声明主假设、可辨识指标和失败判据。</td>
+          </tr>
+          <tr>
+            <td><strong>app/backend + UI</strong></td>
+            <td>campaign 状态机、建议卡片、批准/拒绝/暂停/回滚、事件流。</td>
+            <td>先做大而全管理驾驶舱。</td>
+            <td>操作员能在一个界面看清建议、理由、风险、趋势和回滚按钮。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h3>推荐仓库落点</h3>
+          <p>下面是按你当前项目结构最自然的开发位置，可以直接开始拆任务。</p>
+        </div>
+        <span class="pill">Repo Map</span>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>新增目录建议</h4>
+          <div class="code">.claude/skills/online-film-process-tuner/
+.claude/skills/film-rd-strategy-optimizer/
+mcp/industrial-historian/
+mcp/plc-control-gateway/
+mcp/online-inspection/
+mcp/recipe-ledger/
+mcp/safety-gate/
+workspace/optimization-campaigns/</div>
+        </div>
+        <div class="card">
+          <h4>复用现有能力</h4>
+          <ul>
+            <li>复用 industrial-deep-diagnostic 的 context-builder 作为薄膜双拉本体构建内核。</li>
+            <li>复用 data-processor 的自适应统计分析，扩展成在线窗口和实验响应分析。</li>
+            <li>复用 diagnostician、judge、report-reviewer 做研发策略审计和物理真实性检查。</li>
+            <li>复用后端 EventEmitter/SSE/WebSocket 思路，把在线 campaign 过程实时推到 UI。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const nodes = {
+  mcp: [
+    {
+      id: "historian",
+      title: "historian-mcp：过程历史数据连接",
+      subtitle: "OPC UA / MQTT / Kafka / SQL，把产线数据变成可追溯时间序列",
+      goal: "统一采集挤出、铸片、纵拉、横拉、热定型、收卷各段过程量，并按 experiment_id 对齐在线检测数据。",
+      inputs: ["PLC/DCS tag list", "在线检测时间戳", "recipe_id / roll_id / grade_id", "报警和设备状态"],
+      outputs: ["process_snapshot.json", "stable_window.csv", "tag_quality_report.json", "campaign_timeseries.parquet"],
+      steps: ["建立 tag 字典和单位规范", "实现 read_tags、read_window、subscribe_tags 三类工具", "加入时钟漂移和数据缺失审计", "按工艺段生成特征，例如温区均值、梯度、张力波动、速比变化"],
+      checks: ["关键点位丢失率小于 1%", "所有 tag 有单位、采样周期、物理含义", "时间对齐误差可追踪"]
+    },
+    {
+      id: "inspection",
+      title: "online-inspection-mcp：厚度与双折射检测",
+      subtitle: "把在线 map、profile、统计特征提供给快环和深环",
+      goal: "把厚度和双折射从设备原始输出转成可优化的 feature vector，同时保留横向位置、纵向时间和边部信息。",
+      inputs: ["厚度 profile", "双折射 profile", "膜宽位置", "线速度", "检测设备健康状态"],
+      outputs: ["online_quality_map.json", "profile_features.json", "edge_center_delta.json", "inspection_health.json"],
+      steps: ["定义 MD/TD 坐标系", "提取均值、标准差、边中差、峰谷、局部条纹、漂移斜率", "建立检测设备校准和异常值过滤", "给每个 profile 绑定过程时间窗口"],
+      checks: ["检测设备异常不进入优化", "profile 与过程窗口对齐", "厚度和双折射特征可复算"]
+    },
+    {
+      id: "plc",
+      title: "plc-control-gateway-mcp：受控参数写入",
+      subtitle: "唯一允许写设备参数的 MCP，所有写入先过 safety gate",
+      goal: "提供 write_recipe_delta、preview_write、rollback_recipe 等工具，只能写白名单参数，不能让 Agent 自由写 PLC。",
+      inputs: ["parameter_delta_proposal.json", "safety_gate_result.json", "operator_approval", "current_recipe"],
+      outputs: ["write_receipt.json", "actual_setpoint_change.json", "rollback_receipt.json"],
+      steps: ["建立可写参数白名单", "区分自动、需确认、禁止写入三类参数", "实现预演、写入、确认、回滚", "每次写入记录 before/after 和审批人"],
+      checks: ["无 safety gate 不写入", "无 rollback recipe 不写入", "写入后从 PLC 回读确认"]
+    },
+    {
+      id: "safety",
+      title: "safety-gate-mcp：工艺与设备安全门",
+      subtitle: "限幅、限速、联锁、审批等级、试验停止条件",
+      goal: "把设备安全、工艺窗口和研发试验边界做成可执行规则，而不是写在提示词里的原则。",
+      inputs: ["current_state", "parameter_delta_proposal", "allowed_window", "alarm_state", "line_mode"],
+      outputs: ["safety_gate_result.json", "approval_required", "clipped_delta", "stop_reason"],
+      steps: ["定义每个参数的绝对上下限", "定义每分钟最大变化率和累计变化上限", "接入报警、联锁、牵引稳定性、温控稳定性", "实现 hard stop 和 degraded mode"],
+      checks: ["报警状态禁止自动探索", "越界请求可解释地拒绝", "所有拒绝记录进入审计日志"]
+    },
+    {
+      id: "recipe",
+      title: "recipe-ledger-mcp：配方版本与实验账本",
+      subtitle: "让每一次调参都成为可回放、可学习、可审计的研发样本",
+      goal: "管理 recipe_version、experiment_id、last_known_good_recipe、best_known_recipe 和参数变更历史。",
+      inputs: ["recipe", "parameter_delta", "operator_note", "quality_result", "offline_label"],
+      outputs: ["recipe_version.json", "experiment_ledger.jsonl", "best_recipe_registry.json", "rollback_plan.json"],
+      steps: ["设计配方版本模型", "每次变更产生不可变 ledger entry", "支持按产品牌号和厚度规格检索历史最优", "把失败实验和禁区也沉淀为知识"],
+      checks: ["任何 recipe 都能追溯来源", "任何实验都能重放参数轨迹", "成功和失败都被学习"]
+    },
+    {
+      id: "quality",
+      title: "quality-lab-mcp：离线性能慢反馈",
+      subtitle: "把最终产品性能接回优化闭环，校正在线代理指标",
+      goal: "接入拉伸强度、模量、热收缩、雾度、光学均匀性、表面缺陷等离线指标，让深环知道在线指标是否真的对应最终性能。",
+      inputs: ["roll_id", "sample_position", "lab_result", "test_method", "delay_time"],
+      outputs: ["offline_quality_label.json", "proxy_calibration_report.json", "performance_gap.json"],
+      steps: ["统一样品位置和卷号映射", "把离线结果回填到 experiment_id", "建立 online proxy 到 final performance 的校准模型", "标记延迟标签和置信度"],
+      checks: ["离线样品位置可追踪", "测试方法版本可追踪", "慢标签进入下一轮深环而不是快环直接控制"]
+    }
+  ],
+  skill: [
+    {
+      id: "tuner",
+      title: "online-film-process-tuner Skill：快速调参流程",
+      subtitle: "现场工艺工程师角色，执行深环计划并做在线偏差纠正",
+      goal: "在安全窗口内把当前工况推向目标在线指标，同时尽快采集有效实验数据。",
+      inputs: ["experiment_plan.json", "process_snapshot.json", "online_quality_map.json", "safety_window.json", "recipe_version.json"],
+      outputs: ["parameter_delta_proposal.json", "execution_receipt.json", "experiment_result.json", "operator_summary.md"],
+      steps: ["判断产线是否处于可优化状态", "识别当前偏差是厚度、双折射、稳定性还是边部问题", "从实验计划拆分小步 delta", "调用 safety-gate-mcp 预审", "调用 plc-control-gateway-mcp 写入", "等待滞后时间并评估响应", "把结果回写 recipe-ledger"],
+      checks: ["未稳态不探索", "报警不探索", "单步变化不超过安全窗", "响应方向与预期矛盾时停止并交给深环"]
+    },
+    {
+      id: "strategy",
+      title: "film-rd-strategy-optimizer Skill：深度研发策略流程",
+      subtitle: "研发工程师角色，做机理、DOE、贝叶斯优化和下一轮实验设计",
+      goal: "把产品性能目标分解为可执行的在线代理目标和工艺试验计划，持续逼近全局最优工艺区间。",
+      inputs: ["campaign_timeseries", "experiment_result.json", "offline_quality_label.json", "ontology.json", "recipe_history"],
+      outputs: ["experiment_plan.json", "rd_strategy_report.md", "parameter_window.json", "proxy_model.json", "risk_register.json"],
+      steps: ["构建薄膜双拉工艺本体", "识别厚度/双折射/离线性能之间的代理关系", "校正材料批次、环境、设备漂移等混杂因素", "用 DOE 或受约束贝叶斯优化选择下一组实验", "让 judge/reviewer 审核物理合理性", "发布给快环执行"],
+      checks: ["不能把相关性当因果", "没有离线标签时只优化在线代理", "每轮计划必须有停止条件和预期响应", "高风险实验需要人工审批"]
+    },
+    {
+      id: "diagnostic",
+      title: "复用 industrial-deep-diagnostic Skill：物理诊断与审计",
+      subtitle: "把现有诊断管线作为深环的证据和质量门",
+      goal: "复用你已经有的本体、数据处理、诊断、Judge 和 report-reviewer，保障研发策略不漂移、不瞎猜。",
+      inputs: ["稳定窗口数据", "实验结果", "在线/离线质量", "工艺本体", "历史最佳配方"],
+      outputs: ["diagnosis.json", "data_analysis_conclusion.json", "judge_feedback.json", "optimizer.md"],
+      steps: ["context-builder 构建薄膜工艺本体", "data-processor 做实验响应和混杂分析", "diagnostician 生成竞争假设", "judge 阻断低质量结论", "report-reviewer 审查物理真实性"],
+      checks: ["Judge 未通过不发布研发策略", "证据不足输出 NEEDS_DATA", "竞争机制无法区分时输出 COMPETING_SET"]
+    },
+    {
+      id: "sim",
+      title: "simulation-and-digital-twin Skill：离线仿真与预演",
+      subtitle: "上线前预演策略，避免把坏实验带到真实设备",
+      goal: "用历史数据、简化机理模型或数字孪生预演参数调整，给快环和深环提供风险评估。",
+      inputs: ["historical_campaign", "candidate_plan", "process_constraints", "proxy_model"],
+      outputs: ["simulation_result.json", "risk_score.json", "recommended_clip.json"],
+      steps: ["构建响应滞后模型", "用历史相似窗口估计响应方向", "模拟参数联动和目标冲突", "给出不可执行或高风险点"],
+      checks: ["仿真置信度低时只能建议人工试验", "预测和真实响应偏差进入模型校准"]
+    }
+  ],
+  agent: [
+    {
+      id: "orchestrator",
+      title: "Campaign Orchestrator Agent：总编排",
+      subtitle: "Claude Code 作为 harness，负责调度 Skill、MCP 和状态机",
+      goal: "把用户目标转成 campaign，分派给深环和快环，维护状态、权限、事件日志和最终报告。",
+      inputs: ["user_objective", "line_status", "active_campaign", "permission_policy"],
+      outputs: ["campaign_state.json", "task_dispatch", "human_approval_request", "final_report"],
+      steps: ["创建 campaign_id", "判断运行模式：观测/建议/半自动/自动研发", "启动深环生成实验计划", "启动快环执行", "监听 MCP 事件", "异常时暂停或回滚"],
+      checks: ["状态机可恢复", "所有子任务有输入输出", "人工审批不被绕过"]
+    },
+    {
+      id: "process_engineer",
+      title: "Process Engineer Agent：快速调参工艺工程师",
+      subtitle: "专注现场执行、稳定性和小步调参",
+      goal: "把深环计划变成现场可执行动作，并根据在线响应调整执行节奏。",
+      inputs: ["experiment_plan", "current_snapshot", "inspection_features", "safety_gate"],
+      outputs: ["parameter_delta_proposal", "execution_log", "stop_or_continue_decision"],
+      steps: ["判断稳态", "检查是否满足试验前置条件", "选择下一步 delta", "解释为什么改这个参数", "执行后判断响应是否符合预期"],
+      checks: ["不做全局策略脑补", "不越过计划窗口", "发现矛盾及时上报深环"]
+    },
+    {
+      id: "rd_engineer",
+      title: "R&D Engineer Agent：深度研发工程师",
+      subtitle: "专注机理、产品性能、试验设计和长期最优",
+      goal: "根据在线和离线数据迭代开发工艺窗口，给出下一轮最有信息增益的实验。",
+      inputs: ["experiment_history", "offline_quality", "ontology", "product_spec"],
+      outputs: ["experiment_plan", "rd_strategy_report", "proxy_model_update"],
+      steps: ["识别目标冲突", "建立在线代理指标", "分析实验响应", "选择下一轮探索/利用平衡", "定义预期响应和失败条件"],
+      checks: ["把材料批次和产品型号作为混杂因素处理", "没有最终性能标签时降低结论等级"]
+    },
+    {
+      id: "safety_judge",
+      title: "Safety Reviewer Agent：安全解释与审计",
+      subtitle: "解释确定性 safety-gate 的结果，不替代硬规则放行",
+      goal: "复核策略和写入提案的证据质量，解释安全门拒绝原因，并把高风险动作升级给人工审批。",
+      inputs: ["parameter_delta_proposal", "experiment_plan", "safety_window", "judge_rules"],
+      outputs: ["review_verdict", "blocking_issues", "required_human_approval", "safety_explanation"],
+      steps: ["读取 safety-gate-mcp 的确定性结果", "检查研发证据是否支持这次动作", "检查是否有回滚路径和人工审批", "生成 pass/needs_human/reject 的审计意见"],
+      checks: ["最终写入权限属于 safety-gate-mcp 和 PLC 网关", "Agent 不能覆盖硬安全拒绝", "所有 reject 都有具体原因"]
+    },
+    {
+      id: "operator_ui",
+      title: "Human-in-the-loop Operator Agent：人机协同",
+      subtitle: "把复杂决策压缩成工艺人员能快速判断的界面",
+      goal: "让操作员看到建议、原因、预期响应、风险、回滚按钮和执行状态。",
+      inputs: ["proposal", "risk", "live_trend", "approval_policy"],
+      outputs: ["approve/reject/defer", "operator_note", "manual_override"],
+      steps: ["显示建议差值和原因", "显示安全门结果", "显示当前趋势和预期趋势", "提供批准、拒绝、暂停、回滚"],
+      checks: ["高风险步骤必须人工确认", "人工改动进入 ledger", "界面不隐藏不确定性"]
+    }
+  ]
+};
+
+let activeLayer = "mcp";
+let activeNodeId = nodes.mcp[0].id;
+
+const nodeList = document.getElementById("nodeList");
+const nodeDetail = document.getElementById("nodeDetail");
+const search = document.getElementById("nodeSearch");
+
+function renderList() {
+  const q = search.value.trim().toLowerCase();
+  const items = nodes[activeLayer].filter(item => {
+    const haystack = [item.title, item.subtitle, item.goal, ...item.inputs, ...item.outputs, ...item.steps, ...item.checks].join(" ").toLowerCase();
+    return haystack.includes(q);
+  });
+  nodeList.innerHTML = items.map(item => `
+    <button class="node-btn ${item.id === activeNodeId ? "active" : ""}" data-node="${item.id}">
+      <strong>${item.title}</strong>
+      <span>${item.subtitle}</span>
+    </button>
+  `).join("");
+  if (!items.some(item => item.id === activeNodeId) && items[0]) {
+    activeNodeId = items[0].id;
+  }
+  nodeList.querySelectorAll(".node-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeNodeId = btn.dataset.node;
+      renderList();
+      renderDetail();
+    });
+  });
+}
+
+function list(items) {
+  return `<ul>${items.map(item => `<li>${item}</li>`).join("")}</ul>`;
+}
+
+function renderDetail() {
+  const item = nodes[activeLayer].find(entry => entry.id === activeNodeId) || nodes[activeLayer][0];
+  if (!item) return;
+  nodeDetail.innerHTML = `
+    <h4>${item.title}</h4>
+    <div class="detail-sub">${item.goal}</div>
+    <div class="detail-grid">
+      <div class="mini"><strong>输入</strong>${list(item.inputs)}</div>
+      <div class="mini"><strong>输出</strong>${list(item.outputs)}</div>
+      <div class="mini"><strong>开发步骤</strong>${list(item.steps)}</div>
+      <div class="mini"><strong>验收与安全检查</strong>${list(item.checks)}</div>
+    </div>
+  `;
+}
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(item => item.classList.remove("active"));
+    btn.classList.add("active");
+    activeLayer = btn.dataset.layer;
+    activeNodeId = nodes[activeLayer][0].id;
+    search.value = "";
+    renderList();
+    renderDetail();
+  });
+});
+
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".nav-btn").forEach(item => item.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.scroll).scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+});
+
+search.addEventListener("input", () => {
+  renderList();
+  renderDetail();
+});
+
+renderList();
+renderDetail();
+</script>
+</body>
+</html>
