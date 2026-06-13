@@ -1,0 +1,59 @@
+{
+  "seed": 20260610,
+  "rngState": 3682237923,
+  "productGrade": "PET_FILM_GRADE_A",
+  "campaignId": "CMP-1781279928594",
+  "tick": 152,
+  "clock": "2026-06-10T02:32:00.000Z",
+  "lineState": "STABLE",
+  "experimentId": "EXP-MCP-0145",
+  "recipeId": "RCP-EXP-MCP-0145",
+  "setpoints": {
+    "extruder_speed": 100,
+    "melt_temp": 278,
+    "casting_roll_temp": 33,
+    "md_draw_ratio": 3.1,
+    "md_zone_temp": 92,
+    "td_draw_ratio": 3.65,
+    "td_zone_1_temp": 108,
+    "td_zone_2_temp": 114.2,
+    "heatset_temp": 222,
+    "relaxation_ratio": 4.42,
+    "line_speed": 41,
+    "winder_tension": 118
+  },
+  "lastKnownGoodRecipe": {
+    "id": "RCP-OPT-BIREFRINGENCE-MEAN-001",
+    "setpoints": {
+      "extruder_speed": 100,
+      "melt_temp": 278,
+      "casting_roll_temp": 33,
+      "md_draw_ratio": 3.1,
+      "md_zone_temp": 92,
+      "td_draw_ratio": 3.65,
+      "td_zone_1_temp": 108,
+      "td_zone_2_temp": 114.2,
+      "heatset_temp": 222,
+      "relaxation_ratio": 4.42,
+      "line_speed": 41,
+      "winder_tension": 118
+    }
+  },
+  "pendingTransitionTicks": 0,
+  "timeSinceLastChangeSec": 480,
+  "alarmActive": false,
+  "wasteMeter": 684.3333333333335,
+  "drift": 0.0054288819287158585,
+  "ledger": [],
+  "lastQuality": {
+    "metrics": {
+      "thickness_mean": 12.1161,
+      "thickness_cv": 1.4116,
+      "thickness_edge_center_delta": 0.1239,
+      "birefringence_mean": 0.090879,
+      "birefringence_cv": 3.6822,
+      "birefringence_edge_center_delta": -0.003895
+    },
+    "alarmRisk": false
+  }
+}

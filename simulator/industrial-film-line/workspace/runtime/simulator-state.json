@@ -1,49 +1,49 @@
 {
   "seed": 20260610,
-  "rngState": 1464435227,
+  "rngState": 3078895386,
   "productGrade": "PET_FILM_GRADE_A",
   "campaignId": "CMP-1781279928594",
-  "tick": 56,
-  "clock": "2026-06-10T00:56:00.000Z",
+  "tick": 235,
+  "clock": "2026-06-10T03:55:00.000Z",
   "lineState": "STABLE",
-  "experimentId": "EXP-MCP-0039",
-  "recipeId": "RCP-EXP-MCP-0039",
+  "experimentId": "EXP-MCP-0205",
+  "recipeId": "RCP-EXP-MCP-0205",
   "setpoints": {
     "extruder_speed": 100,
     "melt_temp": 278,
-    "casting_roll_temp": 34,
-    "md_draw_ratio": 3.18,
+    "casting_roll_temp": 33,
+    "md_draw_ratio": 3.1,
     "md_zone_temp": 92,
-    "td_draw_ratio": 3.65,
+    "td_draw_ratio": 3.69,
     "td_zone_1_temp": 108,
     "td_zone_2_temp": 114.2,
     "heatset_temp": 220.5,
-    "relaxation_ratio": 4.2,
-    "line_speed": 42,
+    "relaxation_ratio": 4.42,
+    "line_speed": 41,
     "winder_tension": 118
   },
   "lastKnownGoodRecipe": {
-    "id": "RCP-OPT-THICKNESS-UNIFORMITY-001",
+    "id": "RCP-HOLD-FINAL",
     "setpoints": {
       "extruder_speed": 100,
       "melt_temp": 278,
-      "casting_roll_temp": 34,
-      "md_draw_ratio": 3.18,
+      "casting_roll_temp": 33,
+      "md_draw_ratio": 3.1,
       "md_zone_temp": 92,
-      "td_draw_ratio": 3.65,
+      "td_draw_ratio": 3.69,
       "td_zone_1_temp": 108,
       "td_zone_2_temp": 114.2,
-      "heatset_temp": 219,
-      "relaxation_ratio": 4.2,
-      "line_speed": 42,
+      "heatset_temp": 220.5,
+      "relaxation_ratio": 4.42,
+      "line_speed": 41,
       "winder_tension": 118
     }
   },
   "pendingTransitionTicks": 0,
-  "timeSinceLastChangeSec": 1080,
+  "timeSinceLastChangeSec": 1860,
   "alarmActive": false,
-  "wasteMeter": 252,
-  "drift": -0.004352619603034108,
+  "wasteMeter": 933.6666666666679,
+  "drift": 0.006449821168649946,
   "ledger": [
     {
       "type": "apply",
@@ -538,16 +538,1536 @@
         },
         "timestamp": "2026-06-10T00:39:00.000Z"
       }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0057",
+        "source_plan": "RDP-001-Stage1-Step1",
+        "setpoint_changes": [
+          {
+            "tag": "heatset_temp",
+            "current": 220.5,
+            "target": 221,
+            "delta": 0.5,
+            "ramp_limit_per_min": 0.6
+          }
+        ],
+        "rollback_recipe": "RCP-OPT-THICKNESS-UNIFORMITY-001",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-OPT-THICKNESS-UNIFORMITY-001"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 220.5,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 221,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T00:57:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-STAGE1-STEP1",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 221,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "stage": 1,
+          "step": 1,
+          "birefringence_mean_before": 0.093389,
+          "birefringence_mean_after": 0.09294,
+          "heatset_temp_before": 220.5,
+          "heatset_temp_after": 221
+        },
+        "saved_at": "2026-06-10T01:04:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0065",
+        "source_plan": "RDP-001-Stage1-Step2",
+        "setpoint_changes": [
+          {
+            "tag": "heatset_temp",
+            "current": 221,
+            "target": 222,
+            "delta": 1,
+            "ramp_limit_per_min": 0.6
+          }
+        ],
+        "rollback_recipe": "RCP-STAGE1-STEP1",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-STAGE1-STEP1"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 221,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T01:05:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-STAGE1-COMPLETE",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "birefringence_mean_after": 0.092891,
+          "birefringence_mean_before": 0.09294,
+          "heatset_temp_after": 222,
+          "heatset_temp_before": 221,
+          "stage": 1,
+          "step": 2,
+          "response_observed": "near_flat_plateau"
+        },
+        "saved_at": "2026-06-10T01:12:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0073",
+        "source_plan": "RDP-001-Stage2-Step1",
+        "setpoint_changes": [
+          {
+            "tag": "relaxation_ratio",
+            "current": 4.2,
+            "target": 4.42,
+            "delta": 0.22,
+            "ramp_limit_per_min": 0.12
+          }
+        ],
+        "rollback_recipe": "RCP-STAGE1-COMPLETE",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-STAGE1-COMPLETE"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T01:13:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-STAGE2-STEP1",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "birefringence_mean_after": 0.091987,
+          "birefringence_mean_before": 0.092891,
+          "relaxation_ratio_after": 4.42,
+          "relaxation_ratio_before": 4.2,
+          "heatset_temp": 222,
+          "observed_synergy": "stronger_than_predicted",
+          "stage": 2,
+          "step": 1
+        },
+        "saved_at": "2026-06-10T01:20:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0081",
+        "source_plan": "RDP-001-Stage2-Step2-Conservative",
+        "setpoint_changes": [
+          {
+            "tag": "relaxation_ratio",
+            "current": 4.42,
+            "target": 4.55,
+            "delta": 0.13,
+            "ramp_limit_per_min": 0.12
+          }
+        ],
+        "rollback_recipe": "RCP-STAGE2-STEP1",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-STAGE2-STEP1"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.55,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T01:21:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-STAGE2-STEP2",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.55,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "birefringence_cv": 3.6886,
+          "birefringence_cv_alert": "approaching_limit_3.70",
+          "birefringence_mean": 0.092301,
+          "note": "Stage2_Step2 complete - cv near limit, mean response non-monotonic. Best recipe is RCP-STAGE2-STEP1 (relax=4.42, mean=0.091987, cv=3.625)",
+          "stage": 2,
+          "step": 2
+        },
+        "saved_at": "2026-06-10T01:28:00.000Z"
+      }
+    },
+    {
+      "type": "load_recipe_baseline",
+      "receipt": {
+        "loaded": true,
+        "baseline_synced": true,
+        "reason": "回退到最优工作点 RCP-STAGE2-STEP1 (relax=4.42, biref_mean=0.091987, biref_cv=3.625) — Stage2 Step2 使 biref_cv 升至 3.689 接近限值且均值非单调上升",
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.55,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "rollback_recipe": "RCP-STAGE2-STEP1",
+        "timestamp": "2026-06-10T01:28:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0097",
+        "source_plan": "RDP-001-Lever3-Step1",
+        "setpoint_changes": [
+          {
+            "tag": "md_draw_ratio",
+            "current": 3.18,
+            "target": 3.16,
+            "delta": -0.02,
+            "ramp_limit_per_min": 0.02
+          }
+        ],
+        "rollback_recipe": "RCP-STAGE2-STEP1",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-STAGE2-STEP1"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.16,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T01:37:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0105",
+        "source_plan": "RDP-001-Lever3-Step2",
+        "setpoint_changes": [
+          {
+            "tag": "md_draw_ratio",
+            "current": 3.16,
+            "target": 3.14,
+            "delta": -0.02,
+            "ramp_limit_per_min": 0.02
+          }
+        ],
+        "rollback_recipe": "RCP-STAGE2-STEP1",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-STAGE2-STEP1"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.16,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.14,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T01:45:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0113",
+        "source_plan": "RDP-001-Lever3-Step3",
+        "setpoint_changes": [
+          {
+            "tag": "md_draw_ratio",
+            "current": 3.14,
+            "target": 3.12,
+            "delta": -0.02,
+            "ramp_limit_per_min": 0.02
+          }
+        ],
+        "rollback_recipe": "RCP-STAGE2-STEP1",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-STAGE2-STEP1"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.14,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.12,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T01:53:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0121",
+        "source_plan": "RDP-001-Lever3-Step4",
+        "setpoint_changes": [
+          {
+            "tag": "md_draw_ratio",
+            "current": 3.12,
+            "target": 3.1,
+            "delta": -0.02,
+            "ramp_limit_per_min": 0.02
+          }
+        ],
+        "rollback_recipe": "RCP-STAGE2-STEP1",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-STAGE2-STEP1"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.12,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T02:01:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-BEST-SO-FAR",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "birefringence_mean": 0.091498,
+          "birefringence_cv": 3.5906,
+          "stage": "lever3_complete",
+          "md_draw_ratio": 3.12,
+          "is_best_so_far": true,
+          "total_improvement_from_baseline": -0.001891,
+          "note": "Stage 3 feasibility assessment needed - remaining gap ~0.0135 to target 0.078"
+        },
+        "saved_at": "2026-06-10T02:08:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0129",
+        "source_plan": "RDP-001-Lever4-Step1",
+        "setpoint_changes": [
+          {
+            "tag": "line_speed",
+            "current": 42,
+            "target": 41.5,
+            "delta": -0.5,
+            "ramp_limit_per_min": 0.3
+          }
+        ],
+        "rollback_recipe": "RCP-BEST-SO-FAR",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-BEST-SO-FAR"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41.5,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T02:09:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0137",
+        "source_plan": "RDP-001-Lever4-Step2",
+        "setpoint_changes": [
+          {
+            "tag": "line_speed",
+            "current": 41.5,
+            "target": 41,
+            "delta": -0.5,
+            "ramp_limit_per_min": 0.3
+          }
+        ],
+        "rollback_recipe": "RCP-BEST-SO-FAR",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-BEST-SO-FAR"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41.5,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T02:17:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-CURRENT-BEST",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "birefringence_cv_after": 3.505,
+          "birefringence_cv_before": 3.445,
+          "birefringence_mean_after": 0.091295,
+          "birefringence_mean_before": 0.093389,
+          "improvement": -0.002094,
+          "line_speed": 41,
+          "md_draw_ratio": 3.1,
+          "recipe": "heatset222_relax4.42_md3.1_ls41",
+          "stage": "lever4_complete"
+        },
+        "saved_at": "2026-06-10T02:24:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0145",
+        "source_plan": "RDP-001-Lever5-Step1",
+        "setpoint_changes": [
+          {
+            "tag": "casting_roll_temp",
+            "current": 34,
+            "target": 33,
+            "delta": -1,
+            "ramp_limit_per_min": 0.6
+          }
+        ],
+        "rollback_recipe": "RCP-CURRENT-BEST",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-CURRENT-BEST"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T02:25:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-OPT-BIREFRINGENCE-MEAN-001",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "author": "orchestrator",
+          "best_birefringence_mean": 0.091295,
+          "best_birefringence_cv": 3.505,
+          "total_improvement": -0.002094,
+          "is_final_best": true,
+          "recipe_label": "heatset222_relax4.42_md3.1_ls41",
+          "stages_completed": [
+            "Stage1_heatset",
+            "Stage2_relaxation",
+            "lever3_md_draw",
+            "lever4_line_speed",
+            "lever5_casting_roll"
+          ],
+          "final_recipe_summary": "All safe levers explored. Best result: birefringence_mean 0.091295 (target 0.078). Remaining gap 0.0133."
+        },
+        "saved_at": "2026-06-10T02:32:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0153",
+        "source_plan": "RDP-CV-001-Stage1",
+        "setpoint_changes": [
+          {
+            "tag": "heatset_temp",
+            "current": 222,
+            "target": 221.25,
+            "delta": -0.75,
+            "ramp_limit_per_min": 0.6
+          }
+        ],
+        "rollback_recipe": "RCP-OPT-BIREFRINGENCE-MEAN-001",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-OPT-BIREFRINGENCE-MEAN-001"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 222,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 221.25,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T02:33:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-CV-STAGE1",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 221.25,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "birefringence_cv_after": 3.6387,
+          "birefringence_cv_before": 3.6822,
+          "birefringence_mean_after": 0.092008,
+          "birefringence_mean_before": 0.090879,
+          "heatset_temp": 221.25,
+          "stage": 1,
+          "hypothesis": "heatset_quadratic_penalty_confirmed",
+          "delta_cv": -0.0435
+        },
+        "saved_at": "2026-06-10T02:42:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0163",
+        "source_plan": "RDP-CV-001-Stage2",
+        "setpoint_changes": [
+          {
+            "tag": "td_draw_ratio",
+            "current": 3.65,
+            "target": 3.69,
+            "delta": 0.04,
+            "ramp_limit_per_min": 0.02
+          }
+        ],
+        "rollback_recipe": "RCP-CV-STAGE1",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-CV-STAGE1"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.65,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 221.25,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 221.25,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T02:43:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-CV-STAGE2",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 221.25,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "birefringence_cv": 3.4655,
+          "birefringence_cv_delta_from_baseline": -0.2167,
+          "birefringence_mean": 0.091743,
+          "thickness_cv": 1.1668,
+          "thickness_cv_delta": -0.244,
+          "stage": 2,
+          "td_draw_ratio": 3.69,
+          "note": "Stage2 complete - td_draw_ratio moved to 3.69 (historical optimum). Strong improvement in both biref_cv and thick_cv."
+        },
+        "saved_at": "2026-06-10T02:50:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0171",
+        "source_plan": "RDP-CV-001-Stage3a-Step1",
+        "setpoint_changes": [
+          {
+            "tag": "heatset_temp",
+            "current": 221.25,
+            "target": 220,
+            "delta": -1.25,
+            "ramp_limit_per_min": 0.6
+          }
+        ],
+        "rollback_recipe": "RCP-CV-STAGE2",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-CV-STAGE2"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 221.25,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 220,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T02:51:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0179",
+        "source_plan": "RDP-CV-001-Stage3a-Step2",
+        "setpoint_changes": [
+          {
+            "tag": "heatset_temp",
+            "current": 220,
+            "target": 219.5,
+            "delta": -0.5,
+            "ramp_limit_per_min": 0.6
+          }
+        ],
+        "rollback_recipe": "RCP-CV-STAGE2",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-CV-STAGE2"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 220,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 219.5,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T02:59:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-CV-STAGE3-HEATSET-OPT",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 219.5,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "birefringence_cv": 3.3166,
+          "birefringence_cv_delta_from_stage2": -0.1489,
+          "birefringence_mean": 0.093365,
+          "heatset_temp": 219.5,
+          "note": "Stage3 complete - heatset at cv optimum 219.5. CV improved further but mean rose significantly. Relaxation back to 4.2 may help recover mean.",
+          "stage": 3,
+          "td_draw_ratio": 3.69,
+          "thickness_cv": 1.2866,
+          "thickness_edge_center_delta": 0.1543
+        },
+        "saved_at": "2026-06-10T03:06:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0187",
+        "source_plan": "RDP-CV-001-Stage3b",
+        "setpoint_changes": [
+          {
+            "tag": "relaxation_ratio",
+            "current": 4.42,
+            "target": 4.2,
+            "delta": -0.22,
+            "ramp_limit_per_min": 0.12
+          }
+        ],
+        "rollback_recipe": "RCP-CV-STAGE3-HEATSET-OPT",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-CV-STAGE3-HEATSET-OPT"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 219.5,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 219.5,
+          "relaxation_ratio": 4.2,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T03:07:00.000Z"
+      }
+    },
+    {
+      "type": "load_recipe_baseline",
+      "receipt": {
+        "loaded": true,
+        "baseline_synced": true,
+        "reason": "回退至 birefringence_cv 最优配方：heatset=219.5, relax=4.42, td_draw=3.69. CV=3.3166 最佳.",
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 219.5,
+          "relaxation_ratio": 4.2,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 219.5,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "rollback_recipe": "RCP-CV-STAGE3-HEATSET-OPT",
+        "timestamp": "2026-06-10T03:14:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-OPT-BIREFRINGENCE-CV-FINAL-001",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 219.5,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "author": "team-lead",
+          "birefringence_cv_settled": 3.3911,
+          "birefringence_cv_best": 3.3166,
+          "birefringence_cv_total_improvement": -0.2911,
+          "birefringence_mean": 0.092548,
+          "final_recipe_summary": "CV optimization complete. Birefringence CV reduced from 3.6822 to 3.39 (stable), best achieved 3.3166. thk_cv=1.19, thk_mean=12.08. All guardrails PASS.",
+          "is_final_recipe": true,
+          "thickness_cv": 1.1896,
+          "thickness_mean": 12.0839
+        },
+        "saved_at": "2026-06-10T03:24:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0205",
+        "source_plan": "PROCESS-INDEPENDENT-VERIFIED-MOVE-001",
+        "setpoint_changes": [
+          {
+            "tag": "heatset_temp",
+            "current": 219.5,
+            "target": 220.5,
+            "delta": 1,
+            "ramp_limit_per_min": 0.6
+          }
+        ],
+        "rollback_recipe": "RCP-OPT-BIREFRINGENCE-CV-FINAL-001",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-OPT-BIREFRINGENCE-CV-FINAL-001"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 219.5,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 220.5,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T03:25:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-OPT-BALANCED-001",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 220.5,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "author": "process-engineer",
+          "before_after": {
+            "birefringence_mean": "0.092615→0.091710 (-0.000905)",
+            "birefringence_cv": "3.388→3.243 (-0.145)",
+            "thickness_cv": "1.134→1.174 (稳定)",
+            "thickness_mean": "12.060→12.057 (稳定)"
+          },
+          "cross_validation": "4/4 lines confirmed",
+          "heatset_temp": 220.5,
+          "note": "heatset 219.5→220.5°C 基于完整三线合一验证。mean 和 cv 双双改善。",
+          "tick": 215,
+          "verdict": "EFFECTIVE"
+        },
+        "saved_at": "2026-06-10T03:35:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP_STABLE_HEATSET220_5_TD3_69",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 220.5,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "recipe_type": "stable_best",
+          "tick_range": "215-224",
+          "biref_mean_range": "0.0916-0.0930",
+          "biref_cv_range": "3.23-3.37",
+          "confirmed_stable": true,
+          "stability_window_ticks": 9
+        },
+        "saved_at": "2026-06-10T03:44:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-HOLD-FINAL",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 33,
+          "md_draw_ratio": 3.1,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.69,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 220.5,
+          "relaxation_ratio": 4.42,
+          "line_speed": 41,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "campaign_end": true,
+          "confirmation": "hold_validation",
+          "cv_range": "3.23-3.46",
+          "final_recipe_summary": "PET_FILM_GRADE_A optimized recipe RCP-HOLD-FINAL. heatset=220.5, td_draw=3.69, relax=4.42. Biref_mean=0.0906-0.0933 (20tick mean ~0.0922). Biref_cv=3.23-3.46 (safe margin 0.24 to 3.70 limit). All hard guardrails green. Optimization stopped per stop_conditions.",
+          "hold_ticks": 20,
+          "hold_window_ticks": 20,
+          "note": "优化停止 — 已进入 close-to-target zone (biref_mean < 0.092)，连续稳定超过 20 ticks。配方冻结为 hold_validation 最终版本。",
+          "recipe_type": "hold_validation_final",
+          "stability_verified": true,
+          "stop_reason": "close-to-target zone + 20 tick stability"
+        },
+        "saved_at": "2026-06-10T03:55:00.000Z"
+      }
     }
   ],
   "lastQuality": {
     "metrics": {
-      "thickness_mean": 11.9959,
-      "thickness_cv": 1.3882,
-      "thickness_edge_center_delta": 0.1156,
-      "birefringence_mean": 0.093338,
-      "birefringence_cv": 3.5248,
-      "birefringence_edge_center_delta": -0.003572
+      "thickness_mean": 12.0592,
+      "thickness_cv": 1.2731,
+      "thickness_edge_center_delta": 0.1494,
+      "birefringence_mean": 0.092614,
+      "birefringence_cv": 3.5687,
+      "birefringence_edge_center_delta": -0.00402
     },
     "profiles": {
       "position_norm": [
@@ -570,42 +2090,42 @@
         1
       ],
       "thickness": [
-        12.0919,
-        12.0648,
-        12.0287,
-        11.9992,
-        11.9739,
-        11.9649,
-        11.9903,
-        11.9804,
-        11.9498,
-        11.9409,
-        11.9562,
-        11.9586,
-        11.9971,
-        12.0355,
-        12.0524,
-        12.0563,
-        12.0797
+        12.1694,
+        12.125,
+        12.0902,
+        12.0709,
+        12.054,
+        12.0649,
+        12.0669,
+        12.0446,
+        11.9861,
+        12.0048,
+        11.9943,
+        12.0324,
+        12.0762,
+        12.1238,
+        12.1176,
+        12.1197,
+        12.113
       ],
       "birefringence": [
-        0.091285,
-        0.092104,
-        0.093239,
-        0.09313,
-        0.093068,
-        0.093116,
-        0.093846,
-        0.09453,
-        0.094984,
-        0.094556,
-        0.094518,
-        0.093793,
-        0.092936,
-        0.092515,
-        0.091777,
-        0.091553,
-        0.091395
+        0.090039,
+        0.090368,
+        0.091312,
+        0.09236,
+        0.092476,
+        0.093293,
+        0.093716,
+        0.09323,
+        0.093973,
+        0.093689,
+        0.093399,
+        0.093434,
+        0.092922,
+        0.09228,
+        0.091352,
+        0.091132,
+        0.089717
       ]
     },
     "alarmRisk": false

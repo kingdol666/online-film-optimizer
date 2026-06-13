@@ -1,0 +1,16 @@
+{
+  "changes": [
+    {
+      "tag": "td_draw_ratio",
+      "target": 3.66
+    },
+    {
+      "tag": "heatset_temp",
+      "target": 219
+    }
+  ],
+  "campaignId": "CMP-001",
+  "experimentId": "CMP-001-R1",
+  "sourcePlan": "RD-20260612-001-Round1",
+  "expectedLagMinutes": 8
+}
