@@ -1,2 +1,3 @@
-- [PMMA Quality Gate Rules](pmma-quality-gate-rules.md) — PMMA_FILM_GRADE_A target windows, gate rules, historical baselines
+- [Blackbox ref vs opt basis](blackbox-ref-vs-opt-basis.md) — orientationDrive uses baseline ref, quadratic penalties use opt; critical for birefringence_mean root cause
 - [PET Quality Gate Rules](pet-quality-gate-rules.md) — PET_FILM_GRADE_A target windows, gate rules, baseline metrics, historical recipes
+- [PMMA Quality Gate Rules](pmma-quality-gate-rules.md) — PMMA_FILM_GRADE_A target windows, gate rules, historical baselines

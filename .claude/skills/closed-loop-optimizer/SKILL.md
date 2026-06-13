@@ -1,9 +1,112 @@
 ---
 name: closed-loop-optimizer
-description: Use this skill as the single Claude Code entrypoint for product-aware, team-based online closed-loop optimization of a biaxial film line. Trigger it whenever the user says things like “请完成对产线的优化”, “使得某性能提升/下降 xx%”, “给我开发这个产品的 recipe”, “让研发/质量/工艺团队协同优化”, or asks for PET/PPAT/PMMA/PVA recipe optimization. In Claude Code, this skill should first verify MCP and backend connectivity, then create a real three-agent team where quality and R&D only read line data and process is the only role allowed to execute MCP write actions.
+description: |
+  真实产线闭环优化入口 Skill。面向真实工业薄膜产线，接入真实产线 API。
+  遵循「产线无小事」原则——每一次参数变更都必须经过完整的证据链审查。
+  触发词：产线优化、recipe 开发、团队协同优化、双折射/厚度/透光率优化。
+  在 Claude Code 中，先验证 MCP 和 Backend 连通性，然后创建三角色团队，
+  其中 Quality 和 R&D 只读产线数据，Process 是唯一允许执行 MCP 写入的角色。
+  所有角色都遵循真实产线行为规范：证据先行、最小动作、可回退、可审计。
 ---
 
-# Closed-Loop Optimizer
+# Closed-Loop Optimizer — 真实产线模式
+
+> **⚠️ 真实产线声明：本系统接入的是真实运行中的工业薄膜产线 API。
+> 每一次参数变更都直接影响产线运行——影响材料、产出、良率和商业结果。
+> 所有团队成员必须遵循「产线无小事」原则：证据先行、最小有效动作、可回退、可审计。**
+
+## Real-Line Behavioral Code
+
+All team members must follow these behavioral principles:
+
+1. **证据先行 (Evidence First)**: No write action without complete evidence chain - Quality diagnosis → R&D strategy → Process independent verification → Preview confirmation.
+2. **最小有效动作 (Minimum Effective Action)**: Each step adjusts 1-2 parameters max. Step size should start conservative and stay below 75% of max_delta unless a previous move is already validated.
+3. **可回退 (Always Reversible)**: Every execution must have a confirmed rollback path. Worsening triggers immediate rollback, no waiting for approval.
+4. **可审计 (Fully Auditable)**: Every decision, every data point, every judgment is written to artifacts with timestamps, data sources, and confidence levels.
+5. **诚实面对不确定性 (Honest About Uncertainty)**: Low-confidence judgments are labeled as such. "I don't know" is better than a wrong answer on a real production line.
+
+## DEFAULT EXECUTION MODE: Real Agent Team
+
+**When this skill is triggered, the default and mandatory mode is to spawn real expert agents using the `Agent` tool.** The orchestrator (team-lead) must NOT do the work of quality diagnosis, R&D planning, or process execution itself. It delegates to the three specialist agents and coordinates them.
+
+### Why real agents, not team-lead solo
+
+- Each agent has a distinct personality, experience background, and self-check protocol written in its `.claude/agents/*.md` definition.
+- Agents produce independent, high-quality artifacts with their own judgment — not team-lead ghostwriting.
+- Agents challenge each other: R&D verifies Quality's conclusions independently, Process independently validates safety. This cross-checking is the core safety mechanism.
+- Team-lead solo mode loses the entire value of the team design: the personality, the challenge, the independent verification.
+
+### Mandatory agent dispatch sequence
+
+```
+Step 1: Gate check (backend + MCP + line state)
+Step 2: Create task workspace + intake briefs
+Step 3: Spawn Quality Agent  → waits for quality_diagnosis artifact
+Step 4: Spawn R&D Agent       → reads diagnosis, waits for rd_plan artifact
+Step 5: Spawn Process Agent   → reads plan, executes MCP write actions
+Step 6: Quality re-evaluates after each Process execution
+Step 7: Repeat 3→4→5 cycle until goal reached or hard stop
+```
+
+### When team-lead solo mode is allowed (LAST RESORT ONLY)
+
+Team-lead may drive the optimization directly ONLY if:
+- The Agent tool is not available in the current host environment
+- AND all fallback attempts have been exhausted
+
+In solo mode, team-lead must still follow the three-role artifact protocol (write diagnosis → write plan → execute with safety gates). Solo mode must be explicitly reported to the user as degraded operation.
+
+## Production Team Scheduling Model
+
+This team should behave like a real plant optimization cell with three different cadences:
+
+- **R&D cadence (long cycle)**: background research, historical mining, lever ranking, and strategy refresh. R&D should keep working even when no immediate write action is happening.
+- **Quality cadence (real-time watch)**: continuous monitoring, window-by-window diagnosis, and trigger management. Quality is the system's alarm and evidence engine.
+- **Process cadence (short cycle)**: bounded micro-tuning, safety-gated execution, and rollback management. Process is the only role allowed to touch live setpoints.
+
+The orchestrator should schedule work by state:
+
+- **Startup**: Quality diagnoses first, then R&D plans, then Process validates and executes.
+- **Steady optimization**: Process runs a short tuning loop under the active R&D strategy while Quality watches every stable window.
+- **Background research**: R&D continues to deepen analysis on a longer horizon using the latest quality and historian evidence.
+- **Escalation**: any worsening, safety rejection, or inconsistent signal pauses Process and forces a re-review by Quality and R&D.
+- **Hold / freeze**: when Quality declares PASS, Process stops exploration and the team enters hold validation.
+- **Recovery**: repeated worsening or alarm state forces rollback to the best known baseline before any new tuning.
+
+Canonical loop order:
+
+1. Startup gate check.
+2. Quality initial diagnosis.
+3. R&D strategy generation.
+4. Process safety-gated execution.
+5. Quality post-execution evaluation.
+6. R&D background learning refresh.
+7. Repeat from step 4 until hold, replan, recover, or stop.
+
+Canonical verdict definitions:
+
+- **effective**: the primary target gap improves by at least the meaningful response threshold, and no guardrail metric worsens beyond tolerance.
+- **ineffective**: the primary target gap changes by less than the meaningful response threshold, and no guardrail metric worsens beyond tolerance.
+- **worse**: any guardrail metric breaks spec, or the primary target gap worsens beyond the meaningful response threshold.
+
+Only Quality owns the canonical verdict for a stable window. Process must mirror that verdict in execution receipts, but Process must not redefine it.
+
+R&D background learning is allowed only as a draft lane. While a Process micro-cycle is active, R&D may update notes, evidence summaries, and next-hypothesis candidates, but it must not overwrite the active strategy used by Process until the orchestrator opens a replan window.
+
+Emergency rollback recovery order:
+
+1. Process executes rollback immediately.
+2. Quality performs post-rollback recovery check on the next stable window.
+3. R&D switches to recover mode and writes the next safe hypothesis only after the rollback result is known.
+4. Orchestrator keeps Process paused until Quality and R&D both acknowledge recovery or a new safe plan.
+
+Recommended role trigger matrix:
+
+- **Quality acts** when new stable data arrives, when a process receipt lands, when quality is PASS, when noise or drift is unclear, or when a sensor-health concern appears.
+- **R&D acts** when a fresh diagnosis exists, when a strategy cycle begins, when Process asks for replan, or when the long-cycle learning backlog should be refreshed.
+- **Process acts** only when Quality and R&D artifacts exist, the line is stable, the safety gate is open, and a bounded action can be executed or rolled back.
+
+The orchestrator should prefer one active Process action per loop while letting R&D continue background synthesis. Do not force all roles to move at the same pace; the production goal is coordinated cadence, not simultaneous activity.
 
 ## Use This Skill When
 
@@ -49,14 +152,19 @@ this skill should trigger as the first and only orchestration entry.
 Primary behavior inside Claude Code:
 
 1. Parse the goal and infer `product_grade` if the user already implied it.
-2. Run the MCP connectivity gate before creating any team work:
+2. Build the scheduling frame first:
+   - identify the primary quality KPI,
+   - identify the likely main lever family,
+   - identify the expected Process action cadence,
+   - identify whether the run starts in `explore`, `exploit`, `recover`, or `hold_validation`.
+3. Run the MCP connectivity gate before creating any team work:
    - verify read tools exist: `film_line_get_state`, `film_line_get_snapshot`, `film_line_get_online_quality`, `film_line_list_writable_parameters`, `film_line_list_products`
    - verify process-write tools exist for the process role: `film_line_preview_proposal`, `film_line_apply_proposal`, `film_line_run_until_stable`, `film_line_rollback`, `film_line_save_candidate_recipe`, `film_line_load_recipe_baseline`
    - verify backend health when local backend is expected, for example `curl -fsS http://127.0.0.1:4317/api/health`
-3. If the gate passes, create the task workspace and team artifacts.
-4. Create the real team with `TeamCreate` whenever the host supports it.
-5. Spawn the role agents with `Agent` and route structured messages with `SendMessage`.
-6. Keep optimizing until the goal is reached or governance hard stops fire.
+4. If the gate passes, create the task workspace and team artifacts.
+5. Create the real team with `TeamCreate` whenever the host supports it.
+6. Spawn the role agents with `Agent` and route structured messages with `SendMessage`.
+7. Keep optimizing until the goal is reached or governance hard stops fire.
 
 Fallback order:
 
@@ -110,7 +218,7 @@ Runtime selection reference:
 
 The full runtime matrix and Teamwork contract are documented in `docs/closed-loop-optimizer-runtimes-and-teamwork.md`.
 
-Supported simulated products are `PET_FILM_GRADE_A`, `PPAT_FILM_GRADE_A`, `PMMA_FILM_GRADE_A`, and `PVA_FILM_GRADE_A`. Legacy `BOPET_NEW_GRADE_A` maps to `PET_FILM_GRADE_A`. Product selection changes baseline recipe, writable parameter limits, target template, hidden simulation response, historical recipe memory, and AgentTeam brief context.
+Supported products are `PET_FILM_GRADE_A`, `PPAT_FILM_GRADE_A`, `PMMA_FILM_GRADE_A`, and `PVA_FILM_GRADE_A`. Legacy `BOPET_NEW_GRADE_A` maps to `PET_FILM_GRADE_A`. Product selection changes baseline recipe, writable parameter limits, target template, process response model, historical recipe memory, and AgentTeam brief context.
 
 Every task gets its own workspace under `workspace/optimization-tasks/<task-id>/`.
 The task workspace includes:
@@ -128,7 +236,7 @@ After a team run, inspect the task workspace itself and verify that all required
 
 ## MCP Tool Mode
 
-When the host exposes `.mcp.json`, use the `industrial-film-line-sim` MCP server for live simulated-line actions:
+When the host exposes `.mcp.json`, use the `industrial-film-line-sim` MCP server for live line actions:
 
 - `film_line_run_until_stable`
 - `film_line_list_products`
@@ -159,6 +267,13 @@ For this skill, MCP is a native tool surface. Claude Code should rely on `.mcp.j
 - `rd-engineer` writes `03_rd_plan/rd_optimization_plan_XXX.json` with stage-aware ranked levers, plan rationale, and review focus.
 - `process-engineer` writes `04_execution/parameter_delta_proposal_XXX.json` and `safety_gate_result_XXX.json` while preserving execution intent, control mode, and guardrails.
 
+### Scheduling Responsibilities
+
+- **R&D owns the long-cycle map**: it should refresh the lever ranking when the current strategy is exhausted, when the quality diagnosis changes materially, or when the process loop cannot advance safely.
+- **Quality owns the live truth**: it should compare each stable window to the prior window, decide whether the current move is effective, and trigger hold/replan/recover when thresholds are crossed.
+- **Process owns the short-cycle move**: it should execute one bounded action at a time, keep the rollback path ready, and immediately stop if the line or the safety gate disagrees.
+- **Orchestrator owns cadence and escalation**: it decides which role is active now, which role stays in background research, and when the team must stop, freeze, or reset.
+
 Artifact naming contract:
 
 - New runs must use numbered immutable artifacts, for example `quality_diagnosis_001.json`, `rd_optimization_plan_001.json`, `parameter_delta_proposal_001.json`, `execution_receipt_001.json`.
@@ -166,8 +281,15 @@ Artifact naming contract:
 - Every role should read the highest-numbered artifact in its family unless the team lead explicitly pins a different numbered file in `team/team_messages.jsonl`.
 - `07_coordination/` is the mandatory handoff protocol layer and includes quality review, R&D brief, process brief, strategy state, approval packet, coordination index, best recipe memory, and executive summary.
 - `08_trial_evidence/trial_XXX/` stores the full evidence chain for each experiment.
-- The simulator/equipment adapter writes `execution_receipt_XXX.json`, new snapshots, result summaries, and final recipe recommendation.
+- The line adapter writes `execution_receipt_XXX.json`, new snapshots, result summaries, and final recipe recommendation.
 - Every iteration writes `07_coordination/team_dispatch_plan_XXX.json`; it explains which expert roles act in that iteration, whether R&D strategy is refreshed or carried forward, and what each role is being asked to do.
+
+The dispatch plan should also record:
+
+- the current cadence state (`startup`, `explore`, `exploit`, `recover`, `hold_validation`);
+- which role is in active work mode and which role is in background mode;
+- the next trigger that will wake R&D, Quality, or Process;
+- the stop condition for the current loop.
 
 ## Expert Team Mode
 
@@ -187,8 +309,10 @@ The native teamwork path keeps the same artifact contract. The team behaves as:
 
 - Outer strategy cycle: Quality publishes quality evidence, then R&D publishes the product-aware strategy.
 - Inner process cycle: Process executes multiple bounded micro-tunes under the active R&D strategy.
+- Background learning cycle: R&D continues to mine history, refine hypotheses, and rank levers even when Process is holding or waiting.
 - Replan trigger: no progress, repeated rejection, repeated worsening, safety gate block, or explicit quality/R&D/process request.
 - Completion: freeze the best observed recipe only after target reach plus hold-window confirmation, otherwise preserve the best recipe and the evidence for the next cycle.
+- Team deletion: once completion is validated, the orchestrator should close or delete the native team after final artifact validation passes.
 
 ## Native Teamwork Rules
 
@@ -257,7 +381,19 @@ The operational finish condition is stricter than one good sample:
 - Prefer artifact-driven collaboration over implicit prompt memory: diagnosis context, strategy state, approval packet, ranked planning rationale, and execution intent must be written into artifacts.
 - Treat the user request as the top-level product objective, not as an instruction to tune one metric in isolation.
 - Continue across strategy cycles until the goal is reached or configured governance limits fire. Safety rejection, repeated worsening, or no progress should first trigger replanning/recover unless the hard stop limit is reached.
-- Treat the simulated MCP as if it were a real production-line MCP. Every proposal, hold, rollback, recipe save, and recipe import step must be auditable and safe enough for later migration to a real line.
+- Treat the MCP as a REAL production-line API. Every proposal, hold, rollback, recipe save, and recipe import step must be auditable and safe enough for real production.
+- Treat R&D as a background capability, not a one-shot deliverable. It should deepen the next hypothesis while Process is still executing the current one.
+- Treat Quality as a continuous watch function, not a post-hoc report. It should keep the team honest about drift, noise, and stability.
+- Treat Process as a bounded actuator, not a strategy owner. It executes, measures, rolls back, and reports, but it does not define the research direction.
+- **Real-Line Guardrails (mandatory)**:
+  - Every MCP write must be preceded by preview + safety gate check — no exceptions.
+  - Step size ≤ 75% of max_delta_per_action by default. Only approach max_delta after confirmed positive response.
+  - Maximum 2 parameters changed per action. Never change 3+ simultaneously.
+  - Any metric worsening beyond spec triggers immediate rollback without waiting for approval.
+  - Process Agent must complete the 10-point self-check before every execution.
+  - Quality Agent must provide confidence levels on every judgment.
+  - R&D Agent must provide falsifiable hypotheses with quantified predictions.
+  - Orchestrator must review each stage gate before allowing the next stage to proceed.
 - For real-line migration and hook boundaries, read:
   - `references/orchestration-contract.md`
   - `references/real-line-adapter-contract.md`

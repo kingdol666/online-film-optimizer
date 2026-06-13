@@ -1,0 +1,3 @@
+- [Birefringence Mean Ref Basis Gotcha](birefringence-mean-ref-basis-gotcha.md) — blackbox-model uses baseline_setpoints as ref, NOT optimum; mixing them manufactures phantom residuals
+- [HeatBalance Dominant Mean Driver](heatbalance-dominant-mean-driver.md) — heatBalance composite is the largest single birefringence_mean contributor; heatset_temp is the hidden strongest mean lever via this channel
+- [Biref CV Is Binding For Mean Gap](biref-cv-is-binding-for-mean-gap.md) — heatset→223 costs +0.21 on biref_cv; safe ceiling is 222; mean often cannot reach [0.075,0.081] window under biref_cv guard — surface feasibility decision early
