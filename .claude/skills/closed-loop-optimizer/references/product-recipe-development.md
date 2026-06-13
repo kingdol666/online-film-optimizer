@@ -23,6 +23,12 @@ Every optimization task must keep the same `product_grade` in:
 - `campaigns/<campaign-id>/run_summary.json`
 - `outputs/final_recipe.json`
 
+Artifact naming for recipe memory:
+
+- New recipe memory files should use numbered names when they belong to a campaign iteration, for example `best_recipe_memory_001.json`.
+- `best_recipe_memory.json` is the canonical latest alias that may mirror the highest numbered entry for convenience.
+- The latest alias must always match the highest numbered artifact in the same campaign folder.
+
 `product_context` should include material family, process notes, and historical recipe records. `product_database_ref` should identify the provider used to load product history.
 
 ## Agent Responsibilities

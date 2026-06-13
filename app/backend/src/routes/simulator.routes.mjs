@@ -3,8 +3,10 @@ import {
   applySetpoints,
   getSimulatorOverview,
   listSimulatorProducts,
+  loadRecipeBaseline,
   previewSetpoints,
   resetSimulator,
+  saveCandidateRecipe,
   rollbackSimulator,
   runUntilStable,
   tickSimulator
@@ -71,6 +73,22 @@ router.post('/apply-setpoints', async (req, res, next) => {
 router.post('/rollback', async (req, res, next) => {
   try {
     res.json({ success: true, data: await rollbackSimulator(req.body || {}) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/recipe/save-candidate', async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await saveCandidateRecipe(req.body || {}) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/recipe/load-baseline', async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await loadRecipeBaseline(req.body || {}) });
   } catch (error) {
     next(error);
   }

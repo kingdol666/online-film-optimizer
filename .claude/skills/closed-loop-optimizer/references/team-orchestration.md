@@ -69,6 +69,14 @@ The SDK and fallback paths must write the same evidence types:
 - `08_trial_evidence/trial_XXX/**`
 - `outputs/final_recipe.json`
 
+Canonical role ids for all new work:
+
+- `quality-engineer`
+- `rd-engineer`
+- `process-engineer`
+
+Legacy mailbox aliases (`quality`, `rd`, `process`) may still be read when loading older task folders, but they should not be written by new campaigns.
+
 ## Native Team Semantics
 
 If TeamCreate / TaskCreate / SendMessage are available, the team lead should:

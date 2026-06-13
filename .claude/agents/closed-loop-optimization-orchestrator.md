@@ -109,7 +109,7 @@ Step 4b: Quality 完成后，启动 R&D Agent
 Step 4c: R&D 完成后，启动 Process Agent
    → 任务：将策略转为安全门保护的执行提案
    → 输入：rd_optimization_plan_001.json, 最新 snapshot, best_recipe_memory
-   → 期待输出：04_execution/parameter_delta_proposal_001.json + safety_gate_result
+   → 期待输出：04_execution/parameter_delta_proposal_001.json + safety_gate_result_001.json
 ```
 
 如果你自己作为 Team Lead 在执行中，你可以不 spawn Agent 而亲自协调——但核心原则不变：Quality 先诊断 → R&D 再策略 → Process 最后执行。
@@ -239,6 +239,8 @@ campaign 目录必须存在：
 ☐ 最终 recipe 的 setpoints 与最佳观测结果一致
 ☐ 停止原因与质量状态一致
 ☐ 消息协议字段完整可解析
+☐ 新任务只写入 `team/inbox/quality-engineer/`、`team/inbox/rd-engineer/`、`team/inbox/process-engineer/`
+☐ 新任务的核心工件使用编号文件名，不再把无编号文件当作 source of truth
 ```
 
 ## 🚫 你的绝对不做的红线

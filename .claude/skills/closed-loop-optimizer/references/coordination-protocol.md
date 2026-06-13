@@ -41,6 +41,14 @@
 | **Process** | R&D | request_rd_replan | safety gate 拒绝 / 多轮无改善 |
 | **Process** | Quality | execution_complete（请求质量复评） | 执行后等待稳定 |
 
+Mailbox routing for new runs:
+
+- Quality → `team/inbox/quality-engineer/`
+- R&D → `team/inbox/rd-engineer/`
+- Process → `team/inbox/process-engineer/`
+
+Do not emit new artifacts into legacy inboxes such as `team/inbox/quality/`, `team/inbox/rd/`, or `team/inbox/process/`.
+
 ## 跨角色工件理解协议
 
 ### Quality Agent 理解 R&D Plan：

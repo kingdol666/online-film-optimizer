@@ -1,58 +1,272 @@
 {
   "seed": 20260610,
-  "rngState": 4030865170,
+  "rngState": 23155315,
   "productGrade": "PET_FILM_GRADE_A",
-  "campaignId": "CMP-SIM-BOPET-NEW-GRADE-A",
-  "tick": 0,
-  "clock": "2026-06-10T00:00:00.000Z",
+  "campaignId": "CMP-1781279928594",
+  "tick": 18,
+  "clock": "2026-06-10T00:18:00.000Z",
   "lineState": "STABLE",
-  "experimentId": "EXP-000",
-  "recipeId": "RCP-BASELINE",
+  "experimentId": "EXP-MCP-0013",
+  "recipeId": "RCP-EXP-MCP-0013",
   "setpoints": {
     "extruder_speed": 100,
     "melt_temp": 278,
     "casting_roll_temp": 34,
     "md_draw_ratio": 3.18,
     "md_zone_temp": 92,
-    "td_draw_ratio": 3.62,
+    "td_draw_ratio": 3.66,
     "td_zone_1_temp": 108,
-    "td_zone_2_temp": 112,
-    "heatset_temp": 218,
+    "td_zone_2_temp": 114.2,
+    "heatset_temp": 219,
     "relaxation_ratio": 4.2,
     "line_speed": 42,
     "winder_tension": 118
   },
   "lastKnownGoodRecipe": {
-    "id": "RCP-BASELINE",
+    "id": "RCP-OPT-BIREFRINGENCE-CV-PASS-001",
     "setpoints": {
       "extruder_speed": 100,
       "melt_temp": 278,
       "casting_roll_temp": 34,
       "md_draw_ratio": 3.18,
       "md_zone_temp": 92,
-      "td_draw_ratio": 3.62,
+      "td_draw_ratio": 3.66,
       "td_zone_1_temp": 108,
-      "td_zone_2_temp": 112,
-      "heatset_temp": 218,
+      "td_zone_2_temp": 114.2,
+      "heatset_temp": 219,
       "relaxation_ratio": 4.2,
       "line_speed": 42,
       "winder_tension": 118
     }
   },
   "pendingTransitionTicks": 0,
-  "timeSinceLastChangeSec": 900,
+  "timeSinceLastChangeSec": 360,
   "alarmActive": false,
-  "wasteMeter": 0,
-  "drift": 0,
-  "ledger": [],
+  "wasteMeter": 108,
+  "drift": -0.0001737595607712863,
+  "ledger": [
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0001",
+        "source_plan": "mcp_setpoint_request",
+        "setpoint_changes": [
+          {
+            "tag": "td_zone_2_temp",
+            "current": 112,
+            "target": 113.5,
+            "delta": 1.5,
+            "ramp_limit_per_min": 0.6
+          }
+        ],
+        "rollback_recipe": "RCP-BASELINE",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-BASELINE"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.62,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 112,
+          "heatset_temp": 218,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.62,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 113.5,
+          "heatset_temp": 218,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T00:01:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0007",
+        "source_plan": "mcp_setpoint_request",
+        "setpoint_changes": [
+          {
+            "tag": "td_zone_2_temp",
+            "current": 113.5,
+            "target": 114.2,
+            "delta": 0.7,
+            "ramp_limit_per_min": 0.6
+          }
+        ],
+        "rollback_recipe": "RCP-BASELINE",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-BASELINE"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.62,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 113.5,
+          "heatset_temp": 218,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.62,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 218,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T00:07:00.000Z"
+      }
+    },
+    {
+      "type": "apply",
+      "proposal": {
+        "campaign_id": "CMP-1781279928594",
+        "experiment_id": "EXP-MCP-0013",
+        "source_plan": "mcp_setpoint_request",
+        "setpoint_changes": [
+          {
+            "tag": "td_draw_ratio",
+            "current": 3.62,
+            "target": 3.66,
+            "delta": 0.04,
+            "ramp_limit_per_min": 0.02
+          },
+          {
+            "tag": "heatset_temp",
+            "current": 218,
+            "target": 219,
+            "delta": 1,
+            "ramp_limit_per_min": 0.6
+          }
+        ],
+        "rollback_recipe": "RCP-BASELINE",
+        "expected_lag_minutes": 8
+      },
+      "receipt": {
+        "executed": true,
+        "write_confirmed": true,
+        "safety_gate_result": {
+          "allowed": true,
+          "violations": [],
+          "approval_required": true,
+          "limit_applied": false,
+          "rollback_recipe": "RCP-BASELINE"
+        },
+        "before_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.62,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 218,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "after_setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.66,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 219,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "timestamp": "2026-06-10T00:13:00.000Z"
+      }
+    },
+    {
+      "type": "candidate_recipe",
+      "record": {
+        "recipe_id": "RCP-OPT-BIREFRINGENCE-CV-PASS-001",
+        "setpoints": {
+          "extruder_speed": 100,
+          "melt_temp": 278,
+          "casting_roll_temp": 34,
+          "md_draw_ratio": 3.18,
+          "md_zone_temp": 92,
+          "td_draw_ratio": 3.66,
+          "td_zone_1_temp": 108,
+          "td_zone_2_temp": 114.2,
+          "heatset_temp": 219,
+          "relaxation_ratio": 4.2,
+          "line_speed": 42,
+          "winder_tension": 118
+        },
+        "metadata": {
+          "task_id": "TASK-20260613-001",
+          "goal": "birefringence_cv≤3.7",
+          "performance": {
+            "birefringence_cv": 3.5264,
+            "thickness_cv": 1.3356
+          }
+        },
+        "saved_at": "2026-06-10T00:18:00.000Z"
+      }
+    }
+  ],
   "lastQuality": {
     "metrics": {
-      "thickness_mean": 12.0842,
-      "thickness_cv": 1.5377,
-      "thickness_edge_center_delta": 0.1124,
-      "birefringence_mean": 0.093905,
-      "birefringence_cv": 3.7278,
-      "birefringence_edge_center_delta": -0.002765
+      "thickness_mean": 12.0871,
+      "thickness_cv": 1.3074,
+      "thickness_edge_center_delta": 0.1073,
+      "birefringence_mean": 0.093938,
+      "birefringence_cv": 3.4065,
+      "birefringence_edge_center_delta": -0.003642
     },
     "profiles": {
       "position_norm": [
@@ -75,42 +289,42 @@
         1
       ],
       "thickness": [
-        12.1276,
-        12.1572,
-        12.1519,
-        12.1207,
-        12.0893,
-        12.0532,
-        12.0327,
-        12.0397,
-        12.0561,
-        12.0569,
-        12.0654,
-        12.0715,
-        12.0735,
-        12.0811,
-        12.116,
-        12.1517,
-        12.1697
+        12.1351,
+        12.1229,
+        12.1128,
+        12.1301,
+        12.1187,
+        12.1067,
+        12.055,
+        12.0178,
+        12.0262,
+        12.0554,
+        12.0949,
+        12.076,
+        12.1025,
+        12.0859,
+        12.0949,
+        12.1053,
+        12.131
       ],
       "birefringence": [
-        0.09311,
-        0.09291,
-        0.092919,
-        0.092914,
-        0.093272,
-        0.093767,
-        0.094328,
-        0.09502,
-        0.095738,
-        0.095353,
-        0.094226,
-        0.093588,
-        0.093001,
-        0.093104,
-        0.092968,
-        0.093245,
-        0.092931
+        0.0915,
+        0.09204,
+        0.093127,
+        0.093857,
+        0.094524,
+        0.094059,
+        0.094276,
+        0.095,
+        0.095152,
+        0.094941,
+        0.094959,
+        0.094838,
+        0.094194,
+        0.093266,
+        0.092643,
+        0.091831,
+        0.091511
       ]
     },
     "alarmRisk": false

@@ -244,6 +244,43 @@ async function rollbackLine() {
   });
 }
 
+async function saveCandidateRecipe() {
+  await runAction(async () => {
+    const recipeId = `RCP-CANDIDATE-${Date.now()}`;
+    const result = await api('/api/simulator/recipe/save-candidate', {
+      method: 'POST',
+      body: JSON.stringify({
+        recipeId,
+        metadata: {
+          source: 'frontend_dashboard',
+          product_grade: state.value.product_grade || productGrade.value,
+          note: 'saved from runtime console'
+        }
+      })
+    });
+    await loadOverview();
+    actionMessage.value = `已保存候选 recipe：${result.recipe_id || recipeId}`;
+  });
+}
+
+async function loadBaselineRecipe() {
+  await runAction(async () => {
+    const recipeId = state.value.recipe_id || `RCP-BASELINE-${Date.now()}`;
+    const result = await api('/api/simulator/recipe/load-baseline', {
+      method: 'POST',
+      body: JSON.stringify({
+        recipeId,
+        setpoints: snapshot.value?.setpoints || {},
+        reason: 'frontend dashboard load baseline'
+      })
+    });
+    await loadOverview();
+    actionMessage.value = result?.baseline_synced
+      ? `已回灌基线 recipe：${recipeId}`
+      : '基线回灌完成。';
+  });
+}
+
 async function previewChanges() {
   await runAction(async () => {
     const changes = buildChanges();
@@ -419,6 +456,8 @@ onBeforeUnmount(() => {
             <button @click="tickLine(1)">+1 Tick</button>
             <button @click="tickLine(5)">+5 Tick</button>
             <button class="danger" @click="rollbackLine">回退</button>
+            <button @click="saveCandidateRecipe">保存候选 Recipe</button>
+            <button @click="loadBaselineRecipe">回灌 Baseline</button>
           </div>
         </div>
 

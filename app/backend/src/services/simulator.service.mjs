@@ -40,3 +40,11 @@ export async function applySetpoints(payload) {
 export async function rollbackSimulator({ reason = 'dashboard rollback' } = {}) {
   return postJson(`${SIM_BASE_URL}/sim/rollback`, { reason });
 }
+
+export async function saveCandidateRecipe(payload) {
+  return postJson(`${SIM_BASE_URL}/sim/recipe/save-candidate`, payload);
+}
+
+export async function loadRecipeBaseline(payload) {
+  return postJson(`${SIM_BASE_URL}/sim/recipe/load-baseline`, payload);
+}

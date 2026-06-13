@@ -26,6 +26,14 @@ Team roles:
 - R&D Agent: produce stage-aware optimization strategy and ranked levers.
 - Process Agent: turn the plan into approval-aware proposals and MCP execution artifacts.
 
+Canonical role ids and inboxes:
+
+- `quality-engineer` → `team/inbox/quality-engineer/`
+- `rd-engineer` → `team/inbox/rd-engineer/`
+- `process-engineer` → `team/inbox/process-engineer/`
+
+Legacy aliases `quality`, `rd`, and `process` may exist in older task folders, but new runs must use the canonical role ids above.
+
 ## Team Entry
 
 ## Native Claude Code Entry
@@ -146,10 +154,16 @@ For this skill, MCP is a native tool surface. Claude Code should rely on `.mcp.j
 
 - The entry skill first normalizes the user goal, then creates a department-style team workspace, then launches the campaign runner.
 - Product/material grade is first-class state. It must be present in `goal_request.json`, `product_target.json`, `team/department_briefs.json`, `run_summary.json`, and `outputs/final_recipe.json`.
-- The team lead writes `team/inbox/<role>/intake_brief.json` for each role and appends lifecycle events to `team/team_messages.jsonl`.
+- The team lead writes `team/inbox/<role-id>/intake_brief.json` for each role and appends lifecycle events to `team/team_messages.jsonl`.
 - `quality-engineer` writes `02_quality/quality_diagnosis_XXX.json` with metric-level gap analysis, process risk, response/history context, and stage recommendation.
 - `rd-engineer` writes `03_rd_plan/rd_optimization_plan_XXX.json` with stage-aware ranked levers, plan rationale, and review focus.
 - `process-engineer` writes `04_execution/parameter_delta_proposal_XXX.json` and `safety_gate_result_XXX.json` while preserving execution intent, control mode, and guardrails.
+
+Artifact naming contract:
+
+- New runs must use numbered immutable artifacts, for example `quality_diagnosis_001.json`, `rd_optimization_plan_001.json`, `parameter_delta_proposal_001.json`, `execution_receipt_001.json`.
+- Unnumbered names like `quality_diagnosis.json` or `rd_optimization_plan.json` are legacy compatibility names only and must not be the source of truth for new runs.
+- Every role should read the highest-numbered artifact in its family unless the team lead explicitly pins a different numbered file in `team/team_messages.jsonl`.
 - `07_coordination/` is the mandatory handoff protocol layer and includes quality review, R&D brief, process brief, strategy state, approval packet, coordination index, best recipe memory, and executive summary.
 - `08_trial_evidence/trial_XXX/` stores the full evidence chain for each experiment.
 - The simulator/equipment adapter writes `execution_receipt_XXX.json`, new snapshots, result summaries, and final recipe recommendation.
