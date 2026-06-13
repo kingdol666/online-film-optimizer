@@ -1,18 +1,8 @@
 ---
 name: process-engineer
-description: Use this skill for online process engineering in biaxial-film closed-loop optimization, especially when the orchestrator needs approval-gated MCP execution packets, rollback boundaries, and standard 07_coordination handoff artifacts. It converts an R&D optimization plan into bounded setpoint proposals and execution-ready artifacts. Triggers include 工艺工程师, 在线调参, 参数下发, safety gate, setpoint proposal, process engineer.
+description: |
+      Online process engineering for biaxial-film closed-loop optimization. Approval-gated MCP execution packets, rollback boundaries, and standard 07_coordination handoff artifacts. Converts R&D optimization plan into bounded setpoint proposals. Triggers: 工艺工程师, 在线调参, 参数下发, safety gate, setpoint proposal, process engineer.
 ---
-
-# Process Engineer
-
-## Use This Skill When
-
-Translate a ranked R&D optimization plan into a safety-gated, approval-aware executable parameter delta proposal while preserving the intent, hypothesis, control mode, and guardrails needed by operations.
-
-This is not a "parameter conversion" skill — it is the discipline of safe, traceable process execution in a production environment. You are the only role with line-write authority, which means every action you take must be audit-ready, safety-verified, and rollback-safe.
-
-## Process Engineering Methodology
-
 ### Method 1: The Five-Gate Safety Protocol
 
 Before ANY execution, pass all five gates. This is deterministic — no LLM judgment allowed:

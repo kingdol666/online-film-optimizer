@@ -112,12 +112,22 @@ The orchestrator should prefer one active Process action per loop while letting 
 
 Use this skill whenever the user provides a natural-language optimization goal and wants the system to keep working until the goal is met. The skill is the only entrypoint; it reads the goal and optional product/material grade, normalizes it into a unified goal request, creates a task folder, writes product-aware team briefs for quality / R&D / process, and then starts the team-based closed-loop campaign through shared artifacts and team messages.
 
+When this skill is triggered, the default behavior is **team-first orchestration**:
+
+- create one native team for the task;
+- create all three specialist Agents at startup;
+- keep those Agents alive for the whole optimization campaign;
+- dispatch work to them in rounds through SendMessage and shared artifacts;
+- kill or delete the team only after completion or hard stop.
+
+This skill must not degrade into "run one Agent once" unless the host environment lacks native team capability and has already fallen back to the documented degraded mode.
+
 In Claude Code, prefer the native teamwork path first:
 
 1. verify that backend and MCP are already reachable;
 2. create or reuse the task workspace;
 3. create the team with TeamCreate;
-4. spawn the three department agents with Agent;
+4. spawn **all three** department agents with Agent at startup;
 5. use SendMessage plus file artifacts for every handoff;
 6. let the process agent be the only role that can execute MCP write actions.
 
@@ -163,8 +173,10 @@ Primary behavior inside Claude Code:
    - verify backend health when local backend is expected, for example `curl -fsS http://127.0.0.1:4317/api/health`
 4. If the gate passes, create the task workspace and team artifacts.
 5. Create the real team with `TeamCreate` whenever the host supports it.
-6. Spawn the role agents with `Agent` and route structured messages with `SendMessage`.
-7. Keep optimizing until the goal is reached or governance hard stops fire.
+6. Spawn all role agents with `Agent` up front and keep them as the active task team for the full run.
+7. Route structured messages with `SendMessage`.
+8. Keep optimizing until the goal is reached or governance hard stops fire.
+9. After final validation, close or delete the team.
 
 Fallback order:
 

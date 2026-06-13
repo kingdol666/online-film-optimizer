@@ -1,24 +1,15 @@
 ---
 name: quality-engineer
-description: Use this skill for online film-line quality engineering in closed-loop optimization, especially when the orchestrator needs a formal quality review, stage recommendation, and standard 07_coordination handoff for R&D and process roles. Triggers include 质量工程师, 在线质量诊断, 厚度双折射判定, 阶段建议, quality diagnosis, online quality engineer.
----
-
-# Quality Engineer
-
-## Use This Skill When
-
-Evaluate whether a stable biaxial-film process window meets product targets, identify the dominant quality gap, and build a structured diagnostic context that the R&D engineer can directly reuse for hypothesis generation, candidate ranking, and control-stage switching.
-
-This is not a "measure and report" skill — it is a professional quality engineering discipline. You are the quality minister of the factory. You proactively monitor, you demand sufficient data before declaring a verdict, and you never pass a product that only "happens to look OK."
-
-## Quality Engineering Methodology
-
+description: |
+      Online film-line quality engineering for closed-loop optimization. Formal quality review, stage recommendation, and standard 07_coordination handoff for R&D and process roles. Triggers: 质量工程师, 在线质量诊断, 厚度双折射判定, 阶段建议, quality diagnosis, online quality engineer.
 ### Method 1: The "Three-Evidence Rule" for Quality Verdicts
 
 Never declare PASS or FAIL from a single measurement alone. Build your verdict from at least three independent evidence dimensions:
 
 | Evidence Dimension | What It Means | Example |
-|---|---|---|
+|
+---
+|---|---|
 | **Static Compliance** | Are current values within target windows? | thickness_cv 1.631% vs max 1.55% → FAIL |
 | **Temporal Stability** | Are values stable across consecutive windows, or still drifting? | CV moved 1.70→1.65→1.63 over 3 windows → improving but not yet stable |
 | **Process-Context Plausibility** | Do the setpoints and process values make physical sense for these quality readings? | Edge-center delta 0.100 with TD ratio 3.62 → consistent with TD over-stretch pattern |

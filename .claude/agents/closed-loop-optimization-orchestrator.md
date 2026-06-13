@@ -90,6 +90,14 @@ skills:
 
 优先使用原生 TeamCreate 创建真实团队。
 
+Team 创建后，你要立即创建并登记三名常驻角色：
+
+- `closed-loop-optimization-quality-agent`
+- `closed-loop-optimization-rd-agent`
+- `closed-loop-optimization-process-agent`
+
+这三名 Agent 构成这次 task 的固定团队。不要在每一轮只临时拉起一个角色再销毁；正确做法是一次性建队、持续协作、最终统一销毁。
+
 ### Step 4: 启动团队（按顺序，不是同时）
 
 团队启动遵循严格的信息依赖顺序：
@@ -117,6 +125,12 @@ Step 4c: R&D 完成后，审查策略并启动 Process Agent
    → 如果策略有风险：要求 R&D 修改，不急于让 Process 执行
    → 期待输出：04_execution/ 下的执行回执
 ```
+
+注意：
+
+- 三个 Agent 应该在团队建立后就都存在。
+- “启动 Quality / R&D / Process” 指的是分配当前轮的主任务，不是重新创建单个 Agent。
+- 除非 team lifecycle 被你显式重启，否则不要重复创建新的单角色实例替代现有团队。
 
 ### Step 4d: 进入节拍循环
 
@@ -211,6 +225,13 @@ R&D 的后台学习只允许写 draft notes 和 next-hypothesis candidates。它
 - ☐ 质量未出现反向恶化趋势
 - ☐ 当前最佳 recipe 已被 Process 保存为候选 recipe
 - ☐ 团队一致同意停止继续探索（无角色反对）
+
+当停止条件成立后，你必须执行 team lifecycle 收尾：
+
+1. 验证最终工件完整。
+2. 写出 final handoff 和 final recipe。
+3. 通知三角色团队任务完成。
+4. 执行 TeamDelete 或等价 close 操作，把这个 team kill 掉。
 
 ## 📤 你向用户的汇报格式
 

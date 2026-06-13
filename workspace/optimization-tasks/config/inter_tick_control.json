@@ -1,0 +1,105 @@
+{
+  "_note": "真实产线工艺调优间隔控制配置。所有时间以秒为单位。此文件是唯一的间隔控制源。",
+  "inter_tick_min_wait": {
+    "seconds": 300,
+    "ticks_equivalent": 5,
+    "description": "两次工艺参数变更之间的最小等待时间。真实产线工艺生效需要时间，频繁调整会造成波动叠加。",
+    "rationale": "热定型温度、冷却辊温度等热参数在 real line 上的 thermal lag 大约 5-10 ticks (25-50 min)。在每个变化点之后，需要至少等待这个时间才能进行下一次变更。"
+  },
+  "stabilization": {
+    "min_stable_ticks_before_next_action": 3,
+    "description": "每次变更后，至少经过 min_stable_ticks_before_next_action 个 tick 的稳定数据（cv 连续测量偏差低于阈值）后，才能考虑下一步变更。",
+    "max_consecutive_cv_measurements_deviation": 0.05,
+    "note": "连续两次 cv 测量的偏差超过此阈值时，视为仍在震荡中，禁止下一步操作。"
+  },
+  "inter_tick_min_wait_by_parameter_type": {
+    "temperature": {
+      "tag_patterns": [
+        "heatset_temp",
+        "melt_temp",
+        "casting_roll_temp",
+        "md_zone_temp",
+        "td_zone_1_temp",
+        "td_zone_2_temp"
+      ],
+      "min_wait_seconds": 480,
+      "rationale": "温度参数需要更长的热平衡时间，至少 8 分钟 (480秒)。"
+    },
+    "draw_ratio": {
+      "tag_patterns": [
+        "md_draw_ratio",
+        "td_draw_ratio"
+      ],
+      "min_wait_seconds": 360,
+      "rationale": "拉伸比通过机械调整，响应相对快，但仍需 6 分钟 (360秒) 等待薄膜局部稳态。"
+    },
+    "speed_tension": {
+      "tag_patterns": [
+        "line_speed",
+        "winder_tension"
+      ],
+      "min_wait_seconds": 300,
+      "rationale": "线速度和收卷张力通过伺服系统调整，响应最快，但至少需要 5 分钟 (300秒) 确保波次完全传递。"
+    },
+    "relaxation": {
+      "tag_patterns": [
+        "relaxation_ratio"
+      ],
+      "min_wait_seconds": 420,
+      "rationale": "松弛比同时影响机械和热行为，等待 7 分钟 (420秒)。"
+    },
+    "extruder": {
+      "tag_patterns": [
+        "extruder_speed"
+      ],
+      "min_wait_seconds": 420,
+      "rationale": "挤出量变化影响整个制程的物料流速，需要较长稳定时间。"
+    }
+  },
+  "global_cooldown": {
+    "enabled": true,
+    "min_action_interval_seconds": 360,
+    "description": "全局冷却期 — 不论调整哪种参数类型，两次 MCP 写入的硬间隔。这是最严格的上限，优先于其他配置。",
+    "last_action_timestamp_file": "workspace/optimization-tasks/config/last_action_timestamp.txt",
+    "enforcement": "Process Agent 必须在每次 MCP 回执写入完成后，将 apply_receipt.timestamp 写入到此文件。下次执行前检查当前时间与文件中时间戳的差值 ≥ min_action_interval_seconds。"
+  },
+  "pre_execution_cooldown_check": {
+    "steps": [
+      "Read workspace/optimization-tasks/config/last_action_timestamp.txt",
+      "Parse timestamp as ISO 8601 datetime",
+      "Compute current_time - last_action_time 差值 (秒)",
+      "Compare with min_action_interval_seconds (360 sec global default)",
+      "If 差值 < min_action_interval_seconds → block_execution, 输出剩余等待秒数",
+      "If 差值 >= min_action_interval_seconds → allow_execution"
+    ],
+    "fallback_if_file_missing": "如果文件不存在 (首次执行)，视为冷却已过，允许执行。"
+  },
+  "oscillation_detector": {
+    "enabled": true,
+    "required_stable_ticks": 3,
+    "description": "震荡检测器 — 在执行参数变更后，必须读取 film_line_get_online_quality 至少 3 次（每次间隔 1 tick），确认 cv 的 max-min 幅度不超过阈值。如果超过 → 产线仍在震荡，禁止下一步动作。",
+    "max_cv_swing": 0.08,
+    "max_mean_swing": 0.0008
+  },
+  "_version": "1.1",
+  "_last_modified": "2026-06-13",
+  "optimization_stop_conditions": {
+    "enabled": true,
+    "description": "当产线在 close-to-target zone 内持续稳定达到此条件时，应停止主动优化，进入 hold_validation 观察模式。",
+    "target_close_zone": {
+      "birefringence_mean_below": 0.092,
+      "description": "当 biref_mean 降到 0.092 以下时，视为接近目标区。此时应转为: 不主动探索，仅维持防退步。"
+    },
+    "stability_hold_window": {
+      "required_stable_ticks": 20,
+      "max_cv_oscillation": 0.15,
+      "max_mean_drift": 0.0008,
+      "description": "在 close-to-target zone 内连续稳定超过此 tick 数且震荡和漂移均在阈值内时，触发 hold_validation 模式，冻结优化不再执行新的主动探索。"
+    },
+    "max_improvement_cycles_without_progress": {
+      "cycles": 3,
+      "min_improvement_per_cycle": 0.0003,
+      "description": "最多在保证改进的情况下执行此多轮，如果连续 N 轮每轮 biref_mean 改进小于 min_improvement，说明已收敛，停止优化。"
+    }
+  }
+}

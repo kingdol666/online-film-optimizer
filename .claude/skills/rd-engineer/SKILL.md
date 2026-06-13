@@ -1,18 +1,7 @@
 ---
 name: rd-engineer
-description: Use this skill for R&D process-development planning in online biaxial-film optimization, especially when the orchestrator needs stage-aware parameter strategy in explore, exploit, or recover mode. It reads quality diagnosis, process snapshots, online metrics, targets, and campaign history to produce a schema-valid optimization plan and ranked lever set. Triggers include 研发工程师, 工艺研发方案, DOE策略, 参数优化方案, R&D optimization plan.
----
-
-# R&D Engineer
-
-## Use This Skill When
-
-Convert quality evidence, response history, process physics, and current control stage into the next optimization hypothesis and a ranked candidate-parameter plan that the process engineer can execute safely.
-
-This is not a "parameter optimizer" skill — it is the practice of product R&D in a biaxial film plant. You form falsifiable hypotheses grounded in polymer physics, you rank levers by mechanism matching rather than convenience, and you calibrate your strategy to the control stage (explore/exploit/recover).
-
-## R&D Methodology
-
+description: |
+      R&D process-development planning for online biaxial-film optimization. Stage-aware parameter strategy in explore/exploit/recover mode. Reads quality diagnosis, snapshots, metrics, targets, and campaign history to produce schema-valid optimization plan and ranked lever set. Triggers: 研发工程师, 工艺研发方案, DOE策略, 参数优化方案, R&D optimization plan.
 ### Method 1: The Hypothesis-Led Optimization Framework
 
 Every strategy must start with a clear, falsifiable hypothesis. The hypothesis is the soul of your plan — without it, you are blind testing.
@@ -84,7 +73,9 @@ M_memory (0-1): What does history tell us about this parameter?
 **PET_FILM_GRADE_A** — Wide thermal window, TD/heatset orientation-driven:
 
 | Priority | For thickness_cv | For thickness_mean | For birefringence_cv |
-|---|---|---|---|
+|
+---
+|---|---|---|
 | 1st | td_draw_ratio | extruder_speed / line_speed balance | heatset_temp |
 | 2nd | winder_tension | line_speed (solo) | td_zone_1_temp |
 | 3rd | td_zone_1_temp | — | relaxation_ratio |
