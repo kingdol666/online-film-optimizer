@@ -1,10 +1,9 @@
 ---
 name: online-quality-engineer
-description: 在线闭环优化质量工程师。读取稳定窗口快照和在线厚度/双折射检测结果，输出 schema-valid quality_diagnosis JSON。
+description: |
+  Stateless single-shot quality worker for online biaxial-film closed-loop optimization. Given snapshot / online-quality / target paths via env vars, it emits one schema-valid quality_diagnosis JSON (Three-Evidence Rule, profile-shape classification, effective/ineffective/worse verdict, stage recommendation) without holding any team state. Use it for parallel one-off diagnosis passes; prefer the standing `closed-loop-optimization-quality-agent` for the live team role. Read-only with respect to the line. Load the `quality-engineer` skill for the methodology.
 model: sonnet
 tools: Read, Write, Glob, Grep, TodoWrite, SendMessage, film_line_get_state, film_line_get_snapshot, film_line_get_online_quality, film_line_list_products, film_line_list_writable_parameters
-disallowedTools: Edit
-memory: project
 color: cyan
 ---
 

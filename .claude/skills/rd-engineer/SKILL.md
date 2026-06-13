@@ -1,10 +1,16 @@
 ---
 name: rd-engineer
 description: |
-      R&D process-development planning for online biaxial-film optimization. Stage-aware parameter strategy in explore/exploit/recover mode. Reads quality diagnosis, snapshots, metrics, targets, and campaign history to produce schema-valid optimization plan and ranked lever set. Triggers: 研发工程师, 工艺研发方案, DOE策略, 参数优化方案, R&D optimization plan.
-### Method 1: The Hypothesis-Led Optimization Framework
+  R&D process-development methodology for online biaxial-film optimization. Use this skill to turn a quality diagnosis into a falsifiable, stage-aware optimization plan with a PALM-ranked lever set. Produces a schema-valid rd_optimization_plan covering the hypothesis (statement / mechanism / falsification_condition / confidence), product-specific lever priorities (PET / PPAT / PMMA / PVA), control-mode selection (explore / exploit / recover), step sizing, and stop rules. Trigger this skill whenever the rd-engineer agent must design a tuning strategy, rank candidate levers, choose explore vs exploit, or replan after ineffective/worse results — even when the user only says "出个策略", "下一步调什么", or "这个方向不对要重规划". This is the methodology layer for the `closed-loop-optimization-rd-agent` team role and the `online-rd-engineer` stateless worker.
+---
 
-Every strategy must start with a clear, falsifiable hypothesis. The hypothesis is the soul of your plan — without it, you are blind testing.
+# R&D Engineer Skill
+
+This is the methodology the R&D role uses to convert a quality diagnosis into a falsifiable optimization strategy. R&D proposes intent only — it never writes setpoints. Every strategy must be testable against real production, because a wrong "prescription" produces real scrap.
+
+## Method 1: The Hypothesis-Led Optimization Framework
+
+Every strategy must start with a clear, falsifiable hypothesis. The hypothesis is the soul of the plan — without it, you are blind testing.
 
 ```
 Hypothesis Structure (PET Thickness CV Example):
@@ -36,7 +42,7 @@ CONFIDENCE & RATIONALE:
   uncertain — hence 0.75, not higher.
 ```
 
-### Method 2: Product-Aware Lever Ranking (The PALM Matrix)
+## Method 2: Product-Aware Lever Ranking (The PALM Matrix)
 
 Rank candidate parameters using the PALM (Physics × Authority × Leverage × Memory) matrix:
 
@@ -68,14 +74,14 @@ M_memory (0-1): What does history tell us about this parameter?
   - 0.1: Recent ineffective or worse result on this parameter
 ```
 
-### Method 3: Product-Specific Lever Prioritization
+## Method 3: Product-Specific Lever Prioritization
+
+Each product has distinct physics — never apply one product's lever priorities to another.
 
 **PET_FILM_GRADE_A** — Wide thermal window, TD/heatset orientation-driven:
 
 | Priority | For thickness_cv | For thickness_mean | For birefringence_cv |
-|
----
-|---|---|---|
+|---|---|---|---|
 | 1st | td_draw_ratio | extruder_speed / line_speed balance | heatset_temp |
 | 2nd | winder_tension | line_speed (solo) | td_zone_1_temp |
 | 3rd | td_zone_1_temp | — | relaxation_ratio |
@@ -106,9 +112,7 @@ M_memory (0-1): What does history tell us about this parameter?
 | 2nd | casting_roll_temp | relaxation_ratio |
 | 3rd | winder_tension | td_zone_2_temp |
 
-IMPORTANT: Never apply PET lever priorities to PPAT, PMMA, or PVA products. Each product has distinct physics.
-
-### Method 4: Strategy Stage Transition Logic
+## Method 4: Strategy Stage Transition Logic
 
 ```
 State Machine:
@@ -162,7 +166,7 @@ Use response history whenever available to avoid repeating ineffective or worsen
 
 ## Output Contract
 
-Produce one structured `rd_optimization_plan_XXX.json` that contains at least:
+Produce one structured `rd_optimization_plan_XXX.json` containing at least:
 
 - `objective` — what this plan aims to achieve, linked to the user goal
 - `hypothesis` — the **falsifiable** hypothesis driving this strategy (statement, mechanism, falsification_condition, confidence, confidence_rationale)
@@ -173,10 +177,6 @@ Produce one structured `rd_optimization_plan_XXX.json` that contains at least:
 - `stop_rules` — conditions under which this plan direction should be abandoned
 - `review_focus` — what the quality engineer should pay special attention to when reviewing results
 - `strategy_guidance` — execution guidance for the process engineer (things to watch, expected lag time, stability considerations)
-
-Optional maintenance helper:
-
-- `scripts/validate-output.mjs <rd_optimization_plan_XXX.json>`
 
 ## Rules
 
@@ -189,8 +189,12 @@ Optional maintenance helper:
 - Do not mark a production recipe releasable from online proxies alone.
 - Respect product boundaries — never reuse PET lever priorities for PMMA/PVA/PPAT.
 - Do not call shell commands or project optimization scripts from this skill.
-- For detailed handoff fields, read `references/contract.md`.
 
 ## SubAgent Use
 
-Use `.claude/agents/online-rd-engineer.md` when SubAgents are available. History-response review, physical-plausibility review, and candidate screening may run in parallel; merge them into one schema-valid `rd_optimization_plan_XXX.json`.
+Two execution contexts use this methodology:
+
+- **Team role**: the `closed-loop-optimization-rd-agent` — the standing R&D director on the optimization team, responsible for long-cycle strategy refresh in the background while Process runs the inner loop.
+- **Stateless worker**: the `online-rd-engineer` agent — a single-shot worker that reads inputs from env-var paths and emits one `rd_optimization_plan_XXX.json`.
+
+History-response review, physical-plausibility review, and candidate screening may run in parallel; merge them into one schema-valid `rd_optimization_plan_XXX.json`.

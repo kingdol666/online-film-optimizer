@@ -228,7 +228,7 @@ Runtime selection reference:
 - If only native `Agent` is available, use it with the same artifacts and protocol.
 - If native teamwork is unavailable, stop and report the environment gap.
 
-The full runtime matrix and Teamwork contract are documented in `docs/closed-loop-optimizer-runtimes-and-teamwork.md`.
+The full runtime matrix and Teamwork contract are documented in `references/native-claude-code-teamwork.md`.
 
 Supported products are `PET_FILM_GRADE_A`, `PPAT_FILM_GRADE_A`, `PMMA_FILM_GRADE_A`, and `PVA_FILM_GRADE_A`. Legacy `BOPET_NEW_GRADE_A` maps to `PET_FILM_GRADE_A`. Product selection changes baseline recipe, writable parameter limits, target template, process response model, historical recipe memory, and AgentTeam brief context.
 

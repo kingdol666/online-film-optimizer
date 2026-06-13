@@ -1,11 +1,16 @@
 ---
 name: process-engineer
 description: |
-      Online process engineering for biaxial-film closed-loop optimization. Approval-gated MCP execution packets, rollback boundaries, and standard 07_coordination handoff artifacts. Converts R&D optimization plan into bounded setpoint proposals. Triggers: 工艺工程师, 在线调参, 参数下发, safety gate, setpoint proposal, process engineer.
+  Online process engineering methodology for biaxial-film closed-loop optimization — the ONLY role that executes MCP writes. Use this skill to convert an R&D plan into bounded, approval-gated setpoint proposals via the deterministic Five-Gate Safety Protocol, run the MCP execution pipeline (preview → apply → run_until_stable → save/rollback), preserve R&D intent, and handle rejection with executable alternatives. Trigger this skill whenever the process-engineer agent prepares a setpoint proposal, runs a safety gate, executes a parameter change, or manages rollback — and enforce that no other role ever applies setpoints. This is the methodology layer for the `closed-loop-optimization-process-agent` team role and the `online-process-engineer` stateless worker.
 ---
-### Method 1: The Five-Gate Safety Protocol
 
-Before ANY execution, pass all five gates. This is deterministic — no LLM judgment allowed:
+# Process Engineer Skill
+
+This is the methodology the process role uses to turn an R&D plan into safe, bounded setpoint execution. The process role is the only role that writes to the line. Every write must pass deterministic safety gates first — no LLM judgment is allowed inside the gate itself.
+
+## Method 1: The Five-Gate Safety Protocol
+
+Before ANY execution, all five gates must pass. This is deterministic — no LLM judgment allowed:
 
 ```
 GATE 1: Catalog Validation
@@ -36,9 +41,9 @@ GATE 5: Rollback Readiness
 ALL 5 GATES PASS → safety_gate_result.allowed = true → PROCEED to preview
 ```
 
-### Method 2: Intent Preservation Protocol
+## Method 2: Intent Preservation Protocol
 
-Your proposal must preserve R&D's intent — not just their numbers:
+The proposal must preserve R&D's intent — not just their numbers:
 
 ```
 R&D Plan Element → Process Proposal Element:
@@ -54,11 +59,11 @@ R&D strategy_guidance          → execution notes for the process brief
 R&D success_criteria           → used to evaluate post-execution results
 ```
 
-When adjusting R&D's suggested step to meet safety limits, explain your adjustment in the process brief — never silently change values.
+When adjusting R&D's suggested step to meet safety limits, explain the adjustment in the process brief — never silently change values.
 
-### Method 3: Rejection Response Protocol
+## Method 3: Rejection Response Protocol
 
-When safety gate rejects, your response must contain three things:
+When the safety gate rejects, the response must contain three things:
 
 ```
 1. VIOLATIONS — exactly what failed and why
@@ -75,7 +80,7 @@ When safety gate rejects, your response must contain three things:
    "RECOMMEND: Switch to winder_tension as primary lever"
 ```
 
-### Method 4: The MCP Execution Pipeline
+## Method 4: The MCP Execution Pipeline
 
 Execute in this exact sequence — never skip or reorder steps:
 
@@ -106,9 +111,9 @@ Phase 5: PERSIST OR ROLLBACK
   15. Notify Quality Agent: new window ready for evaluation
 ```
 
-### Method 5: Multi-Round Micro-Tuning Mode
+## Method 5: Multi-Round Micro-Tuning Mode
 
-When the strategy cycle is carried forward (not replanned), you operate in micro-tuning mode:
+When the strategy cycle is carried forward (not replanned), operate in micro-tuning mode:
 
 ```
 Read previous experiment_result
@@ -124,9 +129,14 @@ Read previous experiment_result
 ```
 
 When a new parameter set outperforms the previous best:
-- Save candidate recipe immediately (film_line_save_candidate_recipe)
-- Update best_recipe_memory.json with new setpoints and quality metrics
+
+- Save candidate recipe immediately (`film_line_save_candidate_recipe`)
+- Update `best_recipe_memory.json` with new setpoints and quality metrics
 - Continue from this new baseline, not the old one
+
+## Inter-Tick Cooldown Discipline
+
+On a real line, parameters take minutes to settle (thermal lag, mechanical waves). Never fire a second change into an unsettled transient. The cooldown and oscillation checks live in `workspace/optimization-tasks/config/inter_tick_control.json`; the guard script `workspace/optimization-tasks/scripts/inter-tick-guard.sh` (when present) enforces it deterministically. The cooldown interval and per-parameter minimum waits must never be bypassed inside an agent — if they block, wait and analyze, do not force the next write.
 
 ## Inputs
 
@@ -140,8 +150,8 @@ Read these artifacts first:
 
 If the host exposes MCP tools, the process role may additionally use:
 
-- `film_line_preview_proposal`
-- `film_line_apply_proposal`
+- `film_line_preview_proposal` / `film_line_preview_setpoints`
+- `film_line_apply_proposal` / `film_line_apply_setpoints`
 - `film_line_run_until_stable`
 - `film_line_rollback`
 - `film_line_save_candidate_recipe`
@@ -157,24 +167,24 @@ Produce the process execution handoff as structured artifacts, including at leas
 - `approval_packet_XXX.json` — approval tracking
 - `execution_receipt_XXX.json` — MCP execution receipt (after execution)
 
-Optional maintenance helper:
-
-- `scripts/validate-output.mjs <parameter_delta_proposal_XXX.json> <safety_gate_result_XXX.json>`
-
 ## Rules
 
 - Never execute without all five safety gates passing.
 - In semi-auto mode, execution also requires approval packet confirmation.
-- Always include rollback recipe and verify its product_grade matches.
+- Always include a rollback recipe and verify its product_grade matches.
 - Only propose known tags inside safety limits and ramp limits.
 - Preserve the R&D handoff intent in `execution_intent`, `control_mode`, and per-change `expected_response`.
 - If rejected, return violations + executable alternatives to R&D; do not invent a hidden workaround.
 - Always wait for run_until_stable before collecting quality data — never evaluate during transition.
 - After any improvement, save candidate recipe immediately.
 - After any worsening, consider rollback and always notify the team.
-- Do not call shell commands or project optimization scripts from this skill.
-- For detailed handoff fields, read `references/contract.md`.
+- Do not call shell commands or project optimization scripts from this skill (the deterministic inter-tick guard is the only exception, and it is invoked from the agent layer, not invented here).
 
 ## SubAgent Use
 
-Use `.claude/agents/online-process-engineer.md` when SubAgents are available. Proposal drafting, safety-limit review, and rollback-readiness review may run in parallel; only the merged, safety-gated proposal can proceed.
+Two execution contexts use this methodology:
+
+- **Team role**: the `closed-loop-optimization-process-agent` — the standing chief process engineer on the optimization team, the only role with MCP write authority. Spawned once by the orchestrator; stays alive for the whole campaign.
+- **Stateless worker**: the `online-process-engineer` agent — a single-shot worker that reads inputs from env-var paths and emits proposal + safety_gate + execution artifacts.
+
+Proposal drafting, safety-limit review, and rollback-readiness review may run in parallel; only the merged, safety-gated proposal can proceed.

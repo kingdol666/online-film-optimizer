@@ -19,8 +19,10 @@ The preferred Claude Code path is:
 2. verify local backend health when applicable;
 3. create the task workspace;
 4. create the team with TeamCreate;
-5. dispatch the three role agents;
-6. continue the loop until target reach or governance hard stop.
+5. create all three role agents at startup;
+6. keep the three role agents alive as the working team for the full campaign;
+7. continue the loop until target reach or governance hard stop;
+8. delete or close the team only after final validation passes.
 
 ## Claude Code Project Agents
 
@@ -32,6 +34,7 @@ Project-level agents live in `.claude/agents/` and define the reusable expert id
 - `closed-loop-optimization-process-agent`
 
 When native AgentTeam execution is available, the orchestrator should spawn the three role agents and give each the task directory, current iteration, dispatch plan, and required artifacts.
+These three agents are the standing task team. Do not recreate a fresh single agent for every micro-step unless the original team has failed and the orchestrator has explicitly restarted the team lifecycle.
 
 ## MCP Permission Boundary
 
@@ -83,7 +86,8 @@ If TeamCreate / TaskCreate / SendMessage are available, the team lead should:
 
 - create one team named from the task id;
 - create tasks for quality review, R&D strategy, process execution, and verification;
-- spawn teammates with subagent types `closed-loop-optimization-quality-agent`, `closed-loop-optimization-rd-agent`, and `closed-loop-optimization-process-agent`;
+- spawn teammates with subagent types `closed-loop-optimization-quality-agent`, `closed-loop-optimization-rd-agent`, and `closed-loop-optimization-process-agent` at startup;
+- keep those three teammates alive as the standing team until the run is finished or hard-stopped;
 - send each teammate the task folder, current campaign folder, required artifacts, and expected output files;
 - state the MCP permission boundary in each teammate brief;
 - require each teammate to write standard team-message JSON before reporting completion;

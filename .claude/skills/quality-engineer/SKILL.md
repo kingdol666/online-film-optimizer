@@ -1,15 +1,19 @@
 ---
 name: quality-engineer
 description: |
-      Online film-line quality engineering for closed-loop optimization. Formal quality review, stage recommendation, and standard 07_coordination handoff for R&D and process roles. Triggers: 质量工程师, 在线质量诊断, 厚度双折射判定, 阶段建议, quality diagnosis, online quality engineer.
-### Method 1: The "Three-Evidence Rule" for Quality Verdicts
+  Online quality-engineering methodology for biaxial-film closed-loop optimization. Use this skill to turn stable-window snapshots and online thickness/birefringence measurements into a schema-valid quality_diagnosis: apply the Three-Evidence Rule, classify profile shapes (U/M/W/slope/flat), classify process responses (effective/ineffective/worse), and recommend the next stage (explore/exploit/recover/hold). Trigger this skill whenever the quality-engineer agent diagnoses film quality, judges whether a process change worked, recommends a stage, or initiates a hold-window — even when the user only says "检查质量", "这轮有效吗", or "为什么 CV 还没达标". This is the methodology layer for the `closed-loop-optimization-quality-agent` team role and the `online-quality-engineer` stateless worker.
+---
 
-Never declare PASS or FAIL from a single measurement alone. Build your verdict from at least three independent evidence dimensions:
+# Quality Engineer Skill
+
+This is the methodology the quality role uses to diagnose film-line quality. It is read-only with respect to the line: diagnose, judge, and recommend — never write setpoints.
+
+## Method 1: The "Three-Evidence Rule" for Quality Verdicts
+
+Never declare PASS or FAIL from a single measurement alone. Build a verdict from at least three independent evidence dimensions, because any one signal can be noise:
 
 | Evidence Dimension | What It Means | Example |
-|
----
-|---|---|
+|---|---|---|
 | **Static Compliance** | Are current values within target windows? | thickness_cv 1.631% vs max 1.55% → FAIL |
 | **Temporal Stability** | Are values stable across consecutive windows, or still drifting? | CV moved 1.70→1.65→1.63 over 3 windows → improving but not yet stable |
 | **Process-Context Plausibility** | Do the setpoints and process values make physical sense for these quality readings? | Edge-center delta 0.100 with TD ratio 3.62 → consistent with TD over-stretch pattern |
@@ -24,9 +28,9 @@ Decision matrix:
 | ❌ FAIL | — | — | **FAIL** — identify primary gap |
 | ⚠️ MARGINAL | ⚠️ DRIFTING | — | **NEEDS_DATA** — request more windows |
 
-### Method 2: Profile Shape Diagnosis
+## Method 2: Profile Shape Diagnosis
 
-Thickness and birefringence profiles are not just arrays of numbers — they are signatures of physical process behavior. Classify the shape:
+Thickness and birefringence profiles are not just arrays of numbers — they are signatures of physical process behavior. Classify the shape so downstream roles can infer mechanism:
 
 ```
 Thickness Profile Shape Catalog:
@@ -51,13 +55,11 @@ Thickness Profile Shape Catalog:
    → Normal — good process control
 ```
 
-### Method 3: Response Assessment ("Effective / Ineffective / Worse")
+## Method 3: Response Assessment ("Effective / Ineffective / Worse")
 
 When comparing two consecutive stable windows (before/after a process change):
 
 ```
-Classification criteria:
-
 EFFECTIVE:
   - Primary target metric moved in desired direction by ≥ meaningful threshold
   - No other metric degraded beyond tolerance
@@ -76,7 +78,7 @@ WORSE:
 
 ## Quality Scorecard — Standard Categories
 
-When evaluating any product, use this structured categorization for every metric:
+Evaluate every metric with this structured categorization:
 
 ```json
 {
@@ -108,11 +110,9 @@ When evaluating any product, use this structured categorization for every metric
 
 ## Stage Recommendation Logic
 
-Your stage recommendation must be deterministic and evidence-backed:
+The stage recommendation must be deterministic and evidence-backed:
 
 ```
-Rule-Based Stage Selection:
-
 IF quality_state == PASS
   → recommend "hold_validation" (NOT freeze — freeze only after hold confirmation)
 
@@ -134,11 +134,9 @@ ELSE
 
 ## Hold-Window Protocol
 
-When quality_state becomes PASS, you must initiate hold-window confirmation — NOT immediately declare success:
+When quality_state becomes PASS, initiate hold-window confirmation — do NOT immediately declare success:
 
 ```
-Hold-Window Protocol:
-
 1. Announce "request_hold_validation" to all roles
 2. Process: keep current recipe — no further exploration
 3. Quality: monitor each new stable window without changing parameters
@@ -166,7 +164,7 @@ If the host exposes read-only MCP tools, you may also read:
 
 ## Output Contract
 
-Produce one structured `quality_diagnosis_XXX.json` that contains at least:
+Produce one structured `quality_diagnosis_XXX.json` containing at least:
 
 - `quality_state` — PASS | WARNING | FAIL | NEEDS_DATA
 - `primary_quality_gap` — most important single quality gap with severity
@@ -177,25 +175,25 @@ Produce one structured `quality_diagnosis_XXX.json` that contains at least:
 - `decision_context` — compact collaboration payload for R&D prioritization
 - `strategy_recommendation` — next_stage (explore/exploit/recover/hold_validation), rationale, and hold_window_recommendation
 
-The artifact should be easy for R&D and Process to parse without hidden context.
-
-Optional maintenance helper:
-
-- `scripts/validate-output.mjs <quality_diagnosis_XXX.json>`
+The artifact must be easy for R&D and Process to parse without hidden context.
 
 ## Rules
 
-- Do not generate or write setpoints.
-- Do not bypass `rd-engineer` or `process-engineer`.
-- If `quality_state` is `PASS`, recommend recipe freeze or validation rather than exploration.
+- Do not generate or write setpoints — that is the process role's exclusive authority.
+- Do not bypass `rd-engineer` or `process-engineer`; quality is the evidence layer, not the actuator.
+- If `quality_state` is `PASS`, recommend validation or freeze rather than continued exploration.
 - Always produce `metric_evaluations`, `profile_analysis`, `process_risk_summary`, `history_signal_summary`, `decision_context`, and `strategy_recommendation`; these are the formal collaboration payload for downstream roles.
-- The quality role is responsible for periodic quality review and stage recommendation, not only pass/fail judgment.
+- The quality role owns periodic quality review and stage recommendation, not only pass/fail judgment.
 - Apply the Three-Evidence Rule before declaring final quality_state.
-- If data is insufficient (less than 2 stable windows), set quality_state to NEEDS_DATA and specify how many more windows are required.
+- If data is insufficient (fewer than 2 stable windows), set quality_state to NEEDS_DATA and specify how many more windows are required.
 - Profile shape classification is mandatory — downstream roles need it for mechanism inference.
 - Do not call shell commands or project optimization scripts from this skill.
-- For detailed handoff fields, read `references/contract.md`.
 
 ## SubAgent Use
 
-Use `.claude/agents/online-quality-engineer.md` when the host supports SubAgents. Independent profile-shape review and sensor-health review may run in parallel, but the final artifact must be one schema-valid `quality_diagnosis_XXX.json`.
+Two execution contexts use this methodology:
+
+- **Team role**: the `closed-loop-optimization-quality-agent` — the standing quality minister on the optimization team. Spawned once by the orchestrator at team creation; stays alive for the whole campaign.
+- **Stateless worker**: the `online-quality-engineer` agent — a single-shot worker that reads inputs from env-var paths and emits one `quality_diagnosis_XXX.json`. Use it when you need a one-off parallel diagnosis pass.
+
+Independent profile-shape review and sensor-health review may run in parallel, but the final artifact must be one schema-valid `quality_diagnosis_XXX.json`.
