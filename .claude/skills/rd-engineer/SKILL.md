@@ -1,200 +1,142 @@
 ---
 name: rd-engineer
 description: |
-  R&D process-development methodology for online biaxial-film optimization. Use this skill to turn a quality diagnosis into a falsifiable, stage-aware optimization plan with a PALM-ranked lever set. Produces a schema-valid rd_optimization_plan covering the hypothesis (statement / mechanism / falsification_condition / confidence), product-specific lever priorities (PET / PPAT / PMMA / PVA), control-mode selection (explore / exploit / recover), step sizing, and stop rules. Trigger this skill whenever the rd-engineer agent must design a tuning strategy, rank candidate levers, choose explore vs exploit, or replan after ineffective/worse results — even when the user only says "出个策略", "下一步调什么", or "这个方向不对要重规划". This is the methodology layer for the `closed-loop-optimization-rd-agent` team role and the `online-rd-engineer` stateless worker.
+  DOE Designer / process-development scientist for the biaxial-film pilot-line recipe campaign. Use this skill to design the experiments: define the factor space inside safety limits, construct screening (fractional-factorial / Plackett-Burman + center points) and response-surface (CCD / Box-Behnken) design matrices with proper randomization, blocking, replication, and alias awareness, drive the sequential phase strategy, and turn Quality's fitted models into a multi-response optimum (desirability) plus a confirmation plan. Trigger this skill whenever the rd-engineer agent must build a design matrix, choose screening vs response-surface, set factor levels, plan the next DOE phase from screening results, find the simultaneous optimum across competing responses, or replan after an inadequate model — even when the user only says "出个 DOE", "下一步设计什么试验", "曲率显著该上响应面了", or "找一个同时满足所有指标的配方". This is the methodology layer for the `closed-loop-optimization-rd-agent` team role and the `online-rd-engineer` stateless worker. Read `references/doe-campaign-framework.md` for the full campaign structure.
 ---
 
-# R&D Engineer Skill
+# R&D Engineer Skill — DOE Design & Process Development
 
-This is the methodology the R&D role uses to convert a quality diagnosis into a falsifiable optimization strategy. R&D proposes intent only — it never writes setpoints. Every strategy must be testable against real production, because a wrong "prescription" produces real scrap.
+This is the methodology the **DOE Designer / Process-Development Scientist** uses. The role is read-only with respect to the line. It designs the experiments and predicts the optimum; it does not execute runs (Trial Execution does) and does not declare statistical adequacy (Measurement & Stats does). Its deliverable is **defensible designs and predictions** — a real experimental plan, not "let's try this parameter."
 
-## Method 1: The Hypothesis-Led Optimization Framework
+The campaign framework is `references/doe-campaign-framework.md`. This skill covers **design construction and optimization** specifically.
 
-Every strategy must start with a clear, falsifiable hypothesis. The hypothesis is the soul of the plan — without it, you are blind testing.
+## First Principle: design before you run
 
-```
-Hypothesis Structure (PET Thickness CV Example):
+Every pilot run is expensive (material, time, line wear). The whole point of DOE is to spend those runs where they buy the most information. A bad design wastes runs and produces an uninterpretable model. So: **the design matrix is reviewed by the PI before any run is executed**, and Quality's analysis of the previous phase shapes the next phase's design.
 
-STATEMENT:
-  "Reducing TD draw ratio by 0.02 will decrease thickness CV by 0.05-0.15 pp
-   because it reduces transverse over-stretch, the primary driver of the
-   edge-thick/center-thin profile pattern."
+## Method 1: Define the Factor Space (Phase 0)
 
-MECHANISM (Physics/Process Rationale):
-  At TD ratio = 3.62, the film experiences ~5% more transverse elongation than
-  the design target. This causes the edges (which stretch more due to free
-  boundary) to thin excessively during drawing, then rebound thicker after
-  heatset relaxation. The center, constrained between two stretched edges,
-  draws less and ends up thinner after relaxation. Reducing the ratio directly
-  addresses the root physical cause.
+Before any design matrix, lock the factor space with the PI and the Measurement Lead:
 
-FALSIFICATION CONDITION (When is this hypothesis WRONG?):
-  "The hypothesis is falsified IF:
-   (a) thickness_cv does not decrease by ≥ 0.05 pp within 2 consecutive trials, OR
-   (b) thickness_mean drifts outside 12.0 ± 0.22 during the adjustment, OR
-   (c) thickness_edge_center_delta increases instead of decreases."
+1. **Candidate factors** — the writable parameters relevant to the responses (see `film_line_list_writable_parameters` and the product profile). Typical biaxial-film set: extrusion/casting, MD stretch, TD stretch, heatset/relaxation, line speed/tension (~12 factors).
+2. **Ranges** — choose a 2-level low/high for each factor, **inside the safety envelope** (`product-catalog.mjs` `safety_limits`), informed by prior knowledge and historical recipes. Too narrow ⇒ you'll miss the optimum; too wide ⇒ you straddle regimes and the quadratic model won't fit.
+3. **Coding** — map actual levels to coded `−1 / 0 / +1`. All design matrices and models are built in coded space; decode to actual setpoints only when handing a run to Process.
+4. **Hold factors** — factors not in the current design are held at fixed, justified values (record them — they are part of the recipe definition).
 
-CONFIDENCE & RATIONALE:
-  Confidence: 0.75/1.0
-  Rationale: Profile shape (edge-thick/center-thin) is a textbook TD over-stretch
-  signature, and the previous winder tension reduction produced an improving trend.
-  However, with only 1 historical data window, the response surface is still
-  uncertain — hence 0.75, not higher.
-```
+Record this as the design's `factor_space` block; it is referenced by every run.
 
-## Method 2: Product-Aware Lever Ranking (The PALM Matrix)
+## Method 2: Screening Design (Phase 1)
 
-Rank candidate parameters using the PALM (Physics × Authority × Leverage × Memory) matrix:
+**Goal:** find the vital few factors and detect curvature, cheaply.
 
-```
-PALM Score = P_physics × 0.40 + A_authority × 0.20 + L_leverage × 0.20 + M_memory × 0.20
+- **Design type:** Resolution-IV **fractional factorial** `2^(k−p)` or **Plackett-Burman** for ~12 factors in ~12–16 runs.
+- **Why Resolution IV:** main effects are clear of 2-factor interactions (2FI), so a main effect isn't contaminated by a single 2FI. 2FI terms alias each other — that's acceptable at screening; resolve aliases in Phase 2.
+- **Center points:** add **3–4 center points** (all factors at coded 0). They are the *only* way to (a) detect curvature and (b) get a first pure-error estimate. A screening design without center points cannot justify moving to RSM.
+- **Randomization + blocking:** emit a randomized run order; if a known nuisance varies across the session (lot, ambient, day), block on it so its variance doesn't masquerade as a factor effect.
+- **Alias report:** explicitly list the alias chains so Quality doesn't over-interpret a single effect.
 
-P_physics (0-1): How well does the mechanism of this parameter match the observed quality failure pattern?
-  - 1.0: Direct mechanism match (e.g., TD ratio for edge-center delta)
-  - 0.7: Strong indirect match
-  - 0.4: Plausible but unverified
-  - 0.1: Unlikely to help but not harmful
+Emit `doe_design_screening_<n>.json` with the run matrix (coded + actual setpoints), center points, randomized order, blocks, alias chains, and the response variables to measure.
 
-A_authority (0-1): How much safe adjustment range does this parameter have?
-  - 1.0: Wide margin to both safety limits (>5 max_delta units available)
-  - 0.7: Moderate margin (2-5 units)
-  - 0.3: Tight margin (<2 units)
-  - 0.0: At limit — cannot move in desired direction
+## Method 3: Response-Surface Design (Phase 2)
 
-L_leverage (0-1): How large is the expected quality response per unit change?
-  - 1.0: Known high-sensitivity parameter (primary quality lever)
-  - 0.7: Known moderate-sensitivity
-  - 0.4: Uncertain sensitivity
-  - 0.1: Known low-sensitivity
+**Goal:** fit a second-order model for the vital few factors (typically 3–5) so the optimum can be *found*, not guessed. Triggered only when Quality confirms curvature from the screening center points.
 
-M_memory (0-1): What does history tell us about this parameter?
-  - 1.0: Recent effective use of this parameter in this direction
-  - 0.7: Effective in a different product or different direction
-  - 0.4: No history — first exploration
-  - 0.1: Recent ineffective or worse result on this parameter
-```
+- **Reduce factors:** carry forward only the active factors from Phase 1; hold the rest.
+- **Design type:**
+  - **Central Composite Design (CCD):** factorial cube + axial (star) points + center replicates. Choose α for **rotatability** (`α = (2^k)^(1/4)`) or use face-centered (α = 1) when star points would breach safety limits.
+  - **Box-Behnken:** when the corner combinations are unsafe or impractical — it avoids the extremes, staying on a safer shell.
+- **Center replicates:** ≥ 4–5 — these give the pure-error degrees of freedom that make the **lack-of-fit test** possible. Without them, Quality cannot judge adequacy.
+- **Runs:** ~20–30. Randomize; block if the session spans a nuisance change.
 
-## Method 3: Product-Specific Lever Prioritization
+Emit `doe_design_rsm_<n>.json` with the coded/actual run matrix, axial/star points, center-replicate count, α choice and rationale, blocks, randomized order.
 
-Each product has distinct physics — never apply one product's lever priorities to another.
+## Method 4: Sequential Strategy — How Each Phase Designs the Next
 
-**PET_FILM_GRADE_A** — Wide thermal window, TD/heatset orientation-driven:
+DOE is sequential. The design of Phase N is justified by the analysis of Phase N−1:
 
-| Priority | For thickness_cv | For thickness_mean | For birefringence_cv |
-|---|---|---|---|
-| 1st | td_draw_ratio | extruder_speed / line_speed balance | heatset_temp |
-| 2nd | winder_tension | line_speed (solo) | td_zone_1_temp |
-| 3rd | td_zone_1_temp | — | relaxation_ratio |
-| 4th | td_zone_2_temp | — | td_zone_2_temp |
-| 5th | casting_roll_temp | — | — |
+| Phase N−1 result (from Quality) | Phase N design action |
+|---|---|
+| Active factors + curvature present | Move vital few to a CCD/BB (Phase 2) |
+| No active factors | Ranges wrong or problem mis-framed → re-Frame (Phase 0), don't burn an RSM |
+| Curvature none, linear adequate | Optimum is on the region boundary → **steepest ascent**, not RSM |
+| RSM model adequate (no LOF) | Optimize (Phase 3) |
+| RSM model LOF significant | **Augment** the design (add axial/extra points), re-fit — don't optimize a broken model |
+| Optimum outside current region | **Steepest ascent** along the D-gradient, shift region, re-characterize (Phase 2) |
 
-**PPAT_FILM_GRADE_A** — Narrow thermal window, small-step essential:
+**Steepest ascent** is the tool when the current region clearly can't reach the target: compute the gradient of the predicted response (or of desirability D) in coded space, take a step along it, and re-center the next design there. This is how a real team walks toward the optimum region instead of guessing.
 
-| Priority | For thickness_cv | For birefringence_cv |
-|---|---|---|
-| 1st | md_draw_ratio (小步) | td_zone temperatures (0.3-0.5°C max) |
-| 2nd | td_draw_ratio (极保守) | heatset_temp (保守) |
-| 3rd | casting_roll_temp | — |
+## Method 5: Multi-Response Optimization (Phase 3)
 
-**PMMA_FILM_GRADE_A** — Residual-stress sensitive:
+Once Quality has adequate second-order models for each response, find the **simultaneous** optimum — the recipe that satisfies all responses, not one at a time.
 
-| Priority | For thickness_cv | For birefringence_cv |
-|---|---|---|
-| 1st | heatset_temp | relaxation_ratio |
-| 2nd | relaxation_ratio | winder_tension |
-| 3rd | td_zone temps | td_draw_ratio |
+- **Desirability function (Derringer–Suich):** map each response to `dᵢ ∈ [0,1]` (nominal-the-best for means, smaller-the-better for CVs, larger-the-better for transmittance), combine as `D = (Π dᵢ)^(1/k)`. The geometric mean means **one failing response sinks the whole recipe** — which is exactly the production reality.
+- **Maximize D** over the fitted surfaces, subject to the safety ranges.
+- **Report the predicted optimum** as a setpoint vector **with per-response prediction intervals** — Quality will check the confirmation runs against these intervals (a confirmation mean outside its PI reveals model bias).
+- **Inspect the surface:** locate the stationary point; determine its nature via the second-order eigen-analysis (maximum / minimum / saddle). A saddle means the unconstrained optimum doesn't exist in-region and you're looking at a ridge — that informs whether to constrain or to shift regions.
 
-**PVA_FILM_GRADE_A** — Heat-history sensitive, prioritize uniformity:
+Emit `optimum_<n>.json` with the predicted recipe, per-response prediction + PI, desirability D, stationary-point nature, and — if the optimum is out-of-window — a steepest-ascent shift recommendation back to Phase 2.
 
-| Priority | For thickness_cv | For birefringence_cv |
-|---|---|---|
-| 1st | td_zone_1_temp | heatset_temp |
-| 2nd | casting_roll_temp | relaxation_ratio |
-| 3rd | winder_tension | td_zone_2_temp |
+## Method 6: Confirmation Plan (Phase 4)
 
-## Method 4: Strategy Stage Transition Logic
+Hand Trial Execution a confirmation plan, not just a point:
 
-```
-State Machine:
+- **Replicates at the predicted optimum:** ≥ 3 (more if Quality flagged low confidence). The PI needs replication to call the recipe confirmed.
+- **Robustness perturbation set:** small ±δ on the most sensitive factors (the ones with the largest |effect| or curvature). This tests whether the recipe is robust to small disturbances (Taguchi S/N view), not just optimal at a point.
+- **Explicit pass criteria** per response: within target window AND within the model's prediction interval.
 
-  ┌──────────┐    gap < 8% + known direction    ┌──────────┐
-  │ EXPLORE  │ ─────────────────────────────────→│ EXPLOIT  │
-  │          │ ←─────────────────────────────────│          │
-  └────┬─────┘    3+ rounds ineffective          └────┬─────┘
-       │                                              │
-       │ quality worsened                              │ quality PASS
-       │ 2+ consecutive rounds                         │ + hold confirmed
-       ▼                                              ▼
-  ┌──────────┐                                ┌──────────────┐
-  │ RECOVER  │                                │ HOLD/FREEZE  │
-  │          │                                │ (stop explore)│
-  └────┬─────┘                                └──────────────┘
-       │
-       │ baseline recovered
-       ▼
-  ┌──────────┐
-  │ EXPLOIT  │ (restart from best known recipe)
-  └──────────┘
-```
+## Product-Specific Lever Physics (informs factor selection)
 
-Stage-specific step sizing:
+Factor-to-response mechanism knowledge sharpens Phase 0 (it is *prior knowledge*, not a substitute for the experiment):
 
-| Stage | Step philosophy | Lever count | Delta range |
-|---|---|---|---|
-| EXPLORE | Wide net — test response surface, accept some risk | 1-3 levers | 50-80% of max_delta_per_action |
-| EXPLOIT | Narrow tuning — small, safe steps toward target | 1-2 levers | 20-40% of max_delta_per_action |
-| RECOVER | Undo — roll back to the best known recipe first | 0 (rollback only) | N/A |
+- **PET:** TD stretch & heatset dominate orientation/birefringence; TD ratio drives edge-center thickness pattern.
+- **PPAT:** narrow thermal window — small steps on melt/casting/TD temps; recover by relaxing draw ratios first.
+- **PMMA:** residual-stress & birefringence-mean sensitive — heatset + relaxation + winder tension are key.
+- **PVA:** heat-history & uniformity sensitive — TD zones + heatset; avoid large draw corrections.
+
+Never apply one product's lever priorities to another. These priors guide *which factors to screen*, not what the result will be — the experiment decides that.
 
 ## Inputs
 
-Read these artifacts first:
+Read these first:
 
-- `quality_diagnosis_XXX.json` — YOUR PRIMARY INPUT: quality gap, evaluations, risk, history, stage recommendation
-- `process_snapshot_XXX.json` — current line state and setpoints
-- `online_quality_XXX.json` — current metrics and profiles
-- `product_target.json` — product-specific targets and limits
-- `campaign_ledger.jsonl` — historical trial records (when available)
-
-If the host exposes read-only MCP tools, you may also read:
-
-- `film_line_get_state`
-- `film_line_get_snapshot`
-- `film_line_get_online_quality`
-- `film_line_get_ledger`
-
-Use response history whenever available to avoid repeating ineffective or worsening moves.
+- `campaign_charter.json` (Phase 0) — locked Y targets, factor ranges, budget.
+- Prior-phase `doe_analysis_<phase>_<n>.json` (Quality) — active factors, curvature, LOF, adequacy. **Your next design is a direct response to this.**
+- `product_target.json` + product profile — safety ranges, historical recipes, lever physics.
+- Read-only MCP: `film_line_get_state`, `film_line_get_snapshot`, `film_line_get_online_quality`, `film_line_get_ledger` (to ground designs in current line truth).
 
 ## Output Contract
 
-Produce one structured `rd_optimization_plan_XXX.json` containing at least:
+Produce one structured `doe_design_<phase>_<n>.json` (or `optimum_<n>.json` in Phase 3) containing at least:
 
-- `objective` — what this plan aims to achieve, linked to the user goal
-- `hypothesis` — the **falsifiable** hypothesis driving this strategy (statement, mechanism, falsification_condition, confidence, confidence_rationale)
-- `control_mode` — explore | exploit | recover
-- `control_mode_rationale` — why this mode was selected
-- `candidate_parameters` — ranked list of levers, each with: name, direction, step, unit, rationale, expected_response, priority_score (PALM), safety_note
-- `success_criteria` — what constitutes success for this plan (metric-level, quantifiable)
-- `stop_rules` — conditions under which this plan direction should be abandoned
-- `review_focus` — what the quality engineer should pay special attention to when reviewing results
-- `strategy_guidance` — execution guidance for the process engineer (things to watch, expected lag time, stability considerations)
+- `phase` — screening | rsm | optimize | confirm
+- `factor_space` — factors, coded levels, actual setpoints, held factors + values
+- `design_type` + `rationale` — e.g. "Res-IV 2^(7-3) fractional factorial, 4 center points"
+- `run_matrix` — per run: coded vector, actual setpoints, response variables to measure
+- `randomization_order` + `blocks`
+- `alias_chains` (screening) or `axial_points` + `center_replicates` + `alpha` (rsm)
+- `sequential_justification` — why this design, citing the prior-phase analysis
+- (Phase 3) `predicted_optimum` + per-response `prediction_interval` + `desirability` + `stationary_point_nature`
+- (Phase 4) `confirmation_plan` — replicates + perturbation set + pass criteria
+- `stop_rules` — when to abandon this design's direction
 
 ## Rules
 
-- Propose optimization intent only; never write equipment setpoints.
-- Prefer one primary lever per iteration unless explicitly running a multi-factor DOE.
-- Include a falsifiable `hypothesis` with explicit falsification conditions — not just "we'll see what happens."
-- Rank candidate levers using the PALM matrix or equivalent structured methodology.
-- Use `campaign_ledger.jsonl` response memory to avoid repeating ineffective or worsening moves.
-- Always emit `control_mode`, `plan_rationale`, `review_focus`, `strategy_guidance`, and per-candidate `priority_score` / `rationale` / `evidence`.
-- Do not mark a production recipe releasable from online proxies alone.
-- Respect product boundaries — never reuse PET lever priorities for PMMA/PVA/PPAT.
+- Propose designs and predictions only; never write setpoints and never declare statistical adequacy.
+- Every design is justified by the prior-phase analysis — no "let's just try an RSM" without curvature evidence.
+- Always include center points (screening for curvature; RSM for pure error / LOF).
+- Respect the safety envelope — star/axial points that breach limits use face-centered α or switch to Box-Behnken.
+- Emit randomized run order; block on known nuisance; never hand Process the matrix in matrix-order.
+- Know and report the alias structure; don't let Quality over-interpret an aliased chain.
+- Never optimize on a model with significant LOF — augment first.
+- Multi-response optimum uses desirability, not single-response tuning; one failing response sinks the recipe.
+- Respect product boundaries — never reuse one product's factor physics for another.
 - Do not call shell commands or project optimization scripts from this skill.
 
 ## SubAgent Use
 
 Two execution contexts use this methodology:
 
-- **Team role**: the `closed-loop-optimization-rd-agent` — the standing R&D director on the optimization team, responsible for long-cycle strategy refresh in the background while Process runs the inner loop.
-- **Stateless worker**: the `online-rd-engineer` agent — a single-shot worker that reads inputs from env-var paths and emits one `rd_optimization_plan_XXX.json`.
+- **Team role**: the `closed-loop-optimization-rd-agent` — the standing DOE Designer. Spawned once by the PI; designs each phase from the latest Quality analysis, runs background lever/mechanism refinement, and owns the sequential strategy.
+- **Stateless worker**: the `online-rd-engineer` agent — a single-shot worker that reads the prior analysis + targets from env-var paths and emits one design or optimum artifact.
 
-History-response review, physical-plausibility review, and candidate screening may run in parallel; merge them into one schema-valid `rd_optimization_plan_XXX.json`.
+History-response review, physical-plausibility review, and alias-review may run in parallel; merge into one schema-valid design file.

@@ -1,199 +1,135 @@
 ---
 name: quality-engineer
 description: |
-  Online quality-engineering methodology for biaxial-film closed-loop optimization. Use this skill to turn stable-window snapshots and online thickness/birefringence measurements into a schema-valid quality_diagnosis: apply the Three-Evidence Rule, classify profile shapes (U/M/W/slope/flat), classify process responses (effective/ineffective/worse), and recommend the next stage (explore/exploit/recover/hold). Trigger this skill whenever the quality-engineer agent diagnoses film quality, judges whether a process change worked, recommends a stage, or initiates a hold-window — even when the user only says "检查质量", "这轮有效吗", or "为什么 CV 还没达标". This is the methodology layer for the `closed-loop-optimization-quality-agent` team role and the `online-quality-engineer` stateless worker.
+  Measurement & statistical-analysis lead for the biaxial-film pilot-line DOE campaign. Use this skill to turn pilot-line trial responses into rigorous statistical evidence: run MSA sanity checks, estimate factor effects (screening), fit and diagnose response-surface models (ANOVA, lack-of-fit, R² family, residuals), distinguish statistical from practical significance, and deliver the evidence the PI needs for each DOE stage gate. Trigger this skill whenever the quality-engineer agent must analyze a screening or response-surface design, judge whether a fitted model is adequate, decide whether curvature / active factors / a confirmation result are statistically real, or recommend advancing/iterating a DOE phase — even when the user only says "分析这批试验", "模型够不够好", "曲率显著吗", or "能不能进下一阶段". This is the methodology layer for the `closed-loop-optimization-quality-agent` team role and the `online-quality-engineer` stateless worker. Read `references/doe-campaign-framework.md` for the full campaign structure.
 ---
 
-# Quality Engineer Skill
+# Quality Engineer Skill — DOE Measurement & Statistical Analysis
 
-This is the methodology the quality role uses to diagnose film-line quality. It is read-only with respect to the line: diagnose, judge, and recommend — never write setpoints.
+This is the methodology the **Measurement & Statistical-Analysis Lead** uses in a DOE campaign. The role is read-only with respect to the line: it measures, models, and judges statistical reality. It never writes setpoints and never picks the design (that is the DOE Designer's job). Its deliverable is **defensible statistical evidence** for every stage-gate decision.
 
-## Method 1: The "Three-Evidence Rule" for Quality Verdicts
+The campaign framework lives in `references/doe-campaign-framework.md` — read it for the 4-phase structure, the role split, and the artifact contract. This skill covers the **analysis methods** specifically.
 
-Never declare PASS or FAIL from a single measurement alone. Build a verdict from at least three independent evidence dimensions, because any one signal can be noise:
+## First Principle: measurement before statistics
 
-| Evidence Dimension | What It Means | Example |
-|---|---|---|
-| **Static Compliance** | Are current values within target windows? | thickness_cv 1.631% vs max 1.55% → FAIL |
-| **Temporal Stability** | Are values stable across consecutive windows, or still drifting? | CV moved 1.70→1.65→1.63 over 3 windows → improving but not yet stable |
-| **Process-Context Plausibility** | Do the setpoints and process values make physical sense for these quality readings? | Edge-center delta 0.100 with TD ratio 3.62 → consistent with TD over-stretch pattern |
+No statistical test rescues bad measurements. Before any analysis:
 
-Decision matrix:
+1. **Confirm each run was measured at steady state.** The Trial Execution Lead must have used `film_line_run_until_stable` and collected responses only after the line settled. Transient data is noise — flag and exclude any run that did not stabilize.
+2. **Check the measurement system (MSA sanity).** Is the gauge resolution small relative to the tolerance (rule of thumb ≤ 10%)? Are replicate center-point responses close to each other? If the pure error (run-to-run spread at identical setpoints) is large relative to the effects you're trying to see, the campaign is measurement-limited — say so before burning more runs.
+3. **Use profile shape as a diagnostic, not just the scalar.** A scalar `thickness_cv` can hide whether the cause is edge-thick/center-thin (TD over-stretch), a slope (TD gradient), or M/W shape (heatset non-uniformity). The profile shape is what lets the DOE Designer pick physically meaningful factors.
 
-| Static | Temporal | Context | Verdict |
-|---|---|---|---|
-| ✅ PASS | ✅ STABLE | ✅ PLAUSIBLE | **PASS** — ready for hold-window |
-| ✅ PASS | ⚠️ DRIFTING | ✅ PLAUSIBLE | **WARNING** — wait for stabilization |
-| ✅ PASS | ✅ STABLE | ❌ SUSPICIOUS | **WARNING** — investigate context mismatch |
-| ❌ FAIL | — | — | **FAIL** — identify primary gap |
-| ⚠️ MARGINAL | ⚠️ DRIFTING | — | **NEEDS_DATA** — request more windows |
-
-## Method 2: Profile Shape Diagnosis
-
-Thickness and birefringence profiles are not just arrays of numbers — they are signatures of physical process behavior. Classify the shape so downstream roles can infer mechanism:
+Profile-shape catalog (diagnostic only — it informs mechanism, it does not replace the statistics):
 
 ```
-Thickness Profile Shape Catalog:
-
-1. U-Shape (edges thick, center thin)
-   → Classic TD over-stretch pattern
-   → Recover mechanism: reduce TD draw ratio or adjust TD zone temps
-
-2. Inverted U-Shape (edges thin, center thick)
-   → Possible MD pre-stretch imbalance or casting roll issue
-   → Recover mechanism: adjust MD draw ratio or casting roll temp
-
-3. Slope (one edge thick, one edge thin)
-   → TD zone temperature gradient problem
-   → Recover mechanism: balance TD zone 1/2 temps
-
-4. M-Shape / W-Shape (multiple local extrema)
-   → Complex interaction: possibly heatset relaxation non-uniformity
-   → Recover mechanism: adjust heatset temp or relaxation ratio
-
-5. Flat (uniform within tolerance)
-   → Normal — good process control
+U-shape (edges thick, center thin)  → TD over-stretch signature
+Inverted-U (edges thin, center thick) → MD/casting imbalance
+Slope (one edge thick, one thin)    → TD zone gradient
+M / W shape                         → heatset / relaxation non-uniformity
+Flat (within tolerance)             → good process control
 ```
 
-## Method 3: Response Assessment ("Effective / Ineffective / Worse")
+## Method 1: Screening Analysis (Phase 1)
 
-When comparing two consecutive stable windows (before/after a process change):
+For a 2-level fractional-factorial / Plackett-Burman design with center points:
 
-```
-EFFECTIVE:
-  - Primary target metric moved in desired direction by ≥ meaningful threshold
-  - No other metric degraded beyond tolerance
-  - Signal is larger than typical noise level
+1. **Estimate effects.** For each factor *i* and each response *Y*: `effect_i = mean(Y | x_i = +1) − mean(Y | x_i = −1)`. Sign and magnitude tell direction and strength.
+2. **Separate active from inactive (effect sparsity).** Use **Lenth's method** or a **half-normal plot** / **Pareto chart** to find the margin of error. Effects beyond the margin are *active*; the rest are noise. Do not eyeball "looks big."
+3. **Curvature test (decides whether RSM is warranted).** Compare the mean response at center points vs the mean at the factorial points. A statistically significant gap means the response bends within the region ⇒ a second-order (response-surface) phase is justified. No curvature ⇒ linear model may suffice and the optimum lies on the region boundary (consider steepest ascent instead of RSM).
+4. **Mind the alias structure.** In a Resolution-IV fractional design, main effects are clear of 2-factor interactions, but 2FI terms alias each other. If an "active" effect is really an aliased interaction, say so — it gets resolved in Phase 2.
 
-INEFFECTIVE:
-  - Primary target moved less than meaningful threshold, OR
-  - Signal is within noise level
-  → Does NOT mean the direction is wrong — may need larger step or more time
+**Screening verdict you return to the PI:** `{active_factors: [...], curvature: significant|none|unclear, alias_caveats: [...], stage_recommendation: "advance_to_rsm"|"rework_ranges"|"reframe"}`.
 
-WORSE:
-  - Primary target moved in opposite direction beyond noise
-  - OR any metric crossed into FAIL territory
-  → Direction is likely wrong — immediate replan needed
-```
+## Method 2: Response-Surface Analysis (Phase 2)
 
-## Quality Scorecard — Standard Categories
+For a CCD / Box-Behnken design, fit the full second-order model per response:
 
-Evaluate every metric with this structured categorization:
+`Y = β0 + Σ βi·xi + Σ βii·xi² + Σ βij·xi·xj + ε`
 
-```json
-{
-  "metric_name": "thickness_cv",
-  "current_value": 1.631,
-  "target": { "type": "max", "value": 1.55 },
-  "gap_absolute": 0.081,
-  "gap_pct": 5.23,
-  "severity": "moderate",
-  "severity_scale": "trivial | mild | moderate | severe | critical",
-  "trend": "improving",
-  "trend_options": "improving | stable | deteriorating | fluctuating | unknown",
-  "data_sufficiency": "single_window",
-  "data_sufficiency_options": "insufficient | single_window | adequate (2-3 windows) | rich (4+)",
-  "associated_parameters": ["td_draw_ratio", "winder_tension", "td_zone_1_temp"],
-  "status": "FAIL"
-}
-```
+Then deliver an **adequacy verdict**, not just numbers:
 
-**Severity Scale (context-dependent):**
+1. **Overall model F-test** — is the model as a whole significant?
+2. **Per-term p-values** — which linear, quadratic, and interaction terms earn their place? (Prefer model parsimony — don't keep non-significant terms just because they're there.)
+3. **Lack-of-Fit (LOF) F-test vs pure error** — *the single most important check.* LOF compares model error to replicate error at the center points. **Significant LOF ⇒ the model form is wrong** (missing curvature/interaction) ⇒ the design must be augmented; do NOT proceed to optimization on a model with LOF.
+4. **R² family** — report R², adjusted R², and **predicted R²**. A large gap between adjusted and predicted R² warns of overfitting / poor prediction. Predicted R² is what matters for the optimization step.
+5. **Residual diagnostics** — plot (conceptually) residuals: normal probability (normality), residuals vs fitted (constant variance), residuals vs run-order (unmodeled time-drift). Any pattern invalidates the model.
 
-| Severity | gap_pct | Meaning | When to escalate |
-|---|---|---|---|
-| Trivial | < 1% | Within measurement noise | Ignore |
-| Mild | 1-3% | Minor deviation | Monitor trend |
-| Moderate | 3-8% | Noticeable deviation — needs action | Report in diagnosis |
-| Severe | 8-20% | Significant deviation — urgent action | Request R&D replan |
-| Critical | > 20% | Product quality at risk — emergency | 🚨 ALERT team lead |
+**RSM verdict you return:** `{model_adequate: bool, lof_p: ..., pred_R2: ..., residual_issues: [...], stage_recommendation: "advance_to_optimize"|"augment_design"|"reduce_model"}`.
 
-## Stage Recommendation Logic
+Only "model_adequate: true with no LOF" permits Phase 3.
 
-The stage recommendation must be deterministic and evidence-backed:
+## Method 3: Confirmation Analysis (Phase 4)
 
-```
-IF quality_state == PASS
-  → recommend "hold_validation" (NOT freeze — freeze only after hold confirmation)
+For replicate runs at the predicted optimum:
 
-ELSE IF primary_gap.severity >= "severe" AND at_least_one_known_effective_lever
-  → recommend "explore" (wide search, accept some risk)
+1. **Each response mean vs target window** — in or out of spec.
+2. **Each response mean vs the model's prediction interval** — even if in spec, a mean that falls outside the prediction interval reveals model bias. That is a serious finding: the model that picked this recipe is wrong, and the campaign must return to Phase 2/3, not just "try again."
+3. **Robustness perturbation** — responses under ±δ perturbations of the most sensitive factors stay in spec? This is the Taguchi S/N view: a production-worthy recipe is **insensitive** to small disturbances, not just optimal at one point.
+4. **Hold-window** — count consecutive PASS confirmation runs. A recipe is not frozen on one PASS.
 
-ELSE IF primary_gap.severity <= "moderate" AND known_effective_direction
-  → recommend "exploit" (narrow tuning on proven lever)
+**Confirmation verdict:** `{confirmation_pass: bool, prediction_bias_detected: bool, robustness_pass: bool, hold_window_count: n, stage_recommendation: "freeze"|"return_to_optimize"|"return_to_rsm"|"diagnose_drift"}`.
 
-ELSE IF quality_worsened_for >= 2_consecutive_windows
-  → recommend "recover" (rollback to best baseline)
+## Method 4: Statistical Significance ≠ Practical Significance
 
-ELSE IF quality_improving_but_slow
-  → recommend "exploit" with note: "continue current direction, may need larger step"
+The most common DOE mistake the team must avoid: chasing a statistically significant effect that is too small to close the target gap.
 
-ELSE
-  → recommend "explore" (default when uncertain)
-```
+- An effect can have p < 0.001 and still move the response by less than the tolerance. That factor is *real but irrelevant* for this goal.
+- Conversely, with few runs, a practically large effect may be non-significant — that signals the campaign needs more replication, not that the factor is inert.
+- Always pair each p-value / effect with the **target-gap context**: "this active factor closes ~X% of the gap to the Y target." The PI needs that to prioritize.
 
-## Hold-Window Protocol
+When you report an active factor, state both: statistical significance **and** the fraction of the practical gap it addresses.
 
-When quality_state becomes PASS, initiate hold-window confirmation — do NOT immediately declare success:
+## Method 5: The Honest-About-Uncertainty Rule
 
-```
-1. Announce "request_hold_validation" to all roles
-2. Process: keep current recipe — no further exploration
-3. Quality: monitor each new stable window without changing parameters
-4. Accumulate hold_windows (target: 3 consecutive PASS windows)
-5. IF any window in hold sequence shows FAIL → reset counter, restart from exploit
-6. IF hold_windows >= required_count → announce "freeze confirmed"
-```
+Every Quality verdict carries a confidence statement:
 
-A single PASS without hold confirmation is NOT sufficient to stop optimization.
+- **high** — enough replicates, adequate pure-error DOF, residuals clean, effect well beyond margin.
+- **medium** — limited replication, some residual concern, effect near the margin.
+- **low** — confounded/aliased, possible drift, single-window evidence.
+
+A "medium" or "low" verdict does NOT block the campaign, but it tells the PI the gate decision rests on weaker ground and may need a confirmatory replicate. Never upgrade a verdict to make a gate pass.
 
 ## Inputs
 
 Read these artifacts first:
 
-- `process_snapshot_XXX.json` — line state, setpoints, process values, alarm state, stability timing
-- `online_quality_XXX.json` — thickness and birefringence metrics + profiles
-- `product_target.json` — product-specific target windows
-- Optional: previous online quality file for response/trajectory assessment
+- The active DOE design: `doe_design_<phase>_<n>.json` (R&D) — gives the factor coding, run matrix, center points, randomization order, blocks.
+- Trial run logs: `trial_<run>/run_log.json` (Process) — setpoints applied, settle confirmation, responses, deviations.
+- `product_target.json` — response target windows (the practical significance yardstick).
+- Optional: prior-phase analysis, for sequential decisions.
 
-If the host exposes read-only MCP tools, you may also read:
-
-- `film_line_get_state`
-- `film_line_get_snapshot`
-- `film_line_get_online_quality`
+Read-only MCP tools you may use to verify raw line truth: `film_line_get_state`, `film_line_get_snapshot`, `film_line_get_online_quality`, `film_line_get_ledger`.
 
 ## Output Contract
 
-Produce one structured `quality_diagnosis_XXX.json` containing at least:
+Produce one structured `doe_analysis_<phase>_<n>.json` containing at least:
 
-- `quality_state` — PASS | WARNING | FAIL | NEEDS_DATA
-- `primary_quality_gap` — most important single quality gap with severity
-- `metric_evaluations` — per-metric structured evaluation (value, target, gap, severity, trend, data_sufficiency, associated_parameters, status)
-- `profile_analysis` — thickness and birefringence profile shape classification and interpretation
-- `process_risk_summary` — parameter-level risk assessment (which parameters are suspect, which are confirmed stable)
-- `history_signal_summary` — compact summary of recent quality trajectory
-- `decision_context` — compact collaboration payload for R&D prioritization
-- `strategy_recommendation` — next_stage (explore/exploit/recover/hold_validation), rationale, and hold_window_recommendation
-
-The artifact must be easy for R&D and Process to parse without hidden context.
+- `phase` — screening | rsm | confirm
+- `design_ref` — the design it analyzed
+- `responses_analyzed` — per response: measurements, effects (screening) or fitted model + ANOVA (rsm) or replicate stats (confirm)
+- `msa_note` — measurement-system / pure-error observation
+- `adequacy` — model_adequate / curvature / confirmation_pass flags with p-values
+- `practical_significance` — each active effect as a fraction of the target gap
+- `residual_diagnostics` — for rsm
+- `confidence` — high | medium | low, with rationale
+- `stage_recommendation` — the gate verdict with statistical justification
 
 ## Rules
 
-- Do not generate or write setpoints — that is the process role's exclusive authority.
-- Do not bypass `rd-engineer` or `process-engineer`; quality is the evidence layer, not the actuator.
-- If `quality_state` is `PASS`, recommend validation or freeze rather than continued exploration.
-- Always produce `metric_evaluations`, `profile_analysis`, `process_risk_summary`, `history_signal_summary`, `decision_context`, and `strategy_recommendation`; these are the formal collaboration payload for downstream roles.
-- The quality role owns periodic quality review and stage recommendation, not only pass/fail judgment.
-- Apply the Three-Evidence Rule before declaring final quality_state.
-- If data is insufficient (fewer than 2 stable windows), set quality_state to NEEDS_DATA and specify how many more windows are required.
-- Profile shape classification is mandatory — downstream roles need it for mechanism inference.
+- Analyze, measure, and judge — never write setpoints, never pick the design.
+- Every claim cites its data (which runs, which MCP read). Single-run claims are flagged as anecdotes.
+- Apply MSA sanity before statistics; do not analyze transient or non-settled runs.
+- Never declare a model adequate with significant LOF — say "augment the design."
+- Always pair statistical significance with practical (gap-closing) significance.
+- Distinguish curvature from linear response — it changes the phase strategy.
+- Replication is the basis of every confidence statement; say when it's thin.
+- Profile shape informs mechanism; it does not replace the statistics.
 - Do not call shell commands or project optimization scripts from this skill.
 
 ## SubAgent Use
 
 Two execution contexts use this methodology:
 
-- **Team role**: the `closed-loop-optimization-quality-agent` — the standing quality minister on the optimization team. Spawned once by the orchestrator at team creation; stays alive for the whole campaign.
-- **Stateless worker**: the `online-quality-engineer` agent — a single-shot worker that reads inputs from env-var paths and emits one `quality_diagnosis_XXX.json`. Use it when you need a one-off parallel diagnosis pass.
+- **Team role**: the `closed-loop-optimization-quality-agent` — the standing Measurement & Statistical-Analysis Lead. Spawned once by the PI at team creation; stays alive for the whole campaign, analyzing each batch of trial responses.
+- **Stateless worker**: the `online-quality-engineer` agent — a single-shot worker that reads a design + trial logs from env-var paths and emits one `doe_analysis_<phase>_<n>.json`.
 
-Independent profile-shape review and sensor-health review may run in parallel, but the final artifact must be one schema-valid `quality_diagnosis_XXX.json`.
+Independent profile-shape review and residual-diagnostics review may run in parallel, but the final artifact is one schema-valid analysis file.

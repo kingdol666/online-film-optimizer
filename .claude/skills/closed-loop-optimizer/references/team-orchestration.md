@@ -97,20 +97,20 @@ If only the Agent tool is available, invoke the same subagent types through Agen
 
 If neither TeamCreate nor Agent is available, stop and report that native teamwork is unavailable. Do not swap to shell-script orchestration during the user conversation.
 
-## Team Roles
+## Team Roles (DOE expert hats)
 
-- Quality agent
-  - reads snapshot + online quality
-  - writes quality diagnosis and stage recommendation
-  - may request R&D replan or Process revision
-- R&D agent
-  - reads quality diagnosis + history
-  - writes stage-aware optimization plan
-  - may request quality recheck or process feasibility revision
-- Process agent
-  - reads R&D plan + snapshot
-  - writes approval-aware proposal and safety gate artifacts
-  - may request R&D replan or quality hold validation
+- **R&D agent — DOE Designer**
+  - reads the prior-phase analysis + product target + line truth
+  - writes the phase design matrix (`doe_design_<phase>_<n>.json`) and, in Phase 3, the optimum prediction (`optimum_<n>.json`)
+  - may request a quality recheck, a design augmentation (on LOF), or a region shift (steepest ascent)
+- **Quality agent — Measurement & Statistical-Analysis Lead**
+  - reads the run logs (responses) + the design
+  - writes the phase analysis (`doe_analysis_<phase>_<n>.json`): effects / curvature / ANOVA / LOF / R² / confirmation verdict
+  - owns the statistical verdict that gates each phase
+- **Process agent — Trial-Execution Lead (only write role)**
+  - reads the design + baseline recipe
+  - executes the run matrix run-by-run via MCP (gate → apply → stabilize → collect → reset)
+  - writes `trial_<run>/run_log.json` and deviation flags; may request an R&D design revision when a gate rejects a run
 
 ## Workspace Rules
 
@@ -125,22 +125,22 @@ If neither TeamCreate nor Agent is available, stop and report that native teamwo
 
 ## Dispatch Model
 
-The team uses a two-level control loop:
+The campaign advances through the **4 sequential DOE phases** (Frame → Screen → Characterize → Optimize → Confirm). Within a phase the cadence is:
 
-- Outer strategy cycle: Quality reviews the stable window and R&D creates or refreshes the strategy.
-- Inner process cycle: Process executes multiple bounded micro-tunes under the active R&D strategy.
+- **Design step:** R&D emits the phase design from the latest Quality analysis → PI reviews → Process executes the run matrix.
+- **Execution step:** Process runs the matrix one run at a time (gate → apply → stabilize → collect → reset-to-baseline), in the randomized order.
+- **Analysis step:** Quality analyzes the batch of run logs → emits the phase analysis.
+- **Gate step:** the PI advances / iterates / aborts on Quality's statistical verdict + R&D's next design.
 
-The dispatch plan must state:
+The dispatch plan (per phase) must state:
 
-- `strategy_cycle_id`
-- `process_iteration_in_cycle`
-- `plan_source`: `replanned` or `carry_forward`
-- `replan_reason`
-- `assigned_roles`
-- `role_requests`
-- `shared_artifacts_to_read`
-- `active_strategy_digest`
-- `recent_responses`
+- `campaign_phase` — frame | screening | rsm | optimize | confirm
+- `phase_design_ref` — the `doe_design_<phase>_<n>.json` being executed
+- `run_progress` — e.g. `5/16`
+- `assigned_roles` and `role_requests`
+- `shared_artifacts_to_read` — charter, design, run logs, prior analysis
+- `gate_intent` — what statistical verdict this phase needs to advance
+- `recent_deviation_flags` — any runs Quality must treat with caution
 
 ## Role Requests
 

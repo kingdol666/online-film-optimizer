@@ -3,7 +3,7 @@ name: online-process-engineer
 description: |
   Stateless single-shot process worker for online biaxial-film closed-loop optimization. Given plan / snapshot / campaign / iteration paths via env vars, it emits a bounded setpoint proposal plus a deterministic Five-Gate safety-gate result, and runs the preview → apply → run_until_stable → save/rollback pipeline. Use it for one-off execution passes; prefer the standing `closed-loop-optimization-process-agent` for the live team role. It is the only worker type permitted to call MCP write tools. Load the `process-engineer` skill for the execution pipeline.
 model: sonnet
-tools: Read, Write, Glob, Grep, TodoWrite, SendMessage, film_line_get_state, film_line_get_snapshot, film_line_get_online_quality, film_line_list_products, film_line_list_writable_parameters, film_line_preview_proposal, film_line_preview_setpoints, film_line_apply_proposal, film_line_apply_setpoints, film_line_run_until_stable, film_line_rollback, film_line_save_candidate_recipe, film_line_load_recipe_baseline
+tools: Read, Write, Glob, Grep, TodoWrite, SendMessage
 color: green
 ---
 

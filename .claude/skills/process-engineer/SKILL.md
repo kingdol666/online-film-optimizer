@@ -1,190 +1,168 @@
 ---
 name: process-engineer
 description: |
-  Online process engineering methodology for biaxial-film closed-loop optimization — the ONLY role that executes MCP writes. Use this skill to convert an R&D plan into bounded, approval-gated setpoint proposals via the deterministic Five-Gate Safety Protocol, run the MCP execution pipeline (preview → apply → run_until_stable → save/rollback), preserve R&D intent, and handle rejection with executable alternatives. Trigger this skill whenever the process-engineer agent prepares a setpoint proposal, runs a safety gate, executes a parameter change, or manages rollback — and enforce that no other role ever applies setpoints. This is the methodology layer for the `closed-loop-optimization-process-agent` team role and the `online-process-engineer` stateless worker.
+  Pilot-line trial-execution lead for the biaxial-film DOE campaign — the ONLY role that executes MCP writes. Use this skill to execute a DOE design matrix run-by-run on the pilot line: apply each run's setpoints via the deterministic Five-Gate Safety Protocol (preview → apply → run_until_stable → collect), respect the randomized run order, reset the line to a defined baseline between runs so runs are comparable, collect response measurements only at steady state, and log any deviation that could invalidate a run's data point. Trigger this skill whenever the process-engineer agent executes a DOE run, manages run-to-run reset/rollback, collects trial responses, or runs confirmation/robustness trials — and enforce that no other role ever applies setpoints. This is the methodology layer for the `closed-loop-optimization-process-agent` team role and the `online-process-engineer` stateless worker. Read `references/doe-campaign-framework.md` for the full campaign structure.
 ---
 
-# Process Engineer Skill
+# Process Engineer Skill — Pilot-Line Trial Execution
 
-This is the methodology the process role uses to turn an R&D plan into safe, bounded setpoint execution. The process role is the only role that writes to the line. Every write must pass deterministic safety gates first — no LLM judgment is allowed inside the gate itself.
+This is the methodology the **Pilot-Line Trial-Execution Lead** uses in a DOE campaign. The role is the **only** one that writes to the line. Its job is not to *tune* parameters by feel — it is to **execute the DOE design matrix faithfully, run by run**, so that the data Quality and R&D get is statistically valid. A DOE is only as good as the discipline with which its runs were executed.
 
-## Method 1: The Five-Gate Safety Protocol
+The campaign framework is `references/doe-campaign-framework.md`. This skill covers **trial execution** specifically.
 
-Before ANY execution, all five gates must pass. This is deterministic — no LLM judgment allowed:
+## First Principle: faithful execution, not improvisation
+
+In a DOE, every run is a data point in a designed matrix. If you deviate from the design — run in the wrong order, measure before the line settles, skip the reset between runs, or quietly change a setpoint — you corrupt the whole model. So:
+
+- **Run exactly the setpoints the DOE Designer specified**, in **exactly the randomized order** they specified. You do not pick the recipe; you execute it.
+- **Every run must reach steady state before its responses are measured.** A measurement taken during a transient is noise and must be discarded, not recorded as the run's response.
+- **Reset the line between runs** to a defined baseline, so each run starts from a comparable state.
+- **Log every deviation.** If a run was abnormal (slow settle, alarm, gauge glitch), the data is suspect — flag it rather than let it silently bias the model.
+
+## Method 1: The Five-Gate Safety Protocol (every run, no exceptions)
+
+Before applying ANY run's setpoints, all five gates pass — deterministic, no LLM judgment:
 
 ```
 GATE 1: Catalog Validation
-  Q: Is every proposed tag in the writable parameter catalog?
+  Is every tag in the writable parameter catalog?
   Source: film_line_list_writable_parameters
   Fail → REJECT: "Unknown parameter: <tag>"
 
 GATE 2: Range Validation
-  Q: Is every proposed target within [min, max]?
-  Source: writable parameter limits
+  Is every target within [min, max]?
   Fail → REJECT: "Target <value> exceeds safety range [<min>, <max>]"
 
 GATE 3: Delta Validation
-  Q: Is every |target - current| ≤ max_delta_per_action?
-  Source: writable parameter limits
+  Is every |target - current| ≤ max_delta_per_action?
   Fail → REJECT: "Delta <value> exceeds max_delta_per_action <limit>"
+  (Note: a DOE star/corner point may legitimately exceed a single-action delta.
+   If so, ramp to the target across multiple gated steps within the same run,
+   then settle — never bypass the gate.)
 
 GATE 4: Ramp Rate Validation
-  Q: Is every proposed ramp ≤ max_ramp_per_min?
-  Source: writable parameter limits
+  Is every proposed ramp ≤ max_ramp_per_min?
   Fail → REJECT: "Ramp rate <value> exceeds max_ramp_per_min <limit>"
 
 GATE 5: Rollback Readiness
-  Q: Is there a valid rollback recipe? Is its product_grade correct?
+  Is there a valid rollback recipe with matching product_grade?
   Source: best_recipe_memory.json
   Fail → REJECT: "Rollback baseline missing or product mismatch"
 
-ALL 5 GATES PASS → safety_gate_result.allowed = true → PROCEED to preview
+ALL 5 GATES PASS → PROCEED to preview/apply
 ```
 
-## Method 2: Intent Preservation Protocol
+The safety gate is the line's guardian. Even the PI cannot override a gate failure — if a gate blocks, the run is reported back to the DOE Designer to revise the design (e.g. a star point outside range ⇒ switch to face-centered α or Box-Behnken).
 
-The proposal must preserve R&D's intent — not just their numbers:
+## Method 2: Per-Run Execution Pipeline
 
-```
-R&D Plan Element → Process Proposal Element:
-
-R&D hypothesis.statement      → execution_intent (why we're doing this)
-R&D hypothesis.mechanism       → execution_intent (physical mechanism)
-R&D candidate_parameters[].name → setpoint_changes[].tag
-R&D candidate_parameters[].direction → the sign of delta (increase/decrease/hold)
-R&D candidate_parameters[].step → suggested target (adjusted for ramp limits)
-R&D control_mode               → determines step sizing aggressiveness
-R&D stop_rules                 → added to safety_gate as extra guardrails
-R&D strategy_guidance          → execution notes for the process brief
-R&D success_criteria           → used to evaluate post-execution results
-```
-
-When adjusting R&D's suggested step to meet safety limits, explain the adjustment in the process brief — never silently change values.
-
-## Method 3: Rejection Response Protocol
-
-When the safety gate rejects, the response must contain three things:
+For each run `r` in the design matrix, execute this exact sequence — never skip or reorder:
 
 ```
-1. VIOLATIONS — exactly what failed and why
-   "td_draw_ratio: proposed target 3.38 < safety_min 3.42 (violation by -0.04)"
-   "td_draw_ratio: proposed delta -0.06 > max_delta 0.04 (violation by 0.02)"
-
-2. EXECUTABLE ALTERNATIVES — what CAN be done within safety limits
-   "td_draw_ratio: max decrease = -0.04 (from 3.42 to safety_min 3.42)"
-   "Alternative: split into 2 steps: -0.04 now, -0.02 after next stable window"
-   "Alternative: try winder_tension (max delta 3, current 115, can go to 112)"
-
-3. RECOMMENDED ACTION — what you suggest the R&D agent should do
-   "RECOMMEND: Reduce td_draw_ratio step to within max_delta (0.04)"
-   "RECOMMEND: Switch to winder_tension as primary lever"
+1. PREVIEW & GATE
+   - film_line_preview_proposal(run_r setpoints)
+   - read safety_gate_result; if allowed=false → report to R&D, STOP this run
+2. APPLY
+   - film_line_apply_proposal(run_r setpoints)
+   - verify execution_receipt.executed == true
+3. STABILIZE  (the step that protects statistical validity)
+   - film_line_run_until_stable({ maxTicks, minStableTicks })
+   - do NOT record any response until STABLE confirmed
+4. COLLECT RESPONSES
+   - film_line_get_snapshot → record process values
+   - film_line_get_online_quality → record THIS RUN's responses (the Y's)
+5. WRITE RUN LOG
+   - trial_<run>/run_log.json: design row id, coded vector, actual setpoints,
+     randomized order position, settle confirmation, responses, deviations
+6. RESET TO BASELINE (Method 3) before the next run
 ```
 
-## Method 4: The MCP Execution Pipeline
+## Method 3: Run-to-Run Reset — Protecting Comparability
 
-Execute in this exact sequence — never skip or reorder steps:
+This is the DOE-specific discipline that closed-loop tuning lacks. Each run must start from a **comparable baseline**, or the previous run's setpoints contaminate the next run's results.
 
-```
-Phase 1: PREVIEW & VALIDATE
-  1. film_line_preview_proposal(proposal)
-  2. Read safety_gate_result
-  3. IF allowed=false → send request_rd_replan → STOP
-  4. Write local artifacts (proposal, safety_gate, process_brief, approval)
+- After collecting run `r`'s responses, **reset the line to the campaign baseline** (`film_line_load_recipe_baseline` or `film_line_rollback` to the agreed baseline recipe), then `run_until_stable`.
+- The baseline is fixed for the whole campaign (recorded in `best_recipe_memory.json` / campaign charter). Do not drift it.
+- The reset + re-stabilize gap between runs is also where the line sheds the previous run's thermal/mechanical transient. Respect the settle time — it is not optional waiting, it is experimental hygiene.
+- Only after the baseline re-stabilizes do you load run `r+1`'s setpoints.
 
-Phase 2: EXECUTE
-  5. film_line_apply_proposal(proposal)
-  6. Verify execution_receipt.executed == true
-  7. Write execution_receipt
+Without this reset, the design's randomization is defeated: the response to run `r+1` would partly be the tail of run `r`. That biases every effect estimate.
 
-Phase 3: STABILIZE
-  8. film_line_run_until_stable({ maxTicks: 50, minStableTicks: 3 })
-  9. Wait for line to settle — do NOT evaluate quality mid-transition
+## Method 4: Response Collection & Deviation Logging
 
-Phase 4: COLLECT
-  10. film_line_get_snapshot → write 01_snapshots/
-  11. film_line_get_online_quality → write quality data
+A run's value to the campaign is its **clean response vector**. Collect and record carefully:
 
-Phase 5: PERSIST OR ROLLBACK
-  12. Compare before/after quality metrics
-  13. IF improved → film_line_save_candidate_recipe + update best_recipe_memory
-  14. IF worse → film_line_rollback to previous best
-  15. Notify Quality Agent: new window ready for evaluation
-```
+- **Measure only at steady state** (Method 2 step 3–4). Record the settle confirmation (ticks-to-stable, any settle anomaly).
+- **Record the full response vector** the campaign tracks (thickness_mean, thickness_cv, birefringence_mean, birefringence_cv, …) plus the process-value snapshot, so Quality can cross-check.
+- **Center-point and replicate runs** must be executed identically to their siblings — same setpoints, same reset, same settle criteria. Their agreement is the pure-error estimate that makes the lack-of-fit test possible; sloppy execution here destroys the adequacy check.
+- **Deviation logging (mandatory):** any of the following flags the run as `deviation_flagged`:
+  - alarm during the run, or `run_until_stable` returned `stable=false` (retry once; if it fails again, flag);
+  - abnormally long settle (> 2× typical);
+  - gauge/sensor health warning in the quality read;
+  - a setpoint that would not apply cleanly and had to be ramped in sub-steps.
+  A flagged run is still recorded, but Quality is told to treat its response with caution (or exclude). **Never silently drop or silently keep a flagged run.**
 
-## Method 5: Multi-Round Micro-Tuning Mode
+## Method 5: Confirmation & Robustness Runs (Phase 4)
 
-When the strategy cycle is carried forward (not replanned), operate in micro-tuning mode:
+Phase 4 is run by the same disciplined pipeline, with two run types:
 
-```
-Read previous experiment_result
-├── Effective → continue same direction, consider slightly larger step
-│   └── Step adjustment: current_step × 1.0-1.3 (within safety limits)
-├── Ineffective → continue same direction, reduce step
-│   └── Step adjustment: current_step × 0.5
-│   └── If already at minimum step → request_rd_replan
-├── Worse → IMMEDIATELY STOP
-│   └── Send request_rd_replan + suggest rollback consideration
-└── Safety gate rejected → report with executable alternatives
-    └── Send request_rd_replan with violation details
-```
+- **Confirmation replicates:** n ≥ 3 identical runs at the predicted optimum. Execute each as a normal run (gate → apply → stabilize → collect → reset). Their response spread is the confirmation confidence; their mean vs the model's prediction interval reveals model bias.
+- **Robustness perturbation runs:** the DOE Designer specifies small ±δ perturbations on the most sensitive factors. Execute each perturbation as a run. If responses stay in spec under perturbation, the recipe is robust (Taguchi S/N view) — if not, the optimum is too sharp and production will struggle.
 
-When a new parameter set outperforms the previous best:
+Report Phase 4 results back with per-run responses so Quality can compute confirmation and robustness verdicts.
 
-- Save candidate recipe immediately (`film_line_save_candidate_recipe`)
-- Update `best_recipe_memory.json` with new setpoints and quality metrics
-- Continue from this new baseline, not the old one
+## Method 6: Intent Preservation & Rejection Handling
 
-## Inter-Tick Cooldown Discipline
+When the DOE Designer's design is rejected by a gate (a star point out of range, a delta too large), your job is to feed back **executable alternatives**, not to invent a workaround:
 
-On a real line, parameters take minutes to settle (thermal lag, mechanical waves). Never fire a second change into an unsettled transient. The cooldown and oscillation checks live in `workspace/optimization-tasks/config/inter_tick_control.json`; the guard script `workspace/optimization-tasks/scripts/inter-tick-guard.sh` (when present) enforces it deterministically. The cooldown interval and per-parameter minimum waits must never be bypassed inside an agent — if they block, wait and analyze, do not force the next write.
+- Report the exact violation (tag, proposed, limit, by-how-much).
+- Offer the executable bound (the closest in-range target, or a multi-step ramp to reach it).
+- Recommend the design adjustment to R&D (face-centered α, Box-Behnken, or a narrower factor range).
+
+Never silently move a run's setpoints to pass the gate — that changes the design matrix and corrupts the model. The design stays as specified or R&D revises it; there is no third option.
 
 ## Inputs
 
-Read these artifacts first:
+Read these first:
 
-- `rd_optimization_plan_XXX.json` — R&D strategy (hypothesis, levers, control mode)
-- `process_snapshot_XXX.json` — current setpoints and line state
-- `quality_review_XXX.json` — quality context
-- `strategy_state_XXX.json` — current strategy stage
-- `best_recipe_memory.json` — rollback baseline
-
-If the host exposes MCP tools, the process role may additionally use:
-
-- `film_line_preview_proposal` / `film_line_preview_setpoints`
-- `film_line_apply_proposal` / `film_line_apply_setpoints`
-- `film_line_run_until_stable`
-- `film_line_rollback`
-- `film_line_save_candidate_recipe`
-- `film_line_load_recipe_baseline`
+- `doe_design_<phase>_<n>.json` (R&D) — the run matrix, randomized order, coded/actual setpoints, center points, response variables to measure.
+- `best_recipe_memory.json` — the campaign baseline (for run-to-run reset).
+- `product_target.json` — target windows (for sanity-checking collected responses).
+- Read-only MCP: `film_line_get_state`, `film_line_get_snapshot`, `film_line_get_online_quality`, `film_line_list_writable_parameters`.
 
 ## Output Contract
 
-Produce the process execution handoff as structured artifacts, including at least:
+Per run, produce `trial_<run>/run_log.json` containing at least:
 
-- `parameter_delta_proposal_XXX.json` — executable proposal with execution_intent
-- `safety_gate_result_XXX.json` — deterministic safety gate result (with violations and alternatives on rejection)
-- `process_brief_XXX.json` — human-readable execution summary
-- `approval_packet_XXX.json` — approval tracking
-- `execution_receipt_XXX.json` — MCP execution receipt (after execution)
+- `design_ref` — which design + which row (coded vector)
+- `actual_setpoints` — what was applied
+- `randomized_order_position` + `block`
+- `gate_result` — five-gate outcome (all pass / which failed)
+- `settle` — ticks-to-stable, stable confirmed
+- `responses` — the full Y vector measured
+- `process_values` — snapshot for cross-check
+- `deviation_flagged` + `deviation_note` — anomaly record if any
+
+After a phase's runs complete, also emit `trial_batch_summary.json` (run count, any flagged runs, baseline-reset confirmations) so Quality and the PI know the execution was clean.
 
 ## Rules
 
-- Never execute without all five safety gates passing.
-- In semi-auto mode, execution also requires approval packet confirmation.
-- Always include a rollback recipe and verify its product_grade matches.
-- Only propose known tags inside safety limits and ramp limits.
-- Preserve the R&D handoff intent in `execution_intent`, `control_mode`, and per-change `expected_response`.
-- If rejected, return violations + executable alternatives to R&D; do not invent a hidden workaround.
-- Always wait for run_until_stable before collecting quality data — never evaluate during transition.
-- After any improvement, save candidate recipe immediately.
-- After any worsening, consider rollback and always notify the team.
-- Do not call shell commands or project optimization scripts from this skill (the deterministic inter-tick guard is the only exception, and it is invoked from the agent layer, not invented here).
+- Never execute a run without all five safety gates passing.
+- Never measure a response before the line is stable — transient data is invalid.
+- Never skip the run-to-run reset — it is what keeps the design valid.
+- Run in the randomized order the DOE Designer specified; never the matrix order.
+- Execute center points and replicates identically to their siblings — they are the pure-error basis.
+- Log every deviation; never silently drop or silently keep a flagged run.
+- Never silently change a run's setpoints to pass a gate — report violations + alternatives to R&D.
+- Keep the campaign baseline fixed for the whole campaign.
+- Only the process role applies setpoints; no other role does.
+- Do not call project optimization scripts from this skill (the deterministic inter-tick guard, when present, is invoked from the agent layer).
 
 ## SubAgent Use
 
 Two execution contexts use this methodology:
 
-- **Team role**: the `closed-loop-optimization-process-agent` — the standing chief process engineer on the optimization team, the only role with MCP write authority. Spawned once by the orchestrator; stays alive for the whole campaign.
-- **Stateless worker**: the `online-process-engineer` agent — a single-shot worker that reads inputs from env-var paths and emits proposal + safety_gate + execution artifacts.
+- **Team role**: the `closed-loop-optimization-process-agent` — the standing Trial-Execution Lead, the only role with MCP write authority. Spawned once by the PI; executes each phase's design matrix run by run.
+- **Stateless worker**: the `online-process-engineer` agent — a single-shot worker that executes one run (or one batch) from env-var paths and emits the run log(s).
 
-Proposal drafting, safety-limit review, and rollback-readiness review may run in parallel; only the merged, safety-gated proposal can proceed.
+Proposal drafting, safety-limit review, and rollback-readiness review may run in parallel; only the merged, safety-gated proposal proceeds to apply.
