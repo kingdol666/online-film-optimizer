@@ -1,0 +1,70 @@
+{
+  "_note": "真实产线工艺调优间隔控制配置 — Skill 规范版本。所有时间以秒为单位。",
+  "_location": ".claude/skills/closed-loop-optimizer/references/interval-config.json",
+  "_edit_warning": "修改此文件后，使用 `git add` + `git commit` 提交更改以使其在技能中生效。",
+
+  "global_cooldown": {
+    "enabled": true,
+    "min_action_interval_seconds": 360,
+    "description": "全局冷却期 — 不论调整哪种参数类型，两次 MCP 写入的硬间隔（秒）。优先于 per-class 配置。"
+  },
+
+  "inter_tick_min_wait_by_parameter_type": {
+    "temperature": {
+      "tag_patterns": ["heatset_temp", "melt_temp", "casting_roll_temp", "md_zone_temp", "td_zone_1_temp", "td_zone_2_temp"],
+      "min_wait_seconds": 480,
+      "rationale": "温度参数需要更长的热平衡时间，至少 8 分钟 (480 秒)。"
+    },
+    "draw_ratio": {
+      "tag_patterns": ["md_draw_ratio", "td_draw_ratio"],
+      "min_wait_seconds": 360,
+      "rationale": "拉伸比通过机械调整，响应相对快，但仍需 6 分钟 (360 秒) 等待薄膜局部稳态。"
+    },
+    "speed_tension": {
+      "tag_patterns": ["line_speed", "winder_tension"],
+      "min_wait_seconds": 300,
+      "rationale": "线速度和收卷张力通过伺服系统调整，响应最快，但至少需要 5 分钟 (300 秒) 确保波次完全传递。"
+    },
+    "relaxation": {
+      "tag_patterns": ["relaxation_ratio"],
+      "min_wait_seconds": 420,
+      "rationale": "松弛比同时影响机械和热行为，等待 7 分钟 (420 秒)。"
+    },
+    "extruder": {
+      "tag_patterns": ["extruder_speed"],
+      "min_wait_seconds": 420,
+      "rationale": "挤出量变化影响整个制程的物料流速，需要较长稳定时间。"
+    }
+  },
+
+  "stabilization": {
+    "min_stable_ticks_before_next_action": 3,
+    "description": "每次变更后，至少经过 min_stable_ticks_before_next_action 个 tick 的稳定数据后，才能考虑下一步变更。",
+    "max_consecutive_cv_measurements_deviation": 0.05,
+    "note": "连续两次 cv 测量的偏差超过此阈值时，视为仍在震荡中，禁止下一步操作。"
+  },
+
+  "oscillation_detector": {
+    "enabled": true,
+    "required_stable_ticks": 3,
+    "description": "在执行参数变更后，必须读取在线质量至少 3 次（每次间隔 1 tick），确认 cv 的 max-min 幅度不超过阈值。",
+    "max_cv_swing": 0.08,
+    "max_mean_swing": 0.0008,
+    "gross_thresholds": {
+      "cv_swing": 0.4,
+      "mean_swing": 0.003,
+      "note": "大幅震荡/严重抖动阈值。超过此值视为'很大波动'，触发立即回退。"
+    }
+  },
+
+  "_version": "2.0",
+  "_last_modified": "2026-06-14",
+
+  "response_thresholds": {
+    "_note": "active-monitoring 步骤分析阈值。severeAway/severeDelta 决定一次变更是否导致'严重恶化'。",
+    "thickness_mean":     { "kind": "nominal",     "target": 12.0,  "severeAway": 0.30 },
+    "thickness_cv":       { "kind": "max",         "max": 1.55,     "severeDelta": 0.30 },
+    "birefringence_mean": { "kind": "nominal",     "target": 0.078, "severeAway": 0.0015 },
+    "birefringence_cv":   { "kind": "max",         "max": 3.7,      "severeDelta": 0.20 }
+  }
+}
