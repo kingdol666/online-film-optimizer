@@ -183,13 +183,13 @@ MCP is the hand; the team is the brain. **Only the Process role operates the lin
 | **Execute a setpoint write (apply/preview-apply/rollback/save/load)** | ❌ never | ❌ **never** | ❌ **never** | ✅ **sole executor** |
 | Stage-gate decisions / budget / cadence authority | ✅ | ❌ | ❌ | ❌ |
 
-**Enforcement (defense in depth — not just prose):**
-1. **Structural**: subagents are not granted MCP write tools (the harness centralizes MCP in the main session).
-2. **Code chokepoint**: every setpoint write goes through `applyWithCadence(target, {role, …})` in `workspace/optimization-tasks/lib/doe-cadence.mjs`, which rejects any `role !== 'process'` at the `role_gate` stage. A Quality or R&D proposal cannot pass — even if it reached the execution layer.
-3. **Procedural red-line**: each role prompt states the forbidden MCP ops and that only Process writes.
-4. **Cadence**: even Process cannot write freely — every write also passes the cooldown gate, the safety gate, `run_until_stable`, the oscillation detector, and the gross-defect check (§4.2, §9).
+**Enforcement (defense in depth — the server is the final authority):**
+1. **SERVER-SIDE ROLE GATE (primary, unbypassable)**: `simulator/industrial-film-line/server.mjs` authorizes every write at the HTTP chokepoint — the single point behind BOTH the MCP proxy and any direct HTTP caller. Every request MUST carry an identity tag (`x-agent-role` header, `?agent_role=` query, or body `agent_role`/`agentRole`). Writes (`/sim/apply`, `/sim/setpoints/apply`, `/sim/reset`, `/sim/tick`, `/sim/run-until-stable`, `/sim/rollback`, `/sim/recipe/save-candidate`, `/sim/recipe/load-baseline`) are allowed **only** for `agent_role='process'` (then still pass the five-gate threshold check); any other role (or no role) gets **403 forbidden**. Reads (`get_*`, `list_*`, `preview_*`) are open to all roles. Every decision is written to the audit log (`/sim/access-log`). This is the user's hard "卡控": the hand refuses to move for anyone but Process.
+2. **MCP-layer tag forwarding**: `mcp-server.mjs` adds an `agentRole` param to every tool and forwards it as the `x-agent-role` header, so MCP callers are identified and gated identically.
+3. **Cadence enforcer (run-level)**: `workspace/optimization-tasks/lib/doe-cadence.mjs` `applyWithCadence(target, {role})` adds a second role-gate (`role==='process'`) plus the settling cadence (cooldown + stable-window + oscillation + defect) at the orchestration layer.
+4. **Procedural red-line**: each role prompt names the forbidden MCP ops and the required `agentRole` tag.
 
-The principle: **Quality and R&D are the "eyes and brain" (read + analyze + reason); Process is the only "hand" (execute), and that hand is cadence-gated and safety-gated. No role can destroy the line — that is the baseline.**
+**Each agent's identity tag**: PI=`'pi'`, R&D=`'rd'`, Quality=`'quality'`, Process=`'process'`. Every agent MUST pass its tag on every line call. Process is the only writer; the others are read-only eyes/brain. **No role can destroy the line — the server refuses unauthorized writes regardless of caller.** That is the baseline.
 
 ## 6. Desirability, Multi-Response Optimization & Robustness (Phase 3/4 reference)
 

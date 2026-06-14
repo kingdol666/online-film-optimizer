@@ -31,7 +31,7 @@ const SIM_SERVER_PATH = path.join(__dirname, 'server.mjs');
 // HTTP helper
 // ──────────────────────────────────────────────
 
-function httpRequest(method, urlPath, body = null) {
+function httpRequest(method, urlPath, body = null, headers = {}) {
   return new Promise((resolve, reject) => {
     const urlObj = new URL(urlPath, SIM_BASE);
     const options = {
@@ -39,7 +39,7 @@ function httpRequest(method, urlPath, body = null) {
       port: urlObj.port,
       path: urlObj.pathname,
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...headers },
       timeout: 10000
     };
     const req = http.request(options, (res) => {
@@ -237,8 +237,13 @@ const TOOL_DEFS = [
 // ──────────────────────────────────────────────
 
 async function callHttpTool(def, args = {}) {
-  const body = def.bodyTransform ? def.bodyTransform(args) : args;
-  return httpRequest(def.method, def.path, def.method === 'POST' ? body : null);
+  // Extract the caller's role tag and forward as the x-agent-role header so the
+  // HTTP server's role gate (server.mjs) can authorize: process may write, others read-only.
+  const { agentRole, agent_role, ...rest } = args;
+  const role = agentRole || agent_role || null;
+  const body = def.bodyTransform ? def.bodyTransform(rest) : rest;
+  const headers = role ? { 'x-agent-role': role } : {};
+  return httpRequest(def.method, def.path, def.method === 'POST' ? body : null, headers);
 }
 
 function formatResult(value) {
@@ -253,6 +258,20 @@ const server = new McpServer({
   name: "industrial-film-line-simulator",
   version: "0.2.0",
 });
+
+for (const def of TOOL_DEFS) {
+  // Augment every tool with the caller-identity tag. The HTTP server (server.mjs)
+  // authorizes line writes ONLY for role=process; reads are open to all roles.
+  // Every agent MUST pass its role on every call.
+  def.schema = {
+    ...def.schema,
+    agentRole: z.string().optional().describe(
+      "IDENTITY TAG (required for writes): which agent role is calling — 'pi' | 'rd' | 'quality' | 'process'. " +
+      "Server-side authorization: line writes are allowed ONLY for role=process (then still pass the five-gate threshold check); " +
+      "Quality/R&D/PI are read-only analysis/design experts and CANNOT write setpoints. Pass your role on every call."
+    )
+  };
+}
 
 for (const def of TOOL_DEFS) {
   server.tool(
