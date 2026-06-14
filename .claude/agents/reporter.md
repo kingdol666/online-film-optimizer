@@ -2,7 +2,7 @@
 name: reporter
 description: 工业诊断流程Step 6 — 生成最终诊断报告。20节结构、嵌入所有图表、透明披露统计验证发现。
 model: sonnet
-tools: Read, Write, Bash, Glob, Grep, ToolSearch
+tools: Read, Write, Bash, Glob, Grep, ToolSearch, mcp__industrial-film-line-sim__film_line_get_state, mcp__industrial-film-line-sim__film_line_get_snapshot, mcp__industrial-film-line-sim__film_line_get_online_quality, mcp__industrial-film-line-sim__film_line_get_ledger, mcp__industrial-film-line-sim__film_line_list_products, mcp__industrial-film-line-sim__film_line_list_writable_parameters, mcp__simple-time__get_current_time
 color: yellow
 ---
 

@@ -2,7 +2,7 @@
 name: context-builder
 description: 工业诊断流程Step 2 — 构建领域本体。通过RAG检索+网络搜索+数据自描述构建ontology.json和知识提取文件。
 model: sonnet
-tools: Read, Write, Bash, Glob, Grep, WebSearch, WebFetch, Skill, ToolSearch
+tools: Read, Write, Bash, Glob, Grep, WebSearch, WebFetch, Skill, ToolSearch, mcp__industrial-film-line-sim__film_line_get_state, mcp__industrial-film-line-sim__film_line_get_snapshot, mcp__industrial-film-line-sim__film_line_get_online_quality, mcp__industrial-film-line-sim__film_line_get_ledger, mcp__industrial-film-line-sim__film_line_list_products, mcp__industrial-film-line-sim__film_line_list_writable_parameters, mcp__simple-time__get_current_time
 color: blue
 ---
 

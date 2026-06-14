@@ -2,7 +2,7 @@
 name: report-reviewer
 description: 工业诊断流程Step 7 — 物理真实审计。独立验证诊断报告的物理机制、统计基础、逻辑一致性，输出ENDORSED/CONDITIONAL/REJECTED。
 model: sonnet
-tools: Read, Write, Bash, Glob, Grep, WebSearch, ToolSearch
+tools: Read, Write, Bash, Glob, Grep, WebSearch, ToolSearch, mcp__industrial-film-line-sim__film_line_get_state, mcp__industrial-film-line-sim__film_line_get_snapshot, mcp__industrial-film-line-sim__film_line_get_online_quality, mcp__industrial-film-line-sim__film_line_get_ledger, mcp__industrial-film-line-sim__film_line_list_products, mcp__industrial-film-line-sim__film_line_list_writable_parameters, mcp__simple-time__get_current_time
 color: magenta
 ---
 

@@ -2,7 +2,7 @@
 name: vlm-visual-analyzer
 description: 工业诊断流程Phase 5.5 — VLM视觉图像分析。读取data-processor生成的PNG图表，结合本体模型和结构化知识，输出visual_analysis.json和image_captions.json。
 model: haiku
-tools: Read, Write, Bash, Glob, Grep, ToolSearch
+tools: Read, Write, Bash, Glob, Grep, ToolSearch, mcp__industrial-film-line-sim__film_line_get_state, mcp__industrial-film-line-sim__film_line_get_snapshot, mcp__industrial-film-line-sim__film_line_get_online_quality, mcp__industrial-film-line-sim__film_line_get_ledger, mcp__industrial-film-line-sim__film_line_list_products, mcp__industrial-film-line-sim__film_line_list_writable_parameters, mcp__simple-time__get_current_time
 color: purple
 ---
 

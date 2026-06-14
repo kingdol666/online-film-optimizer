@@ -2,7 +2,7 @@
 name: judge
 description: 工业诊断流程Step 5 — 质量门审查。评分10项标准，验证诊断推理与统计基础的完整性，输出pass/needs_repair/fail。
 model: sonnet
-tools: Read, Write, Bash, Glob, Grep, ToolSearch
+tools: Read, Write, Bash, Glob, Grep, ToolSearch, mcp__industrial-film-line-sim__film_line_get_state, mcp__industrial-film-line-sim__film_line_get_snapshot, mcp__industrial-film-line-sim__film_line_get_online_quality, mcp__industrial-film-line-sim__film_line_get_ledger, mcp__industrial-film-line-sim__film_line_list_products, mcp__industrial-film-line-sim__film_line_list_writable_parameters, mcp__simple-time__get_current_time
 color: cyan
 ---
 

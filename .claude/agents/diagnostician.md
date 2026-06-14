@@ -2,7 +2,7 @@
 name: diagnostician
 description: 工业诊断流程Step 4 — 物理驱动的竞争假说根因分析。融合统计证据+物理机制+VLM视觉洞察，执行5步竞争假说协议。
 model: sonnet
-tools: Read, Write, Bash, Glob, Grep, TodoWrite, ToolSearch
+tools: Read, Write, Bash, Glob, Grep, TodoWrite, ToolSearch, mcp__industrial-film-line-sim__film_line_get_state, mcp__industrial-film-line-sim__film_line_get_snapshot, mcp__industrial-film-line-sim__film_line_get_online_quality, mcp__industrial-film-line-sim__film_line_get_ledger, mcp__industrial-film-line-sim__film_line_list_products, mcp__industrial-film-line-sim__film_line_list_writable_parameters, mcp__simple-time__get_current_time
 color: red
 ---
 

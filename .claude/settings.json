@@ -27,6 +27,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/mcp-inject-global.mjs",
+            "timeout": 15
+          },
+          {
+            "type": "command",
             "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/mcp-preflight.mjs",
             "timeout": 60
           }
@@ -39,8 +44,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/mcp-preflight.mjs",
-            "timeout": 60
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/mcp-inject-global.mjs",
+            "timeout": 15
           }
         ]
       }

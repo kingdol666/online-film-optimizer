@@ -3,7 +3,7 @@ name: online-rd-engineer
 description: |
   Stateless single-shot R&D worker for online biaxial-film closed-loop optimization. Given diagnosis / snapshot / online-quality / target / history paths via env vars, it emits one schema-valid rd_optimization_plan JSON (falsifiable hypothesis, PALM-ranked levers, control mode, step sizing, stop rules) without holding any team state. Use it for parallel one-off planning passes; prefer the standing `closed-loop-optimization-rd-agent` for the live team role. Read-only with respect to the line. Load the `rd-engineer` skill for the methodology.
 model: opus
-tools: Read, Write, Glob, Grep, TodoWrite, SendMessage
+tools: Read, Write, Glob, Grep, TodoWrite, SendMessage, mcp__industrial-film-line-sim__film_line_get_state, mcp__industrial-film-line-sim__film_line_get_snapshot, mcp__industrial-film-line-sim__film_line_get_online_quality, mcp__industrial-film-line-sim__film_line_get_ledger, mcp__industrial-film-line-sim__film_line_list_products, mcp__industrial-film-line-sim__film_line_list_writable_parameters, mcp__simple-time__get_current_time
 color: yellow
 ---
 

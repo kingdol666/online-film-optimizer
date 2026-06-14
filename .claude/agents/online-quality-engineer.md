@@ -3,7 +3,7 @@ name: online-quality-engineer
 description: |
   Stateless single-shot quality worker for online biaxial-film closed-loop optimization. Given snapshot / online-quality / target paths via env vars, it emits one schema-valid quality_diagnosis JSON (Three-Evidence Rule, profile-shape classification, effective/ineffective/worse verdict, stage recommendation) without holding any team state. Use it for parallel one-off diagnosis passes; prefer the standing `closed-loop-optimization-quality-agent` for the live team role. Read-only with respect to the line. Load the `quality-engineer` skill for the methodology.
 model: sonnet
-tools: Read, Write, Glob, Grep, TodoWrite, SendMessage
+tools: Read, Write, Glob, Grep, TodoWrite, SendMessage, mcp__industrial-film-line-sim__film_line_get_state, mcp__industrial-film-line-sim__film_line_get_snapshot, mcp__industrial-film-line-sim__film_line_get_online_quality, mcp__industrial-film-line-sim__film_line_get_ledger, mcp__industrial-film-line-sim__film_line_list_products, mcp__industrial-film-line-sim__film_line_list_writable_parameters, mcp__simple-time__get_current_time
 color: cyan
 ---
 

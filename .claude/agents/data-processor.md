@@ -2,7 +2,7 @@
 name: data-processor
 description: 工业诊断流程Step 3 — 数据处理与可视化。运行统计基线脚本+专家自定义分析，生成图表和data_analysis_conclusion.json。
 model: sonnet
-tools: Read, Write, Bash, Glob, Grep, TodoWrite, ToolSearch, Agent
+tools: Read, Write, Bash, Glob, Grep, TodoWrite, ToolSearch, Agent, mcp__industrial-film-line-sim__film_line_get_state, mcp__industrial-film-line-sim__film_line_get_snapshot, mcp__industrial-film-line-sim__film_line_get_online_quality, mcp__industrial-film-line-sim__film_line_get_ledger, mcp__industrial-film-line-sim__film_line_list_products, mcp__industrial-film-line-sim__film_line_list_writable_parameters, mcp__simple-time__get_current_time
 color: green
 ---
 
