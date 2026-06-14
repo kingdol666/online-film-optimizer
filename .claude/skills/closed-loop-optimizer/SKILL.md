@@ -111,6 +111,7 @@ After FREEZE/stop and artifact validation, the PI closes the team with `TeamDele
 
 - Treat the MCP line as a real pilot line — every run auditable, safe, and settled.
 - Keep deterministic safety gates outside the LLM (the Five-Gate Protocol).
+- **Only the Process role writes the line.** Quality and R&D are read-only analysis/design experts. The cadence enforcer (`workspace/optimization-tasks/lib/doe-cadence.mjs`, `applyWithCadence`) enforces this at a code-level `role_gate` — any `role !== 'process'` write is rejected. See the Permission Matrix in `references/doe-campaign-framework.md` §5.1.
 - **Enforce the settling interval on every change — the line must not jitter.**
 - Never let an LLM write PLC tags directly; never bypass a safety gate; never skip the settling interval.
 - Design split-plots (HTC/ETC); size runs from Gage R&R + power; analyze split-plots with two error strata.

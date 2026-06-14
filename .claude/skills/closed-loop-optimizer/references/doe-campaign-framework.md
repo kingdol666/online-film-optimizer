@@ -171,6 +171,26 @@ These separate a real DOE from "trying parameters":
 
 The three expert roles **cross-validate** each other: Quality's analysis must match R&D's model prediction; Process's observed run responses must match Quality's measurements; R&D's active factors must have a mechanism (`biaxial-film-physics.md`). Any disagreement is investigated before the campaign advances.
 
+### 5.1 Permission & Write-Control Matrix (the hard "卡控")
+
+MCP is the hand; the team is the brain. **Only the Process role operates the line.** Quality and R&D are analysis/design experts — they are structurally and procedurally blocked from any setpoint write.
+
+| Capability | Orchestrator (PI) | R&D (DOE Designer) | Quality (Stats Lead) | Process (Trial Exec) |
+|---|---|---|---|---|
+| Load own / global Skills, reason, produce artifacts | ✅ | ✅ | ✅ | ✅ |
+| Read line (state / snapshot / online-quality / ledger / lists) | via main session | via main session | via main session | ✅ via main session |
+| Author a setpoint change proposal | ❌ | ❌ (authors **design** artifacts, not setpoint writes) | ❌ (authors **analysis** artifacts) | ✅ **sole author** |
+| **Execute a setpoint write (apply/preview-apply/rollback/save/load)** | ❌ never | ❌ **never** | ❌ **never** | ✅ **sole executor** |
+| Stage-gate decisions / budget / cadence authority | ✅ | ❌ | ❌ | ❌ |
+
+**Enforcement (defense in depth — not just prose):**
+1. **Structural**: subagents are not granted MCP write tools (the harness centralizes MCP in the main session).
+2. **Code chokepoint**: every setpoint write goes through `applyWithCadence(target, {role, …})` in `workspace/optimization-tasks/lib/doe-cadence.mjs`, which rejects any `role !== 'process'` at the `role_gate` stage. A Quality or R&D proposal cannot pass — even if it reached the execution layer.
+3. **Procedural red-line**: each role prompt states the forbidden MCP ops and that only Process writes.
+4. **Cadence**: even Process cannot write freely — every write also passes the cooldown gate, the safety gate, `run_until_stable`, the oscillation detector, and the gross-defect check (§4.2, §9).
+
+The principle: **Quality and R&D are the "eyes and brain" (read + analyze + reason); Process is the only "hand" (execute), and that hand is cadence-gated and safety-gated. No role can destroy the line — that is the baseline.**
+
 ## 6. Desirability, Multi-Response Optimization & Robustness (Phase 3/4 reference)
 
 **Desirability (Phase 3).** Map each response to an individual desirability `dᵢ ∈ [0,1]`:
