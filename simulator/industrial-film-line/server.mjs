@@ -1,9 +1,29 @@
 import http from 'node:http';
+import fs from 'node:fs';
 import { IndustrialFilmLineSimulator } from './line-simulator.mjs';
 import { listProductProfiles } from './product-catalog.mjs';
 
 const simulator = new IndustrialFilmLineSimulator();
 const port = Number(process.env.SIM_PORT || 8877);
+
+// ─── Credential-bound role authentication (anti-impersonation) ────────────
+// A role claim is valid ONLY with its matching secret token. An agent may
+// authenticate ONLY as its own role (token-bound) — it cannot impersonate
+// another role. The `emergency` role is restricted to safety rollback only.
+let ROLE_TOKENS = {};
+let READ_ROLES = new Set(['pi', 'rd', 'quality', 'process']);
+let WRITE_ROLE = 'process';
+let EMERGENCY_SCOPE = new Set(['/sim/rollback']);
+try {
+  const cfgPath = process.env.ROLE_TOKENS_PATH || 'workspace/optimization-tasks/config/role-tokens.json';
+  const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+  ROLE_TOKENS = cfg.roles || {};
+  if (cfg.read_roles) READ_ROLES = new Set(cfg.read_roles);
+  if (cfg.write_role) WRITE_ROLE = cfg.write_role;
+  if (cfg.emergency_scope) EMERGENCY_SCOPE = new Set(cfg.emergency_scope);
+} catch (e) {
+  console.warn('[role] could not load role-tokens.json — ALL writes will be rejected:', e.message);
+}
 
 // ─── Role-based write authorization (the team's hard "卡控") ───────────────
 // MCP/HTTP is the "hand"; the team is the "brain". Every caller MUST identify
@@ -54,35 +74,51 @@ const server = http.createServer(async (req, res) => {
       catch (e) { return send(res, 400, { error: 'bad_json', message: e.message }); }
     }
 
-    // Identify the caller: header > query > body
-    const role = req.headers['x-agent-role']
-      || url.searchParams.get('agent_role')
-      || url.searchParams.get('agentRole')
-      || body.agent_role
-      || body.agentRole
-      || null;
+    // ── Caller authentication: a role claim is valid ONLY with its matching token ──
+    const claimedRole = req.headers['x-agent-role']
+      || url.searchParams.get('agent_role') || url.searchParams.get('agentRole')
+      || body.agent_role || body.agentRole || null;
+    const presentedToken = req.headers['x-role-token']
+      || url.searchParams.get('role_token') || url.searchParams.get('roleToken')
+      || body.role_token || body.roleToken || null;
 
+    let auth = { role: claimedRole, authenticated: false, reason: claimedRole ? 'no_token' : 'no_role' };
+    if (claimedRole && presentedToken) {
+      if (ROLE_TOKENS[claimedRole] && ROLE_TOKENS[claimedRole] === presentedToken) {
+        auth = { role: claimedRole, authenticated: true };
+      } else {
+        auth = { role: claimedRole, authenticated: false, reason: 'token_mismatch' };
+      }
+    }
+    const { role, authenticated } = auth;
     const isWrite = WRITE_PATHS.has(url.pathname);
+    // Emergency carve-out: only the `emergency` role, only on safety rollback, and only if authenticated.
+    const isEmergencyWrite = (role === 'emergency' && authenticated && EMERGENCY_SCOPE.has(url.pathname));
 
-    // ── ROLE GATE: only `process` may write ──
-    if (isWrite) {
-      if (role !== WRITE_AUTHORIZED_ROLE) {
-        recordAccess({ role, method: req.method, path: url.pathname, verdict: 'DENIED', reason: `non_process_write (caller=${role || 'unspecified'})` });
+    // ── ROLE GATE ──
+    if (isWrite && !isEmergencyWrite) {
+      if (!authenticated) {
+        recordAccess({ role, method: req.method, path: url.pathname, verdict: 'DENIED', reason: `unauthenticated (claimed='${role || '?'}', ${auth.reason})` });
         return send(res, 403, {
           error: 'forbidden',
-          reason: `only the process role may write to the line — caller '${role || 'unspecified'}' is not authorized. Quality/R&D/PI are read-only analysis/design experts; line setpoints are imported and fine-tuned ONLY by the process role.`,
-          caller: role || 'unspecified',
-          path: url.pathname,
-          hint: "pass header 'x-agent-role: process' (or body agent_role='process') for sanctioned execution-path writes"
+          reason: `caller is not authenticated. Pass your OWN role + its secret token (x-agent-role + x-role-token). A role claim without its matching token — or a token from another role — is rejected. Impersonation is blocked.`,
+          caller: role || 'unspecified', auth_reason: auth.reason, path: url.pathname
+        });
+      }
+      if (role !== WRITE_ROLE) {
+        recordAccess({ role, method: req.method, path: url.pathname, verdict: 'DENIED', reason: `non_process_write (authenticated as '${role}')` });
+        return send(res, 403, {
+          error: 'forbidden',
+          reason: `authenticated as '${role}', but only the '${WRITE_ROLE}' role may write setpoints. Quality/R&D/PI are read-only. You cannot write even by presenting another role's credentials — each token is bound to one role.`,
+          caller: role, path: url.pathname
         });
       }
       recordAccess({ role, method: req.method, path: url.pathname, verdict: 'allowed_process_write' });
-      // NOTE: process writes then still pass through the simulator's existing
-      // five-gate (catalog/range/delta/ramp/rollback) threshold check inside apply().
-      // The run-level cadence (settling interval) is enforced by the cadence
-      // enforcer (workspace/.../lib/doe-cadence.mjs) at the orchestration layer.
+      // Process writes still pass the simulator's five-gate threshold check inside apply().
+    } else if (isEmergencyWrite) {
+      recordAccess({ role, method: req.method, path: url.pathname, verdict: 'allowed_emergency_rollback' });
     } else {
-      recordAccess({ role, method: req.method, path: url.pathname, verdict: 'read_ok' });
+      recordAccess({ role, method: req.method, path: url.pathname, verdict: authenticated ? 'read_ok' : 'read_unauthenticated' });
     }
 
     // ── Routes (POST handlers use the pre-read `body`) ──
@@ -102,8 +138,8 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && url.pathname === '/sim/recipe/save-candidate') return send(res, 200, simulator.saveCandidateRecipe(body));
     if (req.method === 'POST' && url.pathname === '/sim/recipe/load-baseline') return send(res, 200, simulator.loadRecipeBaseline(body));
     if (req.method === 'GET' && url.pathname === '/sim/ledger') return send(res, 200, simulator.getLedger());
-    if (req.method === 'GET' && url.pathname === '/sim/access-log') return send(res, 200, { access_log: accessLog.slice(-100), write_authorized_role: WRITE_AUTHORIZED_ROLE, write_paths: [...WRITE_PATHS] });
-    if (req.method === 'GET' && url.pathname === '/sim/health') return send(res, 200, { status: 'ok', service: 'simulator-http', campaign_id: simulator.getState().campaign_id, role_enforcement: true });
+    if (req.method === 'GET' && url.pathname === '/sim/access-log') return send(res, 200, { access_log: accessLog.slice(-100), auth_model: 'credential_bound (agentRole + roleToken pair; anti-impersonation)', write_role: WRITE_ROLE, read_roles: [...READ_ROLES], emergency_scope: [...EMERGENCY_SCOPE], write_paths: [...WRITE_PATHS] });
+    if (req.method === 'GET' && url.pathname === '/sim/health') return send(res, 200, { status: 'ok', service: 'simulator-http', campaign_id: simulator.getState().campaign_id, role_enforcement: 'credential_bound', write_role: WRITE_ROLE, emergency_role: 'emergency (rollback only)' });
     send(res, 404, { error: 'not_found', path: url.pathname });
   } catch (error) {
     send(res, 500, { error: error.message });
@@ -111,5 +147,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(port, () => {
-  console.log(`industrial-film-line simulator listening on http://localhost:${port} (role-enforcement ON: writes require agent_role=process)`);
+  console.log(`industrial-film-line simulator listening on http://localhost:${port} (credential-bound role auth ON: write_role=${WRITE_ROLE}; emergency=${[...EMERGENCY_SCOPE].join(',')} only; impersonation blocked by token-binding)`);
 });

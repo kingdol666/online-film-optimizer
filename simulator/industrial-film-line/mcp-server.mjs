@@ -237,12 +237,16 @@ const TOOL_DEFS = [
 // ──────────────────────────────────────────────
 
 async function callHttpTool(def, args = {}) {
-  // Extract the caller's role tag and forward as the x-agent-role header so the
-  // HTTP server's role gate (server.mjs) can authorize: process may write, others read-only.
-  const { agentRole, agent_role, ...rest } = args;
+  // Forward the caller's (role, token) credential as headers so the HTTP server's
+  // credential-bound gate can authenticate: a role claim is valid only with its
+  // matching token — agents cannot impersonate another role.
+  const { agentRole, agent_role, roleToken, role_token, ...rest } = args;
   const role = agentRole || agent_role || null;
+  const token = roleToken || role_token || null;
   const body = def.bodyTransform ? def.bodyTransform(rest) : rest;
-  const headers = role ? { 'x-agent-role': role } : {};
+  const headers = {};
+  if (role) headers['x-agent-role'] = role;
+  if (token) headers['x-role-token'] = token;
   return httpRequest(def.method, def.path, def.method === 'POST' ? body : null, headers);
 }
 
@@ -266,9 +270,12 @@ for (const def of TOOL_DEFS) {
   def.schema = {
     ...def.schema,
     agentRole: z.string().optional().describe(
-      "IDENTITY TAG (required for writes): which agent role is calling — 'pi' | 'rd' | 'quality' | 'process'. " +
-      "Server-side authorization: line writes are allowed ONLY for role=process (then still pass the five-gate threshold check); " +
-      "Quality/R&D/PI are read-only analysis/design experts and CANNOT write setpoints. Pass your role on every call."
+      "IDENTITY TAG (your OWN role — never impersonate another): 'pi' | 'rd' | 'quality' | 'process' | 'emergency'. " +
+      "Server-side authorization (credential-bound): line writes allowed ONLY for role=process with its matching token; Quality/R&D/PI are read-only; emergency role is restricted to safety rollback. Pass your own role on every call."
+    ),
+    roleToken: z.string().optional().describe(
+      "IDENTITY CREDENTIAL — the secret token bound to your role (from workspace/optimization-tasks/config/role-tokens.json). " +
+      "A role claim is valid ONLY with its matching token; presenting another role's token is rejected (anti-impersonation). Required for writes (process token) and emergency rollback (emergency token)."
     )
   };
 }
