@@ -86,6 +86,13 @@ SETTLE 4: Anti-oscillation check
 
 Record the settling outcome on every run log as `settling_confirmation` {cooldown_class, wait_seconds, stable_ticks, cv_deviation_max, oscillation_clear}.
 
+**Deterministic enforcement (not just prose).** This discipline is codified in `workspace/optimization-tasks/lib/doe-cadence.mjs`, which is the single sanctioned path for any setpoint change. `applyWithCadence(target, {campaignId, sourcePlan, cfg})` enforces the full chain: cooldown gate (`time_since_last_change_sec >= required`) → re-anchoring safety-gated ramp → `run_until_stable` (stable must be true) → oscillation detector (3 reads) → gross-defect assessment. **Two-tier rollback (matches the production reality):**
+
+- **Rollback IMMEDIATELY** when: `run_until_stable` returns `stable=false`, an alarm is active, a **gross** oscillation (cv-swing > ~0.4 or mean-swing > ~0.003 — a genuine "很大波动") is detected, or a **serious defect** (e.g. thickness_cv > 2.0) appears. After rollback, wait the cooldown before continuing.
+- **Do NOT rollback** for normal post-change settling transients (a mild cv-swing that exceeds the soft real-line threshold but stays well under gross). Instead: the change holds, the response is collected, and the **next** action simply waits its cooldown. This is "调整一定时间再做下一次优化" — the cadence absorbs the settle, it does not panic on routine re-equilibration.
+
+The soft real-line thresholds (`max_cv_swing`/`max_mean_swing` in `inter_tick_control.json`) are logged as warnings; only the gross thresholds (or unstable/alarm/defect) trigger rollback. Tune the gross thresholds only with PI approval.
+
 ## Method 3: Split-Plot Per-Run Execution Pipeline
 
 The design is a split-plot (framework §2.1, §3.1). Execute it as such. For each **whole-plot** `W` (an HTC combination), then each **sub-plot run** `r` inside `W`:
